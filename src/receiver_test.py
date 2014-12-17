@@ -150,7 +150,7 @@ def measure_pulses(signals):
         # Mark edges
         pos = edge > threshPos
         neg = edge < threshNeg
-        # Find + or - going edge indices
+        # Find positive going edge indices
         iPos = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
         iNeg = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
         minSize = min(len(iPos), len(iNeg))
