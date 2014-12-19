@@ -101,6 +101,7 @@ def scan(fs, samples):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
+    # TODO: implement psd in Numpy rather than add another import
     l, f = matplotlib.mlab.psd(samples, SCAN_BINS, Fs=fs)
     peaks = (numpy.diff(numpy.sign(numpy.diff(l))) < 0).nonzero()[0] + 1
     freqs = f[peaks]
@@ -187,10 +188,10 @@ def measure_pulses(signals):
         iNeg = iNeg[:minSize]
         # Find pulses of PULSE_WIDTH
         widths = iNeg - iPos
-        pulsePos = numpy.where((widths > widthMin) & (widths < widthMax))
-        pulseValid = iPos[pulsePos]
-        lenValid = len(pulseValid)
-        if lenValid > 0:
+        widths = widths[(widths > widthMin) & (widths < widthMax)]
+        # Must have at least 2 pulses
+        if widths.size > 1:
+            pulseValid = iPos[:widths.size]
             # Calculate frequency
             pulseAvg = numpy.average(numpy.diff(pulseValid))
             freq = length / (pulseAvg * float(SAMPLE_TIME))
@@ -206,7 +207,7 @@ def measure_pulses(signals):
                     pulse = signal[pos:pos + width - 1]
                     level += numpy.average(pulse)
                 level /= len(pulseValid)
-                pulses.append((lenValid, freq, level))
+                pulses.append((widths.size, freq, level))
             else:
                 pulses.append(None)
         else:
