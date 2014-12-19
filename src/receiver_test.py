@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 
+import matplotlib
 from matplotlib.widgets import RectangleSelector
 import numpy
 from scipy.io import wavfile
@@ -12,8 +13,10 @@ import matplotlib.pyplot as plt
 # Sampling time per location (s)
 SAMPLE_TIME = 3
 
+# FFT bins used to scan
+SCAN_BINS = 4096
 # Size of each block to analyse
-ANALYSIS_SIZE = 4096
+ANALYSIS_BINS = 4096
 
 # Frequencies (offsets from centre frequency) (Hz)
 # for use with SDRSharp_20141116_225753Z_152499kHz_IQ.wav
@@ -45,6 +48,8 @@ def parse_arguments():
                                      description='Demodulation test')
 
     parser.add_argument('-s', '--spectrum', help='Show capture spectrum',
+                        action='store_true')
+    parser.add_argument('-c', '--scan', help='Scan for signals',
                         action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
@@ -79,36 +84,60 @@ def read_data(filename):
 
 
 # Get levels of each frequency
-def analyse_frequencies(freqs, magnitudes):
+def analyse_frequencies(freqBins, magnitudes, frequencies):
     levels = []
 
-    for freq in FREQUENCIES:
+    for freq in frequencies:
         # Closest bin
-        fftBin = (numpy.abs(freqs - freq)).argmin()
+        fftBin = (numpy.abs(freqBins - freq)).argmin()
         level = magnitudes[fftBin]
         levels.append(level)
 
     return levels
 
 
+# Scan for possible signals
+def scan(fs, samples):
+    if samples.size < SCAN_BINS:
+        error('Sample too short')
+
+    l, f = matplotlib.mlab.psd(samples, SCAN_BINS, Fs=fs)
+    peaks = (numpy.diff(numpy.sign(numpy.diff(l))) < 0).nonzero()[0] + 1
+    freqs = f[peaks]
+
+    # Plot results
+    for freq in freqs:
+        plt.axvline(freq, color='g', alpha=.5)
+
+    decibels = 20 * numpy.log10(l)
+    plt.plot(f, decibels)
+    plt.title('Scan')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Level')
+    plt.grid()
+    plt.show()
+
+    return freqs
+
+
 # Analyse blocks from capture
-def fft(fs, samples):
-    chunks = samples.size / ANALYSIS_SIZE
+def demod(fs, samples, frequencies):
+    chunks = samples.size / ANALYSIS_BINS
     if chunks == 0:
         error('Sample time too long')
 
-    signals = numpy.empty((chunks, len(FREQUENCIES)))
+    signals = numpy.empty((chunks, len(frequencies)))
 
     # Split samples into chunks
     for i in range(chunks):
-        chunkStart = i * ANALYSIS_SIZE
-        chunk = samples[chunkStart:chunkStart + ANALYSIS_SIZE]
+        chunkStart = i * ANALYSIS_BINS
+        chunk = samples[chunkStart:chunkStart + ANALYSIS_BINS]
 
         # Analyse chunk
-        fft = numpy.fft.fft(chunk) / ANALYSIS_SIZE
+        fft = numpy.fft.fft(chunk) / ANALYSIS_BINS
         mags = numpy.absolute(fft)
-        freqs = numpy.fft.fftfreq(ANALYSIS_SIZE, 1. / fs)
-        levels = analyse_frequencies(freqs, mags)
+        freqBins = numpy.fft.fftfreq(ANALYSIS_BINS, 1. / fs)
+        levels = analyse_frequencies(freqBins, mags, frequencies)
         signals[i] = levels
 
     return signals
@@ -171,17 +200,17 @@ def measure_pulses(signals):
             if (abs(closest - rate)) < PULSE_RATE_TOL:
                 # Get pulse levels
                 level = 0
-                for i in range(len(pulseValid)):
-                    pos = pulseValid[i]
-                    width = widths[i]
+                for j in range(len(pulseValid)):
+                    pos = pulseValid[j]
+                    width = widths[j]
                     pulse = signal[pos:pos + width - 1]
                     level += numpy.average(pulse)
                 level /= len(pulseValid)
                 pulses.append((lenValid, freq, level))
             else:
-                pulses.append((float('nan'), float('nan'), float('nan')))
+                pulses.append(None)
         else:
-            pulses.append((float('nan'), float('nan'), float('nan')))
+            pulses.append(None)
 
     return pulses
 
@@ -200,6 +229,10 @@ if __name__ == '__main__':
     if args.spectrum:
         # Show spectrum of entire plot
         plt.psd(iq, NFFT=4096, Fs=fs)
+        plt.title('Spectrum')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Level')
+        plt.grid()
         plt.show()
 
     sampleSize = fs * SAMPLE_TIME
@@ -207,24 +240,22 @@ if __name__ == '__main__':
     if sampleBlocks == 0:
         error('Capture too short')
 
-    analysisLen = ANALYSIS_SIZE / float(fs)
+    analysisLen = ANALYSIS_BINS / float(fs)
     print 'Analysis length (ms): {:.1f}'.format(analysisLen * 1000)
-
-    levels = []
 
     # Split input file into SAMPLE_TIME seconds blocks
     for i in range(sampleBlocks):
         sampleStart = i * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
-        levels.append(fft(fs, samples))
 
-    # Analyse each block
-    for i in range(len(levels)):
-        signals = levels[i].T
+        # Scan for possible signals
+        if args.scan:
+            frequencies = scan(fs, samples)
+        else:
+            frequencies = FREQUENCIES
 
-        # Create the x axis time points
-        startTime = i * SAMPLE_TIME
-        x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals.shape[1])
+        # Demodulate
+        signals = demod(fs, samples, frequencies).T
 
         # Reduce noise
         smooth(signals, 4)
@@ -236,11 +267,17 @@ if __name__ == '__main__':
         plt.title('Block {}'.format(i + 1))
         plt.xlabel('Time (s)')
         plt.ylabel('Level')
+        plt.grid()
 
-        labels = ['Count: {} Freq: {:.2f}Hz Level: {:.3f}'.format(n, f, l)
-                  for n, f, l in pulses]
-        for i in range(signals.shape[0]):
-            plt.plot(x, signals[i], label=labels[i])
+        # Create the x axis time points
+        startTime = i * SAMPLE_TIME
+        x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals.shape[1])
+
+        for i in range(len(pulses)):
+            if pulses[i] is not None:
+                label = 'Freq: {:.3f}kHz, Count: {} Rate: {:.2f}Hz Level: {:.3f}'
+                label = label.format(frequencies[i] / 1000., *pulses[i])
+                plt.plot(x, signals[i], label=label)
 
         plt.legend(prop={'size': 10})
 
