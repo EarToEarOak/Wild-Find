@@ -16,7 +16,7 @@ SAMPLE_TIME = 3
 # FFT bins used to scan
 SCAN_BINS = 4096
 # Size of each block to analyse
-ANALYSIS_BINS = 4096
+DEMOD_BINS = 4096
 
 # Frequencies (offsets from centre frequency) (Hz)
 # for use with SDRSharp_20141116_225753Z_152499kHz_IQ.wav
@@ -64,7 +64,7 @@ def parse_arguments():
 
 # Read data from wav file
 def read_data(filename):
-    print 'Loading file: {}'.format(os.path.split(filename)[1])
+    print 'Loading capture file: {}'.format(os.path.split(filename)[1])
     fs, data = wavfile.read(filename)
 
     if data.shape[1] != 2:
@@ -72,8 +72,8 @@ def read_data(filename):
     if data.dtype != 'int16':
         error('Unexpected format')
 
-    print 'Sample rate (MSPS): {:.2f}'.format(fs / 1e6)
-    print 'Length (s): {:.2f}'.format(float(len(data)) / fs)
+    print 'Capture sample rate (MSPS): {:.2f}'.format(fs / 1e6)
+    print 'Capture length (s): {:.2f}'.format(float(len(data)) / fs)
 
     # Scale data to +/-1
     data = data / 256.
@@ -101,7 +101,7 @@ def scan(fs, samples):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
-    # TODO: implement psd in Numpy rather than add another import
+    # TODO: implement PSD in Numpy rather than add another import
     l, f = matplotlib.mlab.psd(samples, SCAN_BINS, Fs=fs)
     peaks = (numpy.diff(numpy.sign(numpy.diff(l))) < 0).nonzero()[0] + 1
     freqs = f[peaks]
@@ -123,7 +123,7 @@ def scan(fs, samples):
 
 # Analyse blocks from capture
 def demod(fs, samples, frequencies):
-    chunks = samples.size / ANALYSIS_BINS
+    chunks = samples.size / DEMOD_BINS
     if chunks == 0:
         error('Sample time too long')
 
@@ -131,13 +131,13 @@ def demod(fs, samples, frequencies):
 
     # Split samples into chunks
     for i in range(chunks):
-        chunkStart = i * ANALYSIS_BINS
-        chunk = samples[chunkStart:chunkStart + ANALYSIS_BINS]
+        chunkStart = i * DEMOD_BINS
+        chunk = samples[chunkStart:chunkStart + DEMOD_BINS]
 
         # Analyse chunk
-        fft = numpy.fft.fft(chunk) / ANALYSIS_BINS
+        fft = numpy.fft.fft(chunk) / DEMOD_BINS
         mags = numpy.absolute(fft)
-        freqBins = numpy.fft.fftfreq(ANALYSIS_BINS, 1. / fs)
+        freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / fs)
         levels = analyse_frequencies(freqBins, mags, frequencies)
         signals[i] = levels
 
@@ -241,11 +241,12 @@ if __name__ == '__main__':
     if sampleBlocks == 0:
         error('Capture too short')
 
-    analysisLen = ANALYSIS_BINS / float(fs)
-    print 'Analysis length (ms): {:.1f}'.format(analysisLen * 1000)
+    analysisLen = DEMOD_BINS / float(fs)
+    print 'Demod resolution (ms): {:.1f}'.format(analysisLen * 1000)
 
     # Split input file into SAMPLE_TIME seconds blocks
     for i in range(sampleBlocks):
+        print 'Block {}/{}'.format(i + 1, sampleBlocks)
         sampleStart = i * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
 
@@ -254,6 +255,8 @@ if __name__ == '__main__':
             frequencies = scan(fs, samples)
         else:
             frequencies = FREQUENCIES
+
+        print 'Signals to demodulate: {}'.format(len(frequencies))
 
         # Demodulate
         signals = demod(fs, samples, frequencies).T
