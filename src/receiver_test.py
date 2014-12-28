@@ -18,6 +18,9 @@ SCAN_BINS = 4096
 # Size of each block to analyse
 DEMOD_BINS = 4096
 
+# Peak level change (dB)
+SCAN_THRES = 2.
+
 # Frequencies (offsets from centre frequency) (Hz)
 # for use with SDRSharp_20141116_225753Z_152499kHz_IQ.wav
 FREQUENCIES = [-167291,
@@ -103,19 +106,29 @@ def scan(fs, samples):
 
     # TODO: implement PSD in Numpy rather than add another import
     l, f = matplotlib.mlab.psd(samples, SCAN_BINS, Fs=fs)
-    peaks = (numpy.diff(numpy.sign(numpy.diff(l))) < 0).nonzero()[0] + 1
-    freqs = f[peaks]
+    decibels = 10 * numpy.log10(l)
+
+    diff = numpy.diff(decibels)
+    # Peaks
+    peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
+    # Changes above SCAN_THRES
+    threshIndices = numpy.where((diff > SCAN_THRES) | (diff < -SCAN_THRES))[0]
+    # Peaks above SCAN_THRES
+    signalIndices = numpy.where(numpy.in1d(peakIndices, threshIndices))[0]
+    freqIndices = peakIndices[signalIndices]
+
+    freqs = f[freqIndices]
+    levels = decibels[freqIndices]
 
     # Plot results
-    for freq in freqs:
-        plt.axvline(freq, color='g', alpha=.5)
-
-    decibels = 20 * numpy.log10(l)
-    plt.plot(f, decibels)
     plt.title('Scan')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Level')
     plt.grid()
+
+    plt.plot(f, decibels)
+    plt.plot(freqs, levels, linestyle='None', marker='o', color='r')
+
     plt.show()
 
     return freqs
@@ -283,7 +296,8 @@ if __name__ == '__main__':
                 label = label.format(frequencies[i] / 1000., *pulses[i])
                 plt.plot(x, signals[i], label=label)
 
-        plt.legend(prop={'size': 10})
+        if not all(pulse is None for pulse in pulses):
+            plt.legend(prop={'size': 10})
 
         # Add a rectangle selector of measurements
         selector = RectangleSelector(ax, rectangle_callback,
