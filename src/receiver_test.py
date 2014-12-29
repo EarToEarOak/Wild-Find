@@ -11,43 +11,52 @@ from scipy.io import wavfile
 
 import matplotlib.pyplot as plt
 
+#
+# Sampling
+#
 
 # Sampling time per location (s)
 SAMPLE_TIME = 4
 
+#
+# Scanning
+#
+
 # FFT bins used to scan
 SCAN_BINS = 4096
-# Size of each block to analyse
-DEMOD_BINS = 4096
-
 # Peak level change (dB)
-SCAN_THRES = 2.
+SCAN_CHANGE = 2.
 
 # Frequencies (offsets from centre frequency) (Hz)
 # for use with SDRSharp_20141116_225753Z_152499kHz_IQ.wav
+# Not used if -c specified
 FREQUENCIES = [-167291,
                - 187153,
                - 209678]
+#
+# Detection
+#
 
+# Size of each block to analyse
+DEMOD_BINS = 4096
 # Pulse threshold (%)
 PULSE_THRESHOLD = 99.5
-
-# Pulse widths (s)
+# Valid pulse widths (s)
 PULSE_WIDTHS = [25e-3, 64e-3]
-# Pulse width tolerance (+/i %)
+# Pulse width tolerance (+/- %)
 PULSE_WIDTH_TOL = 20
-# Valid pulse rates (ppm)
+# Valid pulse rates (Pulses per minute)
 PULSE_RATES = [40, 60, 80]
-# Pulse rate tolerance (+/- ppm)
+# Pulse rate tolerance (+/- Pulses per minute)
 PULSE_RATE_TOL = 10
 
 
-# Stores characteristics of found pulses
+# Stores characteristics of detected pulses
 class Pulse(object):
     # Index of the signal where it was found
     _signalNum = None
     # Frequency (Hz)
-#     _freq = None
+    _freq = None
     # Number of pulses
     _count = None
     # Pulse rate (PPM)
@@ -151,6 +160,8 @@ def analyse_frequencies(freqBins, magnitudes, frequencies):
 
 
 # Scan for possible signals
+# Filtered to SCAN_BINS
+# Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
 def scan(baseband, fs, samples):
     if samples.size < SCAN_BINS:
         error('Sample too short')
@@ -162,9 +173,9 @@ def scan(baseband, fs, samples):
     diff = numpy.diff(decibels)
     # Peaks
     peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
-    # Changes above SCAN_THRES
-    threshIndices = numpy.where((diff > SCAN_THRES) | (diff < -SCAN_THRES))[0]
-    # Peaks above SCAN_THRES
+    # Changes above SCAN_CHANGE
+    threshIndices = numpy.where((diff > SCAN_CHANGE) | (diff < -SCAN_CHANGE))[0]
+    # Peaks above SCAN_CHANGE
     signalIndices = numpy.where(numpy.in1d(peakIndices, threshIndices))[0]
     freqIndices = peakIndices[signalIndices]
 
@@ -220,12 +231,12 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def measure_pulses(frequencies, signals, showThresholds):
+def detect(frequencies, signals, showThresholds):
     pulses = []
 
     length = signals.shape[1]
+    # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
     pulseWidths = [width * length / SAMPLE_TIME for width in sorted(PULSE_WIDTHS)]
-    # TODO: Improve tolerance levels
     widthsMin = [width * (100 - PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     widthsMax = [width * (100 + PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     pulseWidths = zip(widthsMax, widthsMin)
@@ -236,7 +247,7 @@ def measure_pulses(frequencies, signals, showThresholds):
         edges[signalNum] = numpy.diff(signals[signalNum])
 
     for signalNum in range(signals.shape[0]):
-        # TODO: find better thresholds
+        # Calculate thresholds based on percentiles
         signal = signals[signalNum]
         edge = edges[signalNum]
         t1 = numpy.percentile(edge[edge > 0], PULSE_THRESHOLD)
@@ -272,12 +283,13 @@ def measure_pulses(frequencies, signals, showThresholds):
                 if (abs(closest - rate)) < PULSE_RATE_TOL:
                     # Get pulse levels
                     level = 0
-                    for j in range(len(pulseValid)):
-                        pos = pulseValid[j]
-                        width = widthsValid[j]
+                    for pos in range(len(pulseValid)):
+                        pos = pulseValid[pos]
+                        width = widthsValid[pos]
                         pulseSignal = signal[pos:pos + width - 1]
                         level += numpy.average(pulseSignal)
                     level /= len(pulseValid)
+                    # Store valid pulse
                     pulse = Pulse(signalNum,
                                   frequencies[signalNum],
                                   widthsValid.size,
@@ -288,6 +300,7 @@ def measure_pulses(frequencies, signals, showThresholds):
                     valid = True
                     break
 
+        # Display differentiated signal with thresholds (-t)
         if showThresholds:
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
@@ -301,7 +314,7 @@ def measure_pulses(frequencies, signals, showThresholds):
             plt.axhline(threshNeg, color='r', label='- Threshold')
             plt.legend(prop={'size': 10})
             # Add a rectangle selector for measurements
-            _selector = RectangleSelector(ax, rectangle_callback,
+            _selector = RectangleSelector(ax, rectangle_frequency,
                                           drawtype='box', useblit=True)
             plt.show()
 
@@ -309,19 +322,21 @@ def measure_pulses(frequencies, signals, showThresholds):
 
 
 # Print width of dragged rectangle
-def rectangle_callback(eclick, erelease):
+def rectangle_frequency(eclick, erelease):
     print 'dT {:.1f}ms'.format(abs(eclick.xdata - erelease.xdata) * 1000)
     print 'dL {:.4f}'.format(abs(eclick.ydata - erelease.ydata))
 
 
 # Main entry point
 if __name__ == '__main__':
+    # Parse command line arguments
     args = parse_arguments()
 
+    # Read source file
     baseband, fs, iq = read_data(args.file)
 
+    # Show spectrum of entire plot (-s)
     if args.spectrum:
-        # Show spectrum of entire plot
         plt.psd(iq, NFFT=4096, Fs=fs)
         plt.title('Spectrum')
         plt.xlabel('Frequency (Hz)')
@@ -338,12 +353,12 @@ if __name__ == '__main__':
     print 'Demod resolution (ms): {:.1f}'.format(analysisLen * 1000)
 
     # Split input file into SAMPLE_TIME seconds blocks
-    for i in range(sampleBlocks):
-        print 'Block {}/{}'.format(i + 1, sampleBlocks)
-        sampleStart = i * sampleSize
+    for blockNum in range(sampleBlocks):
+        print 'Block {}/{}'.format(blockNum + 1, sampleBlocks)
+        sampleStart = blockNum * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
 
-        # Scan for possible signals
+        # Scan for possible signals (-c)
         if args.scan:
             frequencies = scan(baseband, fs, samples)
         else:
@@ -356,18 +371,18 @@ if __name__ == '__main__':
 
         # Reduce noise
         smooth(signals, 4)
-        # Find pulses
-        pulses = measure_pulses(frequencies, signals, args.thresholds)
+        # Detect pulses
+        pulses = detect(frequencies, signals, args.thresholds)
 
         # Plot results
         ax = plt.subplot(111)
-        plt.title('Block {}'.format(i + 1))
+        plt.title('Block {}'.format(blockNum + 1))
         plt.xlabel('Time (s)')
         plt.ylabel('Level')
         plt.grid()
 
         # Create the x axis time points
-        startTime = i * SAMPLE_TIME
+        startTime = blockNum * SAMPLE_TIME
         x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals.shape[1])
 
         # Plot the signals
@@ -379,7 +394,7 @@ if __name__ == '__main__':
             plt.legend(prop={'size': 10})
 
         # Add a rectangle selector for measurements
-        _selector = RectangleSelector(ax, rectangle_callback,
+        _selector = RectangleSelector(ax, rectangle_frequency,
                                       drawtype='box', useblit=True)
         plt.show()
 
