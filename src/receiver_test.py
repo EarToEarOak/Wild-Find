@@ -1,8 +1,10 @@
 import argparse
 import os
+import re
 import sys
 
 import matplotlib
+from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
 import numpy
 from scipy.io import wavfile
@@ -67,13 +69,23 @@ def parse_arguments():
 
 # Read data from wav file
 def read_data(filename):
-    print 'Loading capture file: {}'.format(os.path.split(filename)[1])
+    name = os.path.split(filename)[1]
+
+    print 'Loading capture file: {}'.format(name)
     fs, data = wavfile.read(filename)
 
     if data.shape[1] != 2:
         error('Not an IQ file')
     if data.dtype != 'int16':
         error('Unexpected format')
+
+    # Get baseband from filename
+    regex = re.compile('_(\d+)kHz_IQ')
+    matches = regex.search(name)
+    if matches is not None:
+        baseband = int(matches.group(1)) * 1000
+    else:
+        baseband = 0
 
     print 'Capture sample rate (MSPS): {:.2f}'.format(fs / 1e6)
     print 'Capture length (s): {:.2f}'.format(float(len(data)) / fs)
@@ -83,7 +95,7 @@ def read_data(filename):
     # Convert right/left to complex numbers
     iq = data[:, 1] + 1j * data[:, 0]
 
-    return fs, iq
+    return baseband, fs, iq
 
 
 # Get levels of each frequency
@@ -100,7 +112,7 @@ def analyse_frequencies(freqBins, magnitudes, frequencies):
 
 
 # Scan for possible signals
-def scan(fs, samples):
+def scan(baseband, fs, samples):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
@@ -121,13 +133,15 @@ def scan(fs, samples):
     levels = decibels[freqIndices]
 
     # Plot results
-    plt.title('Scan')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Level')
-    plt.grid()
+    _fig, ax = plt.subplots()
+    ax.set_title('Scan')
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('Level')
+    ax.xaxis.set_major_formatter(EngFormatter(places=1))
+    ax.grid()
 
-    plt.plot(f, decibels)
-    plt.plot(freqs, levels, linestyle='None', marker='o', color='r')
+    ax.plot(f + baseband, decibels)
+    ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r')
 
     plt.show()
 
@@ -238,7 +252,7 @@ def rectangle_callback(eclick, erelease):
 if __name__ == '__main__':
     args = parse_arguments()
 
-    fs, iq = read_data(args.file)
+    baseband, fs, iq = read_data(args.file)
 
     if args.spectrum:
         # Show spectrum of entire plot
@@ -265,7 +279,7 @@ if __name__ == '__main__':
 
         # Scan for possible signals
         if args.scan:
-            frequencies = scan(fs, samples)
+            frequencies = scan(baseband, fs, samples)
         else:
             frequencies = FREQUENCIES
 
@@ -292,8 +306,8 @@ if __name__ == '__main__':
 
         for i in range(len(pulses)):
             if pulses[i] is not None:
-                label = 'Freq: {:.3f}kHz, Count: {} Rate: {:.2f}Hz Level: {:.3f}'
-                label = label.format(frequencies[i] / 1000., *pulses[i])
+                label = 'Freq: {:.4f}MHz, Count: {} Rate: {:.2f}Hz Level: {:.3f}'
+                label = label.format((baseband + frequencies[i]) / 1e6, *pulses[i])
                 plt.plot(x, signals[i], label=label)
 
         if not all(pulse is None for pulse in pulses):
