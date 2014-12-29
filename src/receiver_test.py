@@ -234,7 +234,7 @@ def measure_pulses(signals):
                     pulse = signal[pos:pos + width - 1]
                     level += numpy.average(pulse)
                 level /= len(pulseValid)
-                pulses.append((widths.size, freq, level))
+                pulses.append((widths.size, freq * 60., level))
             else:
                 pulses.append(None)
         else:
@@ -306,7 +306,7 @@ if __name__ == '__main__':
 
         for i in range(len(pulses)):
             if pulses[i] is not None:
-                label = 'Freq: {:.4f}MHz, Count: {} Rate: {:.2f}Hz Level: {:.3f}'
+                label = 'Freq: {:.4f}MHz, Count: {} Rate: {:.2f}PPM Level: {:.3f}'
                 label = label.format((baseband + frequencies[i]) / 1e6, *pulses[i])
                 plt.plot(x, signals[i], label=label)
 
