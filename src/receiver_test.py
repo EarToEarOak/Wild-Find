@@ -56,6 +56,8 @@ def parse_arguments():
                         action='store_true')
     parser.add_argument('-c', '--scan', help='Scan for signals',
                         action='store_true')
+    parser.add_argument('-t', '--thresholds', help='Show thresholds',
+                        action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
 
@@ -140,9 +142,10 @@ def scan(baseband, fs, samples):
     ax.xaxis.set_major_formatter(EngFormatter(places=1))
     ax.grid()
 
-    ax.plot(f + baseband, decibels)
-    ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r')
+    ax.plot(f + baseband, decibels, label='Signal')
+    ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r', label='Peaks')
 
+    plt.legend(prop={'size': 10})
     plt.show()
 
     return freqs
@@ -180,7 +183,7 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def measure_pulses(signals):
+def measure_pulses(signals, showThresholds):
     pulses = []
 
     length = signals.shape[1]
@@ -204,6 +207,21 @@ def measure_pulses(signals):
         t4 = numpy.mean(edge[edge < 0])
         threshPos = t2 + (t1 - t2) / 2
         threshNeg = t4 + (t3 - t4) / 2
+
+        if showThresholds:
+            x = numpy.linspace(0, SAMPLE_TIME, edge.size)
+            ax = plt.subplot(111)
+            plt.title('Thresholds')
+            plt.grid()
+            plt.plot(x, edge, label='Edges')
+            plt.axhline(threshPos, color='g', label='+ Threshold')
+            plt.axhline(threshNeg, color='r', label='- Threshold')
+            plt.legend(prop={'size': 10})
+            # Add a rectangle selector of measurements
+            selector = RectangleSelector(ax, rectangle_callback,
+                                         drawtype='box', useblit=True)
+            plt.show()
+
         # Mark edges
         pos = edge > threshPos
         neg = edge < threshNeg
@@ -245,7 +263,8 @@ def measure_pulses(signals):
 
 # Print width of dragged rectangle
 def rectangle_callback(eclick, erelease):
-    print 'Width {}'.format(abs(eclick.xdata - erelease.xdata))
+    print 'dT {:.1f}ms'.format(abs(eclick.xdata - erelease.xdata) * 1000)
+    print 'dL {:.4f}'.format(abs(eclick.ydata - erelease.ydata))
 
 
 # Main entry point
@@ -291,7 +310,7 @@ if __name__ == '__main__':
         # Reduce noise
         smooth(signals, 4)
         # Find pulses
-        pulses = measure_pulses(signals)
+        pulses = measure_pulses(signals, args.thresholds)
 
         # Plot results
         ax = plt.subplot(111)
