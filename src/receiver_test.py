@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 # Sampling time per location (s)
-SAMPLE_TIME = 3
+SAMPLE_TIME = 4
 
 # FFT bins used to scan
 SCAN_BINS = 4096
@@ -32,14 +32,51 @@ FREQUENCIES = [-167291,
 # Pulse threshold (%)
 PULSE_THRESHOLD = 99.5
 
-# Pulse length (s)
-PULSE_WIDTH = 25e-3
+# Pulse widths (s)
+PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/i %)
 PULSE_WIDTH_TOL = 20
 # Valid pulse rates (ppm)
 PULSE_RATES = [40, 60, 80]
 # Pulse rate tolerance (+/- ppm)
 PULSE_RATE_TOL = 10
+
+
+# Stores characteristics of found pulses
+class Pulse(object):
+    # Index of the signal where it was found
+    _signalNum = None
+    # Frequency (Hz)
+#     _freq = None
+    # Number of pulses
+    _count = None
+    # Pulse rate (PPM)
+    _rate = None
+    # Pulse level
+    _level = None
+    # Pulse width
+    _width = None
+
+    def __init__(self, signalNum, freq, count, rate, level, width):
+        self._signalNum = signalNum
+        self._freq = freq
+        self._count = count
+        self._rate = rate
+        self._level = level
+        self._width = width
+
+    def get_signal_number(self):
+        return self._signalNum
+
+    def get_description(self, baseband=0):
+        desc = ('Freq: {:.4f}MHz\n'
+                'Count: {} Rate: {:.2f}PPM\n'
+                'Level: {:.3f} Width: {:.1f}ms')
+        desc = desc.format((baseband + frequencies[signalNum]) / 1e6,
+                           self._count, self._rate,
+                           self._level, self._width)
+
+        return desc
 
 
 # Print error and exit
@@ -160,8 +197,8 @@ def demod(fs, samples, frequencies):
     signals = numpy.empty((chunks, len(frequencies)))
 
     # Split samples into chunks
-    for i in range(chunks):
-        chunkStart = i * DEMOD_BINS
+    for chunkNum in range(chunks):
+        chunkStart = chunkNum * DEMOD_BINS
         chunk = samples[chunkStart:chunkStart + DEMOD_BINS]
 
         # Analyse chunk
@@ -169,7 +206,7 @@ def demod(fs, samples, frequencies):
         mags = numpy.absolute(fft)
         freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / fs)
         levels = analyse_frequencies(freqBins, mags, frequencies)
-        signals[i] = levels
+        signals[chunkNum] = levels
 
     return signals
 
@@ -178,49 +215,36 @@ def demod(fs, samples, frequencies):
 def smooth(signals, boxLen):
     box = numpy.ones(boxLen) / float(boxLen)
 
-    for i in range(signals.shape[0]):
-        signals[i] = numpy.convolve(signals[i], box, mode='same')
+    for signalNum in range(signals.shape[0]):
+        signals[signalNum] = numpy.convolve(signals[signalNum], box, mode='same')
 
 
 # Find pulses and their frequency
-def measure_pulses(signals, showThresholds):
+def measure_pulses(frequencies, signals, showThresholds):
     pulses = []
 
     length = signals.shape[1]
-    width = PULSE_WIDTH * length / SAMPLE_TIME
+    pulseWidths = [width * length / SAMPLE_TIME for width in sorted(PULSE_WIDTHS)]
     # TODO: Improve tolerance levels
-    widthMin = width * (100 - PULSE_WIDTH_TOL) / 100.
-    widthMax = width * (100 + PULSE_WIDTH_TOL) / 100.
+    widthsMin = [width * (100 - PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
+    widthsMax = [width * (100 + PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
+    pulseWidths = zip(widthsMax, widthsMin)
 
     # Differentiate to find edges
     edges = numpy.empty((signals.shape[0], length - 1))
-    for i in range(signals.shape[0]):
-        edges[i] = numpy.diff(signals[i])
+    for signalNum in range(signals.shape[0]):
+        edges[signalNum] = numpy.diff(signals[signalNum])
 
-    for i in range(signals.shape[0]):
+    for signalNum in range(signals.shape[0]):
         # TODO: find better thresholds
-        signal = signals[i]
-        edge = edges[i]
+        signal = signals[signalNum]
+        edge = edges[signalNum]
         t1 = numpy.percentile(edge[edge > 0], PULSE_THRESHOLD)
         t2 = numpy.mean(edge[edge > 0])
         t3 = numpy.percentile(edge[edge < 0], 100 - PULSE_THRESHOLD)
         t4 = numpy.mean(edge[edge < 0])
         threshPos = t2 + (t1 - t2) / 2
         threshNeg = t4 + (t3 - t4) / 2
-
-        if showThresholds:
-            x = numpy.linspace(0, SAMPLE_TIME, edge.size)
-            ax = plt.subplot(111)
-            plt.title('Thresholds')
-            plt.grid()
-            plt.plot(x, edge, label='Edges')
-            plt.axhline(threshPos, color='g', label='+ Threshold')
-            plt.axhline(threshNeg, color='r', label='- Threshold')
-            plt.legend(prop={'size': 10})
-            # Add a rectangle selector of measurements
-            selector = RectangleSelector(ax, rectangle_callback,
-                                         drawtype='box', useblit=True)
-            plt.show()
 
         # Mark edges
         pos = edge > threshPos
@@ -231,32 +255,55 @@ def measure_pulses(signals, showThresholds):
         minSize = min(len(iPos), len(iNeg))
         iPos = iPos[:minSize]
         iNeg = iNeg[:minSize]
-        # Find pulses of PULSE_WIDTH
-        widths = iNeg - iPos
-        widths = widths[(widths > widthMin) & (widths < widthMax)]
-        # Must have at least 2 pulses
-        if widths.size > 1:
-            pulseValid = iPos[:widths.size]
-            # Calculate frequency
-            pulseAvg = numpy.average(numpy.diff(pulseValid))
-            freq = length / (pulseAvg * float(SAMPLE_TIME))
-            rate = freq * 60
-            # Limit to PULSE_RATES
-            closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
-            if (abs(closest - rate)) < PULSE_RATE_TOL:
-                # Get pulse levels
-                level = 0
-                for j in range(len(pulseValid)):
-                    pos = pulseValid[j]
-                    width = widths[j]
-                    pulse = signal[pos:pos + width - 1]
-                    level += numpy.average(pulse)
-                level /= len(pulseValid)
-                pulses.append((widths.size, freq * 60., level))
-            else:
-                pulses.append(None)
-        else:
-            pulses.append(None)
+        # Find pulses of pulseWidths
+        widthsFound = iNeg - iPos
+        for wMax, wMin in pulseWidths:
+            valid = False
+            widthsValid = widthsFound[(widthsFound > wMin) & (widthsFound < wMax)]
+            # Must have at least 2 pulses
+            if widthsValid.size > 1:
+                pulseValid = iPos[:widthsValid.size]
+                # Calculate frequency
+                pulseAvg = numpy.average(numpy.diff(pulseValid))
+                freq = length / (pulseAvg * float(SAMPLE_TIME))
+                rate = freq * 60
+                # Limit to PULSE_RATES
+                closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
+                if (abs(closest - rate)) < PULSE_RATE_TOL:
+                    # Get pulse levels
+                    level = 0
+                    for j in range(len(pulseValid)):
+                        pos = pulseValid[j]
+                        width = widthsValid[j]
+                        pulseSignal = signal[pos:pos + width - 1]
+                        level += numpy.average(pulseSignal)
+                    level /= len(pulseValid)
+                    pulse = Pulse(signalNum,
+                                  frequencies[signalNum],
+                                  widthsValid.size,
+                                  freq * 60.,
+                                  level,
+                                  width * SAMPLE_TIME * 1000. / length)
+                    pulses.append(pulse)
+                    valid = True
+                    break
+
+        if showThresholds:
+            x = numpy.linspace(0, SAMPLE_TIME, edge.size)
+            ax = plt.subplot(111)
+            title = 'Thresholds'
+            if valid:
+                title += ' (Pulse Found)'
+            plt.title(title)
+            plt.grid()
+            plt.plot(x, edge, label='Edges')
+            plt.axhline(threshPos, color='g', label='+ Threshold')
+            plt.axhline(threshNeg, color='r', label='- Threshold')
+            plt.legend(prop={'size': 10})
+            # Add a rectangle selector for measurements
+            _selector = RectangleSelector(ax, rectangle_callback,
+                                          drawtype='box', useblit=True)
+            plt.show()
 
     return pulses
 
@@ -310,7 +357,7 @@ if __name__ == '__main__':
         # Reduce noise
         smooth(signals, 4)
         # Find pulses
-        pulses = measure_pulses(signals, args.thresholds)
+        pulses = measure_pulses(frequencies, signals, args.thresholds)
 
         # Plot results
         ax = plt.subplot(111)
@@ -323,16 +370,17 @@ if __name__ == '__main__':
         startTime = i * SAMPLE_TIME
         x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals.shape[1])
 
-        for i in range(len(pulses)):
-            if pulses[i] is not None:
-                label = 'Freq: {:.4f}MHz, Count: {} Rate: {:.2f}PPM Level: {:.3f}'
-                label = label.format((baseband + frequencies[i]) / 1e6, *pulses[i])
-                plt.plot(x, signals[i], label=label)
+        # Plot the signals
+        for pulse in pulses:
+            signalNum = pulse.get_signal_number()
+            plt.plot(x, signals[signalNum], label=pulse.get_description(baseband))
 
-        if not all(pulse is None for pulse in pulses):
+        if len(pulses):
             plt.legend(prop={'size': 10})
 
-        # Add a rectangle selector of measurements
-        selector = RectangleSelector(ax, rectangle_callback,
-                                     drawtype='box', useblit=True)
+        # Add a rectangle selector for measurements
+        _selector = RectangleSelector(ax, rectangle_callback,
+                                      drawtype='box', useblit=True)
         plt.show()
+
+        print 'Done'
