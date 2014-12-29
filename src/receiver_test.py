@@ -261,19 +261,19 @@ def detect(frequencies, signals, showThresholds):
         pos = edge > threshPos
         neg = edge < threshNeg
         # Find positive going edge indices
-        iPos = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
-        iNeg = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
-        minSize = min(len(iPos), len(iNeg))
-        iPos = iPos[:minSize]
-        iNeg = iNeg[:minSize]
+        posIndices = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
+        negIndices = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
+        minSize = min(len(posIndices), len(negIndices))
+        posIndices = posIndices[:minSize]
+        negIndices = negIndices[:minSize]
         # Find pulses of pulseWidths
-        widthsFound = iNeg - iPos
+        widthsFound = negIndices - posIndices
         for wMax, wMin in pulseWidths:
             valid = False
             widthsValid = widthsFound[(widthsFound > wMin) & (widthsFound < wMax)]
             # Must have at least 2 pulses
             if widthsValid.size > 1:
-                pulseValid = iPos[:widthsValid.size]
+                pulseValid = posIndices[:widthsValid.size]
                 # Calculate frequency
                 pulseAvg = numpy.average(numpy.diff(pulseValid))
                 freq = length / (pulseAvg * float(SAMPLE_TIME))
@@ -312,6 +312,11 @@ def detect(frequencies, signals, showThresholds):
             plt.plot(x, edge, label='Edges')
             plt.axhline(threshPos, color='g', label='+ Threshold')
             plt.axhline(threshNeg, color='r', label='- Threshold')
+            xScale = float(SAMPLE_TIME) / edge.size
+            for posIndex in posIndices:
+                plt.axvline((posIndex + 1) * xScale, color='g')
+            for negIndex in negIndices:
+                plt.axvline((negIndex + 1) * xScale, color='r')
             plt.legend(prop={'size': 10})
             # Add a rectangle selector for measurements
             _selector = RectangleSelector(ax, rectangle_frequency,
