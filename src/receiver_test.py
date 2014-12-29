@@ -283,9 +283,9 @@ def detect(frequencies, signals, showThresholds):
                 if (abs(closest - rate)) < PULSE_RATE_TOL:
                     # Get pulse levels
                     level = 0
-                    for pos in range(len(pulseValid)):
-                        pos = pulseValid[pos]
-                        width = widthsValid[pos]
+                    for posValid in range(len(pulseValid)):
+                        pos = pulseValid[posValid]
+                        width = widthsValid[posValid]
                         pulseSignal = signal[pos:pos + width - 1]
                         level += numpy.average(pulseSignal)
                     level /= len(pulseValid)
@@ -398,4 +398,4 @@ if __name__ == '__main__':
                                       drawtype='box', useblit=True)
         plt.show()
 
-        print 'Done'
+    print 'Done'
