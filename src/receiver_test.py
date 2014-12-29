@@ -4,6 +4,7 @@ import re
 import sys
 
 import matplotlib
+matplotlib.use('TkAgg')
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
