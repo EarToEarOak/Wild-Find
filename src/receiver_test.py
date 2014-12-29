@@ -4,6 +4,7 @@ import re
 import sys
 
 import matplotlib
+from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
 import numpy
@@ -11,10 +12,10 @@ from scipy.io import wavfile
 
 import matplotlib.pyplot as plt
 
+
 #
 # Sampling
 #
-
 # Sampling time per location (s)
 SAMPLE_TIME = 4
 
@@ -192,8 +193,10 @@ def scan(baseband, fs, samples):
 
     ax.plot(f + baseband, decibels, label='Signal')
     ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r', label='Peaks')
+    plt.legend(prop={'size': 10}, framealpha=0.8)
 
-    plt.legend(prop={'size': 10})
+    _selector = RectangleSelector(ax, selection_freq,
+                                  drawtype='box', useblit=True)
     plt.show()
 
     return freqs
@@ -304,7 +307,7 @@ def detect(frequencies, signals, showThresholds):
         if showThresholds:
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
-            title = 'Thresholds'
+            title = 'Edge Thresholds'
             if valid:
                 title += ' (Pulse Found)'
             plt.title(title)
@@ -317,19 +320,83 @@ def detect(frequencies, signals, showThresholds):
                 plt.axvline((posIndex + 1) * xScale, color='g')
             for negIndex in negIndices:
                 plt.axvline((negIndex + 1) * xScale, color='r')
-            plt.legend(prop={'size': 10})
+            plt.legend(prop={'size': 10}, framealpha=0.5)
             # Add a rectangle selector for measurements
-            _selector = RectangleSelector(ax, rectangle_frequency,
+            _selector = RectangleSelector(ax, selection_time,
                                           drawtype='box', useblit=True)
             plt.show()
 
     return pulses
 
 
-# Print width of dragged rectangle
-def rectangle_frequency(eclick, erelease):
-    print 'dT {:.1f}ms'.format(abs(eclick.xdata - erelease.xdata) * 1000)
-    print 'dL {:.4f}'.format(abs(eclick.ydata - erelease.ydata))
+# Display dragged rectangle
+def selection_time(eventClick, eventRelease):
+    xStart = eventClick.xdata
+    xEnd = eventRelease.xdata
+    yStart = eventClick.ydata
+    yEnd = eventRelease.ydata
+    width = xEnd - xStart
+    height = yEnd - yStart
+
+    axes = eventClick.inaxes
+
+    draw_selection(axes, xStart, yStart, width, height)
+
+    dx = 'dT: {:.1f}ms'.format(abs(width) * 1000.)
+    dy = 'dL: {:.4f}'.format(abs(height))
+    text = 'Selection:\n\n' + dx + '\n' + dy
+    draw_text(axes, text)
+
+
+def selection_freq(eventClick, eventRelease):
+    xStart = eventClick.xdata
+    xEnd = eventRelease.xdata
+    yStart = eventClick.ydata
+    yEnd = eventRelease.ydata
+    width = xEnd - xStart
+    height = yEnd - yStart
+
+    axes = eventClick.inaxes
+
+    draw_selection(axes, xStart, yStart, width, height)
+
+    dx = 'df: {:.1f}kHz'.format(abs(width) / 1000.)
+    dy = 'dL: {:.4f}dB'.format(abs(height))
+    text = 'Selection:\n\n' + dx + '\n' + dy
+    draw_text(axes, text)
+
+
+# Draw selection rectangle
+def draw_selection(axes, x, y, width, height):
+    remove_child(axes, 'rectangeSelection')
+
+    rectangle = Rectangle((x, y), width, height,
+                          alpha=0.5,
+                          facecolor='grey',
+                          edgecolor='black',
+                          gid='rectangeSelection')
+    axes.add_patch(rectangle)
+
+
+# Draw text in upper right
+def draw_text(axes, text):
+    remove_child(axes, 'boxText')
+
+    bbox = dict(alpha=0.8, facecolor='w')
+    plt.text(0.02, 0.98, text, size=10,
+             transform=axes.transAxes,
+             verticalalignment='top',
+             bbox=bbox,
+             gid='boxText')
+    plt.draw()
+
+
+# Remove child from plot
+def remove_child(axes, gid):
+    for child in axes.get_children():
+        if child.get_gid() is not None:
+            if child.get_gid() is gid:
+                child.remove()
 
 
 # Main entry point
@@ -342,11 +409,14 @@ if __name__ == '__main__':
 
     # Show spectrum of entire plot (-s)
     if args.spectrum:
+        ax = plt.subplot(111)
         plt.psd(iq, NFFT=4096, Fs=fs)
         plt.title('Spectrum')
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Level')
         plt.grid()
+        _selector = RectangleSelector(ax, selection_freq,
+                                      drawtype='box', useblit=True)
         plt.show()
 
     sampleSize = fs * SAMPLE_TIME
@@ -396,10 +466,10 @@ if __name__ == '__main__':
             plt.plot(x, signals[signalNum], label=pulse.get_description(baseband))
 
         if len(pulses):
-            plt.legend(prop={'size': 10})
+            plt.legend(prop={'size': 10}, framealpha=0.5)
 
         # Add a rectangle selector for measurements
-        _selector = RectangleSelector(ax, rectangle_frequency,
+        _selector = RectangleSelector(ax, selection_time,
                                       drawtype='box', useblit=True)
         plt.show()
 
