@@ -1,10 +1,12 @@
+#! /usr/bin/env python
+
 import argparse
 import os
 import re
 import sys
+import time
 
 import matplotlib
-matplotlib.use('TkAgg')
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
@@ -12,6 +14,9 @@ import numpy
 from scipy.io import wavfile
 
 import matplotlib.pyplot as plt
+
+
+matplotlib.use('TkAgg')
 
 
 #
@@ -84,6 +89,35 @@ class Pulse(object):
         return desc
 
 
+# Basic timing
+class Timing(object):
+    _name = None
+    _timings = {}
+
+    def start(self, name):
+        self._name = name
+        if name not in self._timings:
+            print name
+            self._timings[name] = [0.] * 3
+
+        self._timings[name][0] = time.clock()
+
+    def stop(self):
+        elapsed = time.clock() - self._timings[self._name][0]
+        self._timings[self._name][1] += elapsed
+        self._timings[self._name][2] += 1
+
+    def print_timings(self):
+        formatTimings = '\t{:<8} {:>4d} {:>8.3f}ms'
+        print 'Timings:'
+        print '\t{:<8} {:>4} {:>10}'.format('Routine', 'Runs', 'Average')
+        for name, timing in self._timings.iteritems():
+            if timing[2] != 0:
+                print formatTimings.format(name,
+                                           int(timing[2]),
+                                           timing[1] * 1000. / timing[2])
+
+
 # Print error and exit
 def error(error):
     sys.exit(error)
@@ -115,7 +149,8 @@ def parse_arguments():
 def read_data(filename):
     name = os.path.split(filename)[1]
 
-    print 'Loading capture file: {}'.format(name)
+    print 'Loading:'
+    print '\tLoading capture file: {}'.format(name)
     fs, data = wavfile.read(filename)
 
     if data.shape[1] != 2:
@@ -131,8 +166,8 @@ def read_data(filename):
     else:
         baseband = 0
 
-    print 'Capture sample rate (MSPS): {:.2f}'.format(fs / 1e6)
-    print 'Capture length (s): {:.2f}'.format(float(len(data)) / fs)
+    print '\tCapture sample rate (MSPS): {:.2f}'.format(fs / 1e6)
+    print '\tCapture length (s): {:.2f}'.format(float(len(data)) / fs)
 
     # Scale data to +/-1
     data = data / 256.
@@ -162,6 +197,8 @@ def scan(baseband, fs, samples, showScan):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
+    timing.start('Scan')
+
     # TODO: implement PSD in Numpy rather than add another import
     l, f = matplotlib.mlab.psd(samples, SCAN_BINS, Fs=fs)
     decibels = 10 * numpy.log10(l)
@@ -177,6 +214,8 @@ def scan(baseband, fs, samples, showScan):
 
     freqs = f[freqIndices]
     levels = decibels[freqIndices]
+
+    timing.stop()
 
     # Plot results
     if showScan:
@@ -208,6 +247,8 @@ def demod(fs, samples, frequencies):
 
     # Split samples into chunks
     for chunkNum in range(chunks):
+        timing.start('Demod')
+
         chunkStart = chunkNum * DEMOD_BINS
         chunk = samples[chunkStart:chunkStart + DEMOD_BINS]
 
@@ -217,6 +258,8 @@ def demod(fs, samples, frequencies):
         freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / fs)
         levels = analyse_frequencies(freqBins, mags, frequencies)
         signals[chunkNum] = levels
+
+        timing.stop()
 
     return signals
 
@@ -246,6 +289,8 @@ def detect(baseband, frequencies, signals, showEdges):
         edges[signalNum] = numpy.diff(signals[signalNum])
 
     for signalNum in range(signals.shape[0]):
+        timing.start('Detect')
+
         # Calculate thresholds based on percentiles
         signal = signals[signalNum]
         edge = edges[signalNum]
@@ -298,8 +343,9 @@ def detect(baseband, frequencies, signals, showEdges):
                     pulses.append(pulse)
                     valid = True
                     break
+        timing.stop()
 
-        # Display differentiated signal with thresholds (-t)
+        # Display differentiated signal with thresholds (-e)
         if showEdges:
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
@@ -398,6 +444,8 @@ def remove_child(axes, gid):
 
 # Main entry point
 if __name__ == '__main__':
+    timing = Timing()
+
     # Parse command line arguments
     args = parse_arguments()
 
@@ -422,17 +470,18 @@ if __name__ == '__main__':
         error('Capture too short')
 
     analysisLen = DEMOD_BINS / float(fs)
-    print 'Demod resolution (ms): {:.1f}'.format(analysisLen * 1000)
+    print '\tDemod resolution (ms): {:.1f}'.format(analysisLen * 1000)
 
+    print 'Analysis:'
     # Split input file into SAMPLE_TIME seconds blocks
     for blockNum in range(sampleBlocks):
-        print 'Block {}/{}'.format(blockNum + 1, sampleBlocks)
+        print '\tBlock {}/{}'.format(blockNum + 1, sampleBlocks)
         sampleStart = blockNum * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
 
         frequencies = scan(baseband, fs, samples, args.scan)
 
-        print 'Signals to demodulate: {}'.format(len(frequencies))
+        print '\t\tSignals to demodulate: {}'.format(len(frequencies))
 
         # Demodulate
         signals = demod(fs, samples, frequencies).T
@@ -466,4 +515,7 @@ if __name__ == '__main__':
                                       drawtype='box', useblit=True)
         plt.show()
 
+    timing.print_timings()
+
     print 'Done'
+
