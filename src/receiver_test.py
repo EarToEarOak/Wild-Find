@@ -17,7 +17,6 @@ from scipy.io import wavfile
 import matplotlib.pyplot as plt
 
 
-
 #
 # Sampling
 #
@@ -96,7 +95,6 @@ class Timing(object):
     def start(self, name):
         self._name = name
         if name not in self._timings:
-            print name
             self._timings[name] = [0.] * 3
 
         self._timings[name][0] = time.clock()
@@ -517,4 +515,3 @@ if __name__ == '__main__':
     timing.print_timings()
 
     print 'Done'
-
