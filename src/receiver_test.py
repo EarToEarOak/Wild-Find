@@ -29,12 +29,6 @@ SCAN_BINS = 4096
 # Peak level change (dB)
 SCAN_CHANGE = 2.
 
-# Frequencies (offsets from centre frequency) (Hz)
-# for use with SDRSharp_20141116_225753Z_152499kHz_IQ.wav
-# Not used if -c specified
-FREQUENCIES = [-167291,
-               - 187153,
-               - 209678]
 #
 # Detection
 #
@@ -100,11 +94,11 @@ def parse_arguments():
     parser = argparse.ArgumentParser(prog='demod_test.py',
                                      description='Demodulation test')
 
-    parser.add_argument('-s', '--spectrum', help='Show capture spectrum',
+    parser.add_argument('-s', '--spectrum', help='Display capture spectrum',
                         action='store_true')
-    parser.add_argument('-c', '--scan', help='Scan for signals',
+    parser.add_argument('-c', '--scan', help='Display signal scan',
                         action='store_true')
-    parser.add_argument('-t', '--thresholds', help='Show thresholds',
+    parser.add_argument('-e', '--edges', help='Display pulse edges',
                         action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
@@ -164,7 +158,7 @@ def analyse_frequencies(freqBins, magnitudes, frequencies):
 # Scan for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
-def scan(baseband, fs, samples):
+def scan(baseband, fs, samples, showScan):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
@@ -185,20 +179,21 @@ def scan(baseband, fs, samples):
     levels = decibels[freqIndices]
 
     # Plot results
-    _fig, ax = plt.subplots()
-    ax.set_title('Scan')
-    ax.set_xlabel('Frequency (Hz)')
-    ax.set_ylabel('Level')
-    ax.xaxis.set_major_formatter(EngFormatter(places=1))
-    ax.grid()
+    if showScan:
+        _fig, ax = plt.subplots()
+        ax.set_title('Scan')
+        ax.set_xlabel('Frequency (Hz)')
+        ax.set_ylabel('Level')
+        ax.xaxis.set_major_formatter(EngFormatter(places=1))
+        ax.grid()
 
-    ax.plot(f + baseband, decibels, label='Signal')
-    ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r', label='Peaks')
-    plt.legend(prop={'size': 10}, framealpha=0.8)
+        ax.plot(f + baseband, decibels, label='Signal')
+        ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r', label='Peaks')
+        plt.legend(prop={'size': 10}, framealpha=0.8)
 
-    _selector = RectangleSelector(ax, selection_freq,
-                                  drawtype='box', useblit=True)
-    plt.show()
+        _selector = RectangleSelector(ax, selection_freq,
+                                      drawtype='box', useblit=True)
+        plt.show()
 
     return freqs
 
@@ -235,7 +230,7 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def detect(baseband, frequencies, signals, showThresholds):
+def detect(baseband, frequencies, signals, showEdges):
     pulses = []
 
     length = signals.shape[1]
@@ -305,10 +300,10 @@ def detect(baseband, frequencies, signals, showThresholds):
                     break
 
         # Display differentiated signal with thresholds (-t)
-        if showThresholds:
+        if showEdges:
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
-            title = 'Edge Thresholds'
+            title = 'Signal Edges'
             if valid:
                 title += ' (Pulse Found)'
             plt.title(title)
@@ -435,11 +430,7 @@ if __name__ == '__main__':
         sampleStart = blockNum * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
 
-        # Scan for possible signals (-c)
-        if args.scan:
-            frequencies = scan(baseband, fs, samples)
-        else:
-            frequencies = FREQUENCIES
+        frequencies = scan(baseband, fs, samples, args.scan)
 
         print 'Signals to demodulate: {}'.format(len(frequencies))
 
@@ -449,7 +440,7 @@ if __name__ == '__main__':
         # Reduce noise
         smooth(signals, 4)
         # Detect pulses
-        pulses = detect(baseband, frequencies, signals, args.thresholds)
+        pulses = detect(baseband, frequencies, signals, args.edges)
 
         # Plot results
         ax = plt.subplot(111)
