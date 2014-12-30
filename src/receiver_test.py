@@ -79,11 +79,11 @@ class Pulse(object):
     def get_signal_number(self):
         return self._signalNum
 
-    def get_description(self, baseband=0):
-        desc = ('Freq: {:.4f}MHz\n'
+    def get_description(self):
+        desc = ('Freq: {:.3f}MHz\n'
                 'Count: {} Rate: {:.2f}PPM\n'
                 'Level: {:.3f} Width: {:.1f}ms')
-        desc = desc.format((baseband + frequencies[signalNum]) / 1e6,
+        desc = desc.format(self._freq / 1e6,
                            self._count, self._rate,
                            self._level, self._width)
 
@@ -235,7 +235,7 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def detect(frequencies, signals, showThresholds):
+def detect(baseband, frequencies, signals, showThresholds):
     pulses = []
 
     length = signals.shape[1]
@@ -295,7 +295,7 @@ def detect(frequencies, signals, showThresholds):
                     level /= len(pulseValid)
                     # Store valid pulse
                     pulse = Pulse(signalNum,
-                                  frequencies[signalNum],
+                                  frequencies[signalNum] + baseband,
                                   widthsValid.size,
                                   freq * 60.,
                                   level,
@@ -313,9 +313,10 @@ def detect(frequencies, signals, showThresholds):
                 title += ' (Pulse Found)'
             plt.title(title)
             plt.grid()
-            plt.plot(x, edge, label='Edges')
-            plt.axhline(threshPos, color='g', label='+ Threshold')
-            plt.axhline(threshNeg, color='r', label='- Threshold')
+            label = '{:.3f}MHz'.format((baseband + frequencies[signalNum]) / 1e6)
+            plt.plot(x, edge, label=label)
+            plt.axhline(threshPos, color='g', label='+ve')
+            plt.axhline(threshNeg, color='r', label='-ve')
             xScale = float(SAMPLE_TIME) / edge.size
             for posIndex in posIndices:
                 plt.axvline((posIndex + 1) * xScale, color='g')
@@ -448,7 +449,7 @@ if __name__ == '__main__':
         # Reduce noise
         smooth(signals, 4)
         # Detect pulses
-        pulses = detect(frequencies, signals, args.thresholds)
+        pulses = detect(baseband, frequencies, signals, args.thresholds)
 
         # Plot results
         ax = plt.subplot(111)
@@ -464,7 +465,7 @@ if __name__ == '__main__':
         # Plot the signals
         for pulse in pulses:
             signalNum = pulse.get_signal_number()
-            plt.plot(x, signals[signalNum], label=pulse.get_description(baseband))
+            plt.plot(x, signals[signalNum], label=pulse.get_description())
 
         if len(pulses):
             plt.legend(prop={'size': 10}, framealpha=0.5)
