@@ -65,16 +65,22 @@ class Pulse(object):
     # Pulse width
     _width = None
 
-    def __init__(self, signalNum, freq, count, rate, level, width):
-        self._signalNum = signalNum
-        self._freq = freq
+    def __init__(self, count, rate, level, width):
+        self._signalNum = None
+        self._freq = None
         self._count = count
         self._rate = rate
         self._level = level
         self._width = width
 
+    def set_signal_number(self, signalNum):
+        self._signalNum = signalNum
+
     def get_signal_number(self):
         return self._signalNum
+
+    def set_frequency(self, freq):
+        self._freq = freq
 
     def get_description(self):
         desc = ('Freq: {:.3f}MHz\n'
@@ -187,6 +193,64 @@ def analyse_frequencies(freqBins, magnitudes, frequencies):
     return levels
 
 
+# Calculate thresholds based on percentiles
+def find_edges(edges):
+    t1 = numpy.percentile(edges[edges > 0], PULSE_THRESHOLD)
+    t2 = numpy.mean(edges[edges > 0])
+    t3 = numpy.percentile(edges[edges < 0], 100 - PULSE_THRESHOLD)
+    t4 = numpy.mean(edges[edges < 0])
+    threshPos = t2 + (t1 - t2) / 2
+    threshNeg = t4 + (t3 - t4) / 2
+
+    # Mark edges
+    pos = edges > threshPos
+    neg = edges < threshNeg
+    # Find positive going edge indices
+    posIndices = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
+    negIndices = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
+    minSize = min(len(posIndices), len(negIndices))
+    posIndices = posIndices[:minSize]
+    negIndices = negIndices[:minSize]
+
+    return threshPos, threshNeg, posIndices, negIndices
+
+
+# Find pulses
+def find_pulses(signal, negIndices, posIndices, pulseWidths):
+    pulse = None
+    length = signals.shape[1]
+    # Find pulses of pulseWidths
+    widthsFound = negIndices - posIndices
+    for wMax, wMin in pulseWidths:
+        widthsValid = widthsFound[(widthsFound > wMin) & (widthsFound < wMax)]
+        # Must have at least 2 pulses
+        if widthsValid.size > 1:
+            pulseValid = posIndices[:widthsValid.size]
+            # Calculate frequency
+            pulseAvg = numpy.average(numpy.diff(pulseValid))
+            freq = length / (pulseAvg * float(SAMPLE_TIME))
+            rate = freq * 60
+            # Limit to PULSE_RATES
+            closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
+            if (abs(closest - rate)) < PULSE_RATE_TOL:
+                # Get pulse levels
+                level = 0
+                for posValid in range(len(pulseValid)):
+                    pos = pulseValid[posValid]
+                    width = widthsValid[posValid]
+                    pulseSignal = signal[pos:pos + width - 1]
+                    level += numpy.average(pulseSignal)
+                level /= len(pulseValid)
+                # Store valid pulse
+                pulse = Pulse(widthsValid.size,
+                              freq * 60.,
+                              level,
+                              width * SAMPLE_TIME * 1000. / length)
+                break
+
+    return pulse
+
+
 # Scan for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
@@ -273,73 +337,27 @@ def smooth(signals, boxLen):
 def detect(baseband, frequencies, signals, showEdges):
     pulses = []
 
-    length = signals.shape[1]
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
-    pulseWidths = [width * length / SAMPLE_TIME for width in sorted(PULSE_WIDTHS)]
+    pulseWidths = [width * signals.shape[1] / SAMPLE_TIME for width in sorted(PULSE_WIDTHS)]
     widthsMin = [width * (100 - PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     widthsMax = [width * (100 + PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     pulseWidths = zip(widthsMax, widthsMin)
 
-    # Differentiate to find edges
-    edges = numpy.empty((signals.shape[0], length - 1))
-    for signalNum in range(signals.shape[0]):
-        edges[signalNum] = numpy.diff(signals[signalNum])
-
-    for signalNum in range(signals.shape[0]):
+    signalNum = 0
+    for signal in signals:
         timing.start('Detect')
 
-        # Calculate thresholds based on percentiles
-        signal = signals[signalNum]
-        edge = edges[signalNum]
-        t1 = numpy.percentile(edge[edge > 0], PULSE_THRESHOLD)
-        t2 = numpy.mean(edge[edge > 0])
-        t3 = numpy.percentile(edge[edge < 0], 100 - PULSE_THRESHOLD)
-        t4 = numpy.mean(edge[edge < 0])
-        threshPos = t2 + (t1 - t2) / 2
-        threshNeg = t4 + (t3 - t4) / 2
+        edge = numpy.diff(signal)
+        threshPos, threshNeg, posIndices, negIndices = find_edges(edge)
 
-        # Mark edges
-        pos = edge > threshPos
-        neg = edge < threshNeg
-        # Find positive going edge indices
-        posIndices = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
-        negIndices = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
-        minSize = min(len(posIndices), len(negIndices))
-        posIndices = posIndices[:minSize]
-        negIndices = negIndices[:minSize]
-        # Find pulses of pulseWidths
-        widthsFound = negIndices - posIndices
-        for wMax, wMin in pulseWidths:
-            valid = False
-            widthsValid = widthsFound[(widthsFound > wMin) & (widthsFound < wMax)]
-            # Must have at least 2 pulses
-            if widthsValid.size > 1:
-                pulseValid = posIndices[:widthsValid.size]
-                # Calculate frequency
-                pulseAvg = numpy.average(numpy.diff(pulseValid))
-                freq = length / (pulseAvg * float(SAMPLE_TIME))
-                rate = freq * 60
-                # Limit to PULSE_RATES
-                closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
-                if (abs(closest - rate)) < PULSE_RATE_TOL:
-                    # Get pulse levels
-                    level = 0
-                    for posValid in range(len(pulseValid)):
-                        pos = pulseValid[posValid]
-                        width = widthsValid[posValid]
-                        pulseSignal = signal[pos:pos + width - 1]
-                        level += numpy.average(pulseSignal)
-                    level /= len(pulseValid)
-                    # Store valid pulse
-                    pulse = Pulse(signalNum,
-                                  frequencies[signalNum] + baseband,
-                                  widthsValid.size,
-                                  freq * 60.,
-                                  level,
-                                  width * SAMPLE_TIME * 1000. / length)
-                    pulses.append(pulse)
-                    valid = True
-                    break
+        pulse = find_pulses(signal,
+                            negIndices, posIndices,
+                            pulseWidths)
+        if pulse is not None:
+            pulse.set_signal_number(signalNum)
+            pulse.set_frequency(frequencies[signalNum] + baseband)
+            pulses.append(pulse)
+
         timing.stop()
 
         # Display differentiated signal with thresholds (-e)
@@ -347,8 +365,8 @@ def detect(baseband, frequencies, signals, showEdges):
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
             title = 'Signal Edges'
-            if valid:
-                title += ' (Pulse Found)'
+            if pulse is not None:
+                title += ' (Pulses Found)'
             plt.title(title)
             plt.grid()
             label = '{:.3f}MHz'.format((baseband + frequencies[signalNum]) / 1e6)
@@ -365,6 +383,8 @@ def detect(baseband, frequencies, signals, showEdges):
             _selector = RectangleSelector(ax, selection_time,
                                           drawtype='box', useblit=True)
             plt.show()
+
+        signalNum += 1
 
     return pulses
 
