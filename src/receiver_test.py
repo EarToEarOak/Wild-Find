@@ -181,7 +181,7 @@ def read_data(filename):
 
 
 # Get levels of each frequency
-def analyse_frequencies(freqBins, magnitudes, frequencies):
+def filter_frequencies(freqBins, magnitudes, frequencies):
     levels = []
 
     for freq in frequencies:
@@ -317,7 +317,7 @@ def demod(fs, samples, frequencies):
         fft = numpy.fft.fft(chunk) / DEMOD_BINS
         mags = numpy.absolute(fft)
         freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / fs)
-        levels = analyse_frequencies(freqBins, mags, frequencies)
+        levels = filter_frequencies(freqBins, mags, frequencies)
         signals[chunkNum] = levels
 
         timing.stop()
