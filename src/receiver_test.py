@@ -338,7 +338,8 @@ def detect(baseband, frequencies, signals, showEdges):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
-    pulseWidths = [width * signals.shape[1] / SAMPLE_TIME for width in sorted(PULSE_WIDTHS)]
+    sampleRate = float(SAMPLE_TIME) / signals.shape[1]
+    pulseWidths = [width / sampleRate for width in sorted(PULSE_WIDTHS)]
     widthsMin = [width * (100 - PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     widthsMax = [width * (100 + PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
     pulseWidths = zip(widthsMax, widthsMin)
@@ -350,9 +351,11 @@ def detect(baseband, frequencies, signals, showEdges):
         edge = numpy.diff(signal)
         threshPos, threshNeg, posIndices, negIndices = find_edges(edge)
 
+        # Find CW pulses
         pulse = find_pulses(signal,
                             negIndices, posIndices,
                             pulseWidths)
+
         if pulse is not None:
             pulse.set_signal_number(signalNum)
             pulse.set_frequency(frequencies[signalNum] + baseband)
