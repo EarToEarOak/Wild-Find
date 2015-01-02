@@ -137,6 +137,8 @@ def parse_arguments():
                         action='store_true')
     parser.add_argument('-e', '--edges', help='Display pulse edges',
                         action='store_true')
+    parser.add_argument('-b', '--block', help='Block to process',
+                        type=int, default=0)
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
 
@@ -178,6 +180,13 @@ def read_data(filename):
     iq = data[:, 1] + 1j * data[:, 0]
 
     return baseband, fs, iq
+
+
+# Return ranges based on tolerance
+def calc_tolerances(values, tolerance):
+    valuesMin = [value * (100 - tolerance) / 100. for value in values]
+    valuesMax = [value * (100 + tolerance) / 100. for value in values]
+    return zip(valuesMax, valuesMin)
 
 
 # Get levels of each frequency
@@ -288,7 +297,9 @@ def scan(baseband, fs, samples, showScan):
         ax.grid()
 
         ax.plot(f + baseband, decibels, label='Signal')
-        ax.plot(freqs + baseband, levels, linestyle='None', marker='o', color='r', label='Peaks')
+        ax.plot(freqs + baseband, levels,
+                linestyle='None', marker='o',
+                color='r', label='Peaks')
         plt.legend(prop={'size': 10}, framealpha=0.8)
 
         _selector = RectangleSelector(ax, selection_freq,
@@ -299,7 +310,7 @@ def scan(baseband, fs, samples, showScan):
 
 
 # Analyse blocks from capture
-def demod(fs, samples, frequencies):
+def demod_cw(fs, samples, frequencies):
     chunks = samples.size / DEMOD_BINS
     if chunks == 0:
         error('Sample time too long')
@@ -338,11 +349,9 @@ def detect(baseband, frequencies, signals, showEdges):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
-    sampleRate = float(SAMPLE_TIME) / signals.shape[1]
-    pulseWidths = [width / sampleRate for width in sorted(PULSE_WIDTHS)]
-    widthsMin = [width * (100 - PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
-    widthsMax = [width * (100 + PULSE_WIDTH_TOL) / 100. for width in pulseWidths]
-    pulseWidths = zip(widthsMax, widthsMin)
+    sampleRate = signals.shape[1] / float(SAMPLE_TIME)
+    pulseWidths = [width * sampleRate for width in sorted(PULSE_WIDTHS)]
+    pulseWidths = calc_tolerances(pulseWidths, PULSE_WIDTH_TOL)
 
     signalNum = 0
     for signal in signals:
@@ -495,6 +504,9 @@ if __name__ == '__main__':
     print 'Analysis:'
     # Split input file into SAMPLE_TIME seconds blocks
     for blockNum in range(sampleBlocks):
+        if args.block > 0 and args.block != blockNum + 1:
+            continue
+
         print '\tBlock {}/{}'.format(blockNum + 1, sampleBlocks)
         sampleStart = blockNum * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
@@ -503,8 +515,8 @@ if __name__ == '__main__':
 
         print '\t\tSignals to demodulate: {}'.format(len(frequencies))
 
-        # Demodulate
-        signals = demod(fs, samples, frequencies).T
+        # Demodulate CW
+        signals = demod_cw(fs, samples, frequencies).T
 
         # Reduce noise
         smooth(signals, 4)
