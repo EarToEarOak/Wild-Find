@@ -48,6 +48,8 @@ PULSE_WIDTH_TOL = 20
 PULSE_RATES = [40, 60, 80]
 # Pulse rate tolerance (+/- Pulses per minute)
 PULSE_RATE_TOL = 10
+# Valid AM tones (Hz)
+TONES = [260]
 # Tolerance of AM tones
 TONE_TOL = 10
 # Reduce pulse width size to compensate for AM detection (%)
@@ -255,6 +257,7 @@ def find_edges(edges):
 
 
 # Find pulses
+# TODO: test if repeating
 def find_pulses(signal, negIndices, posIndices, pulseWidths):
     pulse = None
     length = signals.shape[1]
@@ -291,27 +294,34 @@ def find_pulses(signal, negIndices, posIndices, pulseWidths):
 
 
 # Find tone ranges and return a pulse based on the signal
-def find_tone(signal, indices, freq=None):
-    # Add start position if needed
-    if indices[0] != 0:
-        indices = numpy.insert(indices, 0, 0)
+def find_tone(signal, indices, freqs):
+    if not len(indices):
+        return None, None
+
+    sampleRate = signals.shape[1] / float(SAMPLE_TIME)
+    periods = [sampleRate / freq for freq in freqs]
+    periods = calc_tolerances(periods, TONE_TOL)
 
     # Edge widths
+    if indices[0] != 0:
+        indices = numpy.insert(indices, 0, 0)
     widths = numpy.diff(indices)
 
-    # Get fundamental period
-    sampleRate = signals.shape[1] / float(SAMPLE_TIME)
-    if freq is None:
-        period = numpy.percentile(widths, 20)
-        freq = sampleRate / period
-    else:
-        period = sampleRate / freq
-
-    periodMin = period * (100 - TONE_TOL) / 100.
-    periodMax = period * (100 + TONE_TOL) / 100.
-
+    # Count valid widths for each period
+    counts = []
+    for maxPeriod, minPeriod in periods:
+        valid = (widths > minPeriod) & (widths < maxPeriod)
+        counts.append(numpy.sum(valid))
+    # Find maximum
+    maxCounts = max(counts)
+    if maxCounts == 0:
+        return None, None
+    maxPos = counts.index(maxCounts)
+    maxPeriod, minPeriod = periods[maxPos]
     # Matching widths
-    periodsValid = (widths > periodMin) & (widths < periodMax)
+    periodsValid = (widths > minPeriod) & (widths < maxPeriod)
+    periodAvg = numpy.average(widths[periodsValid])
+    freq = sampleRate / periodAvg
 
     # Create pulses from signal
     pulse = numpy.zeros((signal.size))
@@ -331,9 +341,13 @@ def find_tone(signal, indices, freq=None):
 # Find AM signal
 def find_am(signal, posIndices, negIndices, showAm):
     # Find +ve cycles
-    freq, amPos = find_tone(signal, posIndices)
-    # Find matching -ve cycles
-    _freq, amNeg = find_tone(signal, negIndices, freq)
+    freq, amPos = find_tone(signal, posIndices, TONES)
+    if freq is None:
+        return None, [], []
+    # Find matching -ve cycle
+    freq, amNeg = find_tone(signal, negIndices, [freq])
+    if freq is None:
+        return None, [], []
     # Average +/- ve pulses
     am = (amPos + amNeg) / 2.
 
@@ -481,12 +495,13 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
         if pulse is None and not disableAm:
             am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
                                                  showAm)
-            # Reduce widths to compensate for AM detection
-            widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
-            pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
-            pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
-            if pulse is not None:
-                pulse.set_modulation('AM')
+            if am is not None:
+                # Reduce widths to compensate for AM detection
+                widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
+                pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
+                pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
+                if pulse is not None:
+                    pulse.set_modulation('AM')
         else:
             pulse.set_modulation('CW')
 
