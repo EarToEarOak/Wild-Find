@@ -56,6 +56,8 @@ TONE_TOL = 10
 class Pulse(object):
     # Index of the signal where it was found
     _signalNum = None
+    # Modulation type
+    _mod = None
     # Frequency (Hz)
     _freq = None
     # Number of pulses
@@ -68,8 +70,6 @@ class Pulse(object):
     _width = None
 
     def __init__(self, count, rate, level, width):
-        self._signalNum = None
-        self._freq = None
         self._count = count
         self._rate = rate
         self._level = level
@@ -84,11 +84,17 @@ class Pulse(object):
     def set_frequency(self, freq):
         self._freq = freq
 
+    def set_modulation(self, mod):
+        self._mod = mod
+
+    def get_modulation(self):
+        return self._mod
+
     def get_description(self):
-        desc = ('Freq: {:.3f}MHz\n'
+        desc = ('Freq: {:.3f}MHz Type: {}\n'
                 'Count: {} Rate: {:.2f}PPM\n'
                 'Level: {:.3f} Width: {:.1f}ms')
-        desc = desc.format(self._freq / 1e6,
+        desc = desc.format(self._freq / 1e6, self._mod,
                            self._count, self._rate,
                            self._level, self._width)
 
@@ -474,6 +480,10 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
             am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
                                                  showAm)
             pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
+            if pulse is not None:
+                pulse.set_modulation('AM')
+        else:
+            pulse.set_modulation('CW')
 
         if pulse is not None:
             pulse.set_signal_number(signalNum)
@@ -488,7 +498,7 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
             ax = plt.subplot(111)
             title = 'Signal Edges'
             if pulse is not None:
-                title += ' (Pulses Found)'
+                title += ' (Pulses Found - {})'.format(pulse.get_modulation())
             plt.title(title)
             plt.grid()
             label = '{:.3f}MHz'.format((baseband + frequencies[signalNum]) / 1e6)
