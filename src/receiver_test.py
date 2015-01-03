@@ -99,6 +99,7 @@ class Pulse(object):
 class Timing(object):
     _name = None
     _timings = {}
+    _paused = None
 
     def start(self, name):
         self._name = name
@@ -106,6 +107,13 @@ class Timing(object):
             self._timings[name] = [0.] * 3
 
         self._timings[name][0] = time.clock()
+
+    def pause(self):
+        self._paused = time.clock()
+
+    def resume(self):
+        elapsed = time.clock() - self._paused
+        self._timings[self._name][0] += elapsed
 
     def stop(self):
         elapsed = time.clock() - self._timings[self._name][0]
@@ -316,6 +324,7 @@ def find_am(signal, posIndices, negIndices, showAm):
     amNegIndices = numpy.where((am[1:] == 0) & (am[:-1] != 0))[0]
 
     if showAm:
+        timing.pause()
         x = numpy.linspace(0, SAMPLE_TIME, signal.size)
         ax = plt.subplot(111)
         title = 'AM Detection ({:.1f}Hz)'.format(freq)
@@ -337,6 +346,7 @@ def find_am(signal, posIndices, negIndices, showAm):
         _selector = RectangleSelector(ax, selection_time,
                                       drawtype='box', useblit=True)
         plt.show()
+        timing.resume()
 
     return am, amPosIndices, amNegIndices
 
