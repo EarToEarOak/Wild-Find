@@ -41,7 +41,7 @@ DEMOD_BINS = 4096
 # Pulse threshold (%)
 PULSE_THRESHOLD = 99.5
 # Valid pulse widths (s)
-PULSE_WIDTHS = [20e-3, 25e-3, 64e-3]
+PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
 PULSE_WIDTH_TOL = 20
 # Valid pulse rates (Pulses per minute)
@@ -50,6 +50,8 @@ PULSE_RATES = [40, 60, 80]
 PULSE_RATE_TOL = 10
 # Tolerance of AM tones
 TONE_TOL = 10
+# Reduce pulse width size to compensate for AM detection (%)
+AM_WIDTH_REDUCE = 10
 
 
 # Stores characteristics of detected pulses
@@ -479,6 +481,9 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
         if pulse is None and not disableAm:
             am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
                                                  showAm)
+            # Reduce widths to compensate for AM detection
+            widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
+            pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
             pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
             if pulse is not None:
                 pulse.set_modulation('AM')
