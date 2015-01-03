@@ -41,13 +41,15 @@ DEMOD_BINS = 4096
 # Pulse threshold (%)
 PULSE_THRESHOLD = 99.5
 # Valid pulse widths (s)
-PULSE_WIDTHS = [25e-3, 64e-3]
+PULSE_WIDTHS = [20e-3, 25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
 PULSE_WIDTH_TOL = 20
 # Valid pulse rates (Pulses per minute)
 PULSE_RATES = [40, 60, 80]
 # Pulse rate tolerance (+/- Pulses per minute)
 PULSE_RATE_TOL = 10
+# Tolerance of AM tones
+TONE_TOL = 10
 
 
 # Stores characteristics of detected pulses
@@ -136,6 +138,8 @@ def parse_arguments():
     parser.add_argument('-c', '--scan', help='Display signal scan',
                         action='store_true')
     parser.add_argument('-e', '--edges', help='Display pulse edges',
+                        action='store_true')
+    parser.add_argument('-a', '--am', help='Display AM detection',
                         action='store_true')
     parser.add_argument('-b', '--block', help='Block to process',
                         type=int, default=0)
@@ -260,6 +264,83 @@ def find_pulses(signal, negIndices, posIndices, pulseWidths):
     return pulse
 
 
+# Find tone ranges and return a pulse based on the signal
+def find_tone(signal, indices, freq=None):
+    # Add start position if needed
+    if indices[0] != 0:
+        indices = numpy.insert(indices, 0, 0)
+
+    # Edge widths
+    widths = numpy.diff(indices)
+
+    # Get fundamental period
+    sampleRate = signals.shape[1] / float(SAMPLE_TIME)
+    if freq is None:
+        period = numpy.percentile(widths, 20)
+        freq = sampleRate / period
+    else:
+        period = sampleRate / freq
+
+    periodMin = period * (100 - TONE_TOL) / 100.
+    periodMax = period * (100 + TONE_TOL) / 100.
+
+    # Matching widths
+    periodsValid = (widths > periodMin) & (widths < periodMax)
+
+    # Create pulses from signal
+    pulse = numpy.zeros((signal.size))
+    pos = 0
+    for i in range(widths.size):
+        width = widths[i]
+        valid = periodsValid[i]
+        signalPos = indices[i]
+        level = numpy.average(signal[signalPos:signalPos + width])
+        level = abs(level)
+        pulse[pos:pos + width].fill(valid * level)
+        pos += width
+
+    return freq, pulse
+
+
+# Find AM signal
+def find_am(signal, posIndices, negIndices, showAm):
+    # Find +ve cycles
+    freq, amPos = find_tone(signal, posIndices)
+    # Find matching -ve cycles
+    _freq, amNeg = find_tone(signal, negIndices, freq)
+    # Average +/- ve pulses
+    am = (amPos + amNeg) / 2.
+
+    # Find edges
+    amPosIndices = numpy.where((am[1:] != 0) & (am[:-1] == 0))[0]
+    amNegIndices = numpy.where((am[1:] == 0) & (am[:-1] != 0))[0]
+
+    if showAm:
+        x = numpy.linspace(0, SAMPLE_TIME, signal.size)
+        ax = plt.subplot(111)
+        title = 'AM Detection ({:.1f}Hz)'.format(freq)
+        plt.title(title)
+        plt.plot(x, am, label='AM Pulse')
+        xScale = float(SAMPLE_TIME) / am.size
+        labelPos = '+ve'
+        labelNeg = '-ve'
+        for posIndex in amPosIndices:
+            plt.axvline((posIndex + 1) * xScale, color='g', label=labelPos)
+            labelPos = None
+        for negIndex in amNegIndices:
+            plt.axvline((negIndex + 1) * xScale, color='r', label=labelNeg)
+            labelNeg = None
+        plt.xlabel('Time (s)')
+        plt.ylabel('Level')
+        plt.grid()
+        plt.legend(prop={'size': 10}, framealpha=0.5)
+        _selector = RectangleSelector(ax, selection_time,
+                                      drawtype='box', useblit=True)
+        plt.show()
+
+    return am, amPosIndices, amNegIndices
+
+
 # Scan for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
@@ -310,7 +391,7 @@ def scan(baseband, fs, samples, showScan):
 
 
 # Analyse blocks from capture
-def demod_cw(fs, samples, frequencies):
+def demod(fs, samples, frequencies):
     chunks = samples.size / DEMOD_BINS
     if chunks == 0:
         error('Sample time too long')
@@ -336,16 +417,17 @@ def demod_cw(fs, samples, frequencies):
     return signals
 
 
-# Smooth signal
+# Smooth signal & remove DC offset
 def smooth(signals, boxLen):
     box = numpy.ones(boxLen) / float(boxLen)
 
     for signalNum in range(signals.shape[0]):
         signals[signalNum] = numpy.convolve(signals[signalNum], box, mode='same')
+        signals[signalNum] -= numpy.average(signals[signalNum])
 
 
 # Find pulses and their frequency
-def detect(baseband, frequencies, signals, showEdges):
+def detect(baseband, frequencies, signals, showEdges, showAm):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
@@ -364,6 +446,12 @@ def detect(baseband, frequencies, signals, showEdges):
         pulse = find_pulses(signal,
                             negIndices, posIndices,
                             pulseWidths)
+
+        # Find AM pulses
+        if pulse is None:
+            am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
+                                                 showAm)
+            pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
 
         if pulse is not None:
             pulse.set_signal_number(signalNum)
@@ -515,13 +603,14 @@ if __name__ == '__main__':
 
         print '\t\tSignals to demodulate: {}'.format(len(frequencies))
 
-        # Demodulate CW
-        signals = demod_cw(fs, samples, frequencies).T
+        # Demodulate
+        signals = demod(fs, samples, frequencies).T
 
         # Reduce noise
         smooth(signals, 4)
         # Detect pulses
-        pulses = detect(baseband, frequencies, signals, args.edges)
+        pulses = detect(baseband, frequencies, signals,
+                        args.edges, args.am)
 
         # Plot results
         ax = plt.subplot(111)
