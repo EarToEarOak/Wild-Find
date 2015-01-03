@@ -332,6 +332,9 @@ def find_am(signal, posIndices, negIndices, showAm):
     # Find edges
     amPosIndices = numpy.where((am[1:] != 0) & (am[:-1] == 0))[0]
     amNegIndices = numpy.where((am[1:] == 0) & (am[:-1] != 0))[0]
+    minSize = min(len(amPosIndices), len(amNegIndices))
+    amPosIndices = amPosIndices[:minSize]
+    amNegIndices = amNegIndices[:minSize]
 
     if showAm:
         timing.pause()
