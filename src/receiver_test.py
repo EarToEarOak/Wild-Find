@@ -144,6 +144,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser(prog='demod_test.py',
                                      description='Demodulation test')
 
+    parser.add_argument('-i', '--info', help='Display summary info',
+                        action='store_true')
     parser.add_argument('-s', '--spectrum', help='Display capture spectrum',
                         action='store_true')
     parser.add_argument('-c', '--scan', help='Display signal scan',
@@ -335,9 +337,8 @@ def find_am(signal, posIndices, negIndices, showAm):
         timing.pause()
         x = numpy.linspace(0, SAMPLE_TIME, signal.size)
         ax = plt.subplot(111)
-        title = 'AM Detection ({:.1f}Hz)'.format(freq)
-        plt.title(title)
-        plt.plot(x, am, label='AM Pulse')
+        plt.title('AM Detection')
+        plt.plot(x, am, label='{:.1f}Hz'.format(freq))
         xScale = float(SAMPLE_TIME) / am.size
         labelPos = '+ve'
         labelNeg = '-ve'
@@ -587,6 +588,18 @@ if __name__ == '__main__':
     # Read source file
     baseband, fs, iq = read_data(args.file)
 
+#     analysisLen = DEMOD_BINS / float(fs)
+#     print '\tDemod resolution (ms): {:.1f}'.format(analysisLen * 1000)
+
+    if args.info:
+        info = ('Info:\n'
+                '\tBlock size: {}s\n'
+                '\tScan resolution {:.2f}Hz\n'
+                '\tDemod resolution {:.2f}Hz ({:.2f}ms)\n')
+        print (info).format(SAMPLE_TIME,
+                            float(fs) / SCAN_BINS,
+                            float(fs) / DEMOD_BINS, DEMOD_BINS * 1e3 / float(fs))
+
     # Show spectrum of entire plot (-s)
     if args.spectrum:
         ax = plt.subplot(111)
@@ -604,8 +617,6 @@ if __name__ == '__main__':
     if sampleBlocks == 0:
         error('Capture too short')
 
-    analysisLen = DEMOD_BINS / float(fs)
-    print '\tDemod resolution (ms): {:.1f}'.format(analysisLen * 1000)
 
     print 'Analysis:'
     # Split input file into SAMPLE_TIME seconds blocks
