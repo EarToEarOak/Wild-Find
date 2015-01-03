@@ -132,8 +132,11 @@ class Timing(object):
 
 
 # Print error and exit
-def error(error):
-    sys.exit(error)
+def error(error, fatal=True):
+    if fatal:
+        sys.exit(error)
+
+    sys.stderr.write(error + '\n')
 
 
 # Parse command line arguments
@@ -151,6 +154,8 @@ def parse_arguments():
                         action='store_true')
     parser.add_argument('-b', '--block', help='Block to process',
                         type=int, default=0)
+    parser.add_argument('-da', '--disableAm', help='Disable AM detection',
+                        action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
 
@@ -158,6 +163,9 @@ def parse_arguments():
         error('Please specify a file')
     if not os.path.isfile(args.file):
         error('Cannot find file')
+
+    if args.am and args.disableAm:
+        error('AM detection disabled - will not display graphs', False)
 
     return args
 
@@ -392,7 +400,7 @@ def scan(baseband, fs, samples, showScan):
                 linestyle='None', marker='o',
                 color='r', label='Peaks')
         plt.legend(prop={'size': 10}, framealpha=0.8)
-
+        # Add a rectangle selector for measurements
         _selector = RectangleSelector(ax, selection_freq,
                                       drawtype='box', useblit=True)
         plt.show()
@@ -437,7 +445,7 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def detect(baseband, frequencies, signals, showEdges, showAm):
+def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
@@ -458,7 +466,7 @@ def detect(baseband, frequencies, signals, showEdges, showAm):
                             pulseWidths)
 
         # Find AM pulses
-        if pulse is None:
+        if pulse is None and not disableAm:
             am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
                                                  showAm)
             pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
@@ -620,7 +628,7 @@ if __name__ == '__main__':
         smooth(signals, 4)
         # Detect pulses
         pulses = detect(baseband, frequencies, signals,
-                        args.edges, args.am)
+                        args.edges, args.am, args.disableAm)
 
         # Plot results
         ax = plt.subplot(111)
