@@ -263,7 +263,6 @@ def find_edges(edges):
 
 
 # Find pulses
-# TODO: test if repeating
 def find_pulses(signal, negIndices, posIndices, pulseWidths):
     pulse = None
     length = signals.shape[1]
