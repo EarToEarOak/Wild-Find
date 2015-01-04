@@ -7,6 +7,7 @@ import sys
 import time
 
 import matplotlib
+from collections import OrderedDict
 matplotlib.use('TkAgg')
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
@@ -108,7 +109,7 @@ class Pulse(object):
 # Basic timing
 class Timing(object):
     _name = None
-    _timings = {}
+    _timings = OrderedDict()
     _paused = None
 
     def start(self, name):
@@ -131,14 +132,19 @@ class Timing(object):
         self._timings[self._name][2] += 1
 
     def print_timings(self):
-        formatTimings = '\t{:<8} {:>4d} {:>8.3f}ms'
+        formatTimings = '\t{:<8} {:>4d} {:>10.3f} {:>13.3f}'
         print 'Timings:'
-        print '\t{:<8} {:>4} {:>10}'.format('Routine', 'Runs', 'Average')
+        print '\t{:<8} {:>4} {:>10} {:>12}'.format('Routine', 'Runs', 'Total (s)', 'Average (ms)')
+        timeTotal = 0
         for name, timing in self._timings.iteritems():
             if timing[2] != 0:
+                timeTotal += timing[1]
                 print formatTimings.format(name,
                                            int(timing[2]),
+                                           timing[1],
                                            timing[1] * 1000. / timing[2])
+
+        print '\t{:<8} {:>15.3f}s'.format('Total', timeTotal)
 
 
 # Print error and exit
@@ -621,9 +627,6 @@ if __name__ == '__main__':
     # Read source file
     baseband, fs, iq = read_data(args.file)
 
-#     analysisLen = DEMOD_BINS / float(fs)
-#     print '\tDemod resolution (ms): {:.1f}'.format(analysisLen * 1000)
-
     if args.info:
         info = ('Info:\n'
                 '\tBlock size: {}s\n'
@@ -649,7 +652,6 @@ if __name__ == '__main__':
     sampleBlocks = iq.size / sampleSize
     if sampleBlocks == 0:
         error('Capture too short')
-
 
     print 'Analysis:'
     # Split input file into SAMPLE_TIME seconds blocks
