@@ -498,16 +498,18 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
                             pulseWidths)
 
         # Find AM pulses
-        if pulse is None and not disableAm:
-            am, posIndices, negIndices = find_am(signal, posIndices, negIndices,
-                                                 showAm)
-            if am is not None:
-                # Reduce widths to compensate for AM detection
-                widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
-                pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
-                pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
-                if pulse is not None:
-                    pulse.set_modulation('AM')
+        if pulse is None:
+            if not disableAm:
+                am, posIndices, negIndices = find_am(signal,
+                                                     posIndices, negIndices,
+                                                     showAm)
+                if am is not None:
+                    # Reduce widths to compensate for AM detection
+                    widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
+                    pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
+                    pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
+                    if pulse is not None:
+                        pulse.set_modulation('AM')
         else:
             pulse.set_modulation('CW')
 
