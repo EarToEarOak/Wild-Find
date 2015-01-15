@@ -43,6 +43,8 @@ DEMOD_BINS = 4096
 PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
 PULSE_WIDTH_TOL = 25
+# Maximum pulse rate deviation (%)
+PULSE_RATE_DEVIATION = 2
 # Valid pulse rates (Pulses per minute)
 PULSE_RATES = [40, 60, 80]
 # Pulse rate tolerance (+/- Pulses per minute)
@@ -278,27 +280,31 @@ def find_pulses(signal, negIndices, posIndices, pulseWidths):
         # Must have at least 2 pulses
         if widthsValid.size > 1:
             pulseValid = posIndices[:widthsValid.size]
-            # Calculate frequency
-            pulseAvg = numpy.average(numpy.diff(pulseValid))
-            freq = length / (pulseAvg * float(SAMPLE_TIME))
-            rate = freq * 60
-            # Limit to PULSE_RATES
-            closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
-            if (abs(closest - rate)) < PULSE_RATE_TOL:
-                # Get pulse levels
-                level = 0
-                for posValid in range(len(pulseValid)):
-                    pos = pulseValid[posValid]
-                    width = widthsValid[posValid]
-                    pulseSignal = signal[pos:pos + width - 1]
-                    level += numpy.average(pulseSignal)
-                level /= len(pulseValid)
-                # Store valid pulse
-                pulse = Pulse(widthsValid.size,
-                              freq * 60.,
-                              level,
-                              width * SAMPLE_TIME * 1000. / length)
-                break
+            pulseRate = numpy.diff(pulseValid)
+            pulseAvg = numpy.average(pulseRate)
+            # Constant rate?
+            maxDeviation = pulseAvg * PULSE_RATE_DEVIATION / 100.
+            if numpy.std(pulseRate) < maxDeviation:
+                # Calculate frequency
+                freq = length / (pulseAvg * float(SAMPLE_TIME))
+                rate = freq * 60
+                # Limit to PULSE_RATES
+                closest = min(PULSE_RATES, key=lambda x: abs(x - rate))
+                if (abs(closest - rate)) < PULSE_RATE_TOL:
+                    # Get pulse levels
+                    level = 0
+                    for posValid in range(len(pulseValid)):
+                        pos = pulseValid[posValid]
+                        width = widthsValid[posValid]
+                        pulseSignal = signal[pos:pos + width - 1]
+                        level += numpy.average(pulseSignal)
+                    level /= len(pulseValid)
+                    # Store valid pulse
+                    pulse = Pulse(widthsValid.size,
+                                  freq * 60.,
+                                  level,
+                                  width * SAMPLE_TIME * 1000. / length)
+                    break
 
     return pulse
 
