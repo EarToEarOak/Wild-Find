@@ -252,9 +252,9 @@ def find_edges(edges):
     # Mark edges
     pos = edges > threshPos
     neg = edges < threshNeg
-    # Find positive going edge indices
-    posIndices = numpy.where((pos[1:] == False) & (pos[:-1] == True))[0]
-    negIndices = numpy.where((neg[1:] == False) & (neg[:-1] == True))[0]
+    # Find edge indices
+    posIndices = numpy.where((pos[1:] == True) & (pos[:-1] == False))[0]
+    negIndices = numpy.where((neg[1:] == True) & (neg[:-1] == False))[0]
     minSize = min(len(posIndices), len(negIndices))
     posIndices = posIndices[:minSize]
     negIndices = negIndices[:minSize]
