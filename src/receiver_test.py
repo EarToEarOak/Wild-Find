@@ -53,8 +53,6 @@ PULSE_RATE_TOL = 10
 TONES = [260]
 # Tolerance of AM tones (%)
 TONE_TOL = 10
-# Reduce pulse width size to compensate for AM detection (%)
-AM_WIDTH_REDUCE = 10
 
 
 # Stores characteristics of detected pulses
@@ -507,9 +505,6 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
                                                      posIndices, negIndices,
                                                      showAm)
                 if am is not None:
-                    # Reduce widths to compensate for AM detection
-                    widthScaling = (100 - AM_WIDTH_REDUCE) / 100.
-                    pulseWidths = [(wMax * widthScaling, wMin * widthScaling) for wMax, wMin in pulseWidths]
                     pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
                     if pulse is not None:
                         pulse.set_modulation('AM')
