@@ -44,14 +44,14 @@ PULSE_THRESHOLD = 99.5
 # Valid pulse widths (s)
 PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
-PULSE_WIDTH_TOL = 20
+PULSE_WIDTH_TOL = 25
 # Valid pulse rates (Pulses per minute)
 PULSE_RATES = [40, 60, 80]
 # Pulse rate tolerance (+/- Pulses per minute)
 PULSE_RATE_TOL = 10
 # Valid AM tones (Hz)
 TONES = [260]
-# Tolerance of AM tones
+# Tolerance of AM tones (%)
 TONE_TOL = 10
 # Reduce pulse width size to compensate for AM detection (%)
 AM_WIDTH_REDUCE = 10
