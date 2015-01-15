@@ -523,7 +523,7 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
         if showEdges:
             x = numpy.linspace(0, SAMPLE_TIME, edge.size)
             ax = plt.subplot(111)
-            title = 'Signal Edges'
+            title = 'Signal Edges ({})'.format(signalNum + 1)
             if pulse is not None:
                 title += ' (Pulses Found - {})'.format(pulse.get_modulation())
             plt.title(title)
