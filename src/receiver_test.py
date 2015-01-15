@@ -39,8 +39,6 @@ SCAN_CHANGE = 2.
 
 # Size of each block to analyse
 DEMOD_BINS = 4096
-# Pulse threshold (%)
-PULSE_THRESHOLD = 99.5
 # Valid pulse widths (s)
 PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
@@ -239,10 +237,15 @@ def filter_frequencies(freqBins, magnitudes, frequencies):
 
 
 # Calculate thresholds based on percentiles
-def find_edges(edges):
-    t1 = numpy.percentile(edges[edges > 0], PULSE_THRESHOLD)
+def find_edges(edges, pulseWidths):
+    minPulses = SAMPLE_TIME * min(PULSE_RATES) / 60.
+    minHigh = minPulses * min(min(pulseWidths)) / 1e3
+    threshold = 1 - (minHigh / SAMPLE_TIME)
+    threshold *= 100
+
+    t1 = numpy.percentile(edges[edges > 0], threshold)
     t2 = numpy.mean(edges[edges > 0])
-    t3 = numpy.percentile(edges[edges < 0], 100 - PULSE_THRESHOLD)
+    t3 = numpy.percentile(edges[edges < 0], 100 - threshold)
     t4 = numpy.mean(edges[edges < 0])
     threshPos = t2 + (t1 - t2) / 2
     threshNeg = t4 + (t3 - t4) / 2
@@ -491,7 +494,7 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
         timing.start('Detect')
 
         edge = numpy.diff(signal)
-        threshPos, threshNeg, posIndices, negIndices = find_edges(edge)
+        threshPos, threshNeg, posIndices, negIndices = find_edges(edge, pulseWidths)
 
         # Find CW pulses
         pulse = find_pulses(signal,
