@@ -268,6 +268,10 @@ def find_pulses(signal, negIndices, posIndices, pulseWidths):
     length = signals.shape[1]
     # Find pulses of pulseWidths
     widthsFound = negIndices - posIndices
+    # Ignore negative pulse widths:
+    if numpy.any(widthsFound < 0):
+        return None
+
     for wMax, wMin in pulseWidths:
         widthsValid = widthsFound[(widthsFound > wMin) & (widthsFound < wMax)]
         # Must have at least 2 pulses
