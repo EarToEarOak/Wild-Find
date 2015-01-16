@@ -42,7 +42,7 @@ DEMOD_BINS = 4096
 # Valid pulse widths (s)
 PULSE_WIDTHS = [25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
-PULSE_WIDTH_TOL = 20
+PULSE_WIDTH_TOL = 25
 # Maximum pulse rate deviation (%)
 PULSE_RATE_DEVIATION = 2
 # Valid pulse rates (Pulses per minute)
