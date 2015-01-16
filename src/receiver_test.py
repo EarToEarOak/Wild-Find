@@ -172,6 +172,8 @@ def parse_arguments():
                         type=int, default=0)
     parser.add_argument('-da', '--disableAm', help='Disable AM detection',
                         action='store_true')
+    parser.add_argument('-v', '--verbose', help='Be more verbose',
+                        action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
     args = parser.parse_args()
 
@@ -266,13 +268,15 @@ def find_edges(edges, pulseWidths):
 
 
 # Find pulses
-def find_pulses(signal, negIndices, posIndices, pulseWidths):
+def find_pulses(signal, negIndices, posIndices, pulseWidths, verbose):
     pulse = None
     length = signals.shape[1]
     # Find pulses of pulseWidths
     widthsFound = negIndices - posIndices
     # Ignore negative pulse widths:
     if numpy.any(widthsFound < 0):
+        if verbose:
+            error('Negative widths found', False)
         return None
 
     for wMax, wMin in pulseWidths:
@@ -305,12 +309,24 @@ def find_pulses(signal, negIndices, posIndices, pulseWidths):
                                   level,
                                   width * SAMPLE_TIME * 1000. / length)
                     break
+                else:
+                    if verbose:
+                        error('Invalid rate {:.1f}PPM'.format(rate), False)
+            else:
+                if verbose:
+                    msg = 'Pulse rate deviation {:.1f} >= {:.1f}ms'
+                    msg = msg.format(1000 * numpy.std(pulseRate) * SAMPLE_TIME / length,
+                                     1000 * maxDeviation * SAMPLE_TIME / length)
+                    error(msg, False)
+        else:
+            if verbose:
+                error('Only found {} pulses'.format(widthsValid.size), False)
 
     return pulse
 
 
 # Find tone ranges and return a pulse based on the signal
-def find_tone(signal, indices, freqs):
+def find_tone(signal, indices, freqs, verbose):
     if not len(indices):
         return None, None
 
@@ -331,6 +347,8 @@ def find_tone(signal, indices, freqs):
     # Find maximum
     maxCounts = max(counts)
     if maxCounts == 0:
+        if verbose:
+            error('No tone found', False)
         return None, None
     maxPos = counts.index(maxCounts)
     maxPeriod, minPeriod = periods[maxPos]
@@ -355,13 +373,13 @@ def find_tone(signal, indices, freqs):
 
 
 # Find AM signal
-def find_am(signal, posIndices, negIndices, showAm):
+def find_am(signal, posIndices, negIndices, showAm, verbose):
     # Find +ve cycles
-    freq, amPos = find_tone(signal, posIndices, TONES)
+    freq, amPos = find_tone(signal, posIndices, TONES, verbose)
     if freq is None:
         return None, [], []
     # Find matching -ve cycle
-    freq, amNeg = find_tone(signal, negIndices, [freq])
+    freq, amNeg = find_tone(signal, negIndices, [freq], verbose)
     if freq is None:
         return None, [], []
     # Average +/- ve pulses
@@ -487,7 +505,7 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
+def detect(baseband, frequencies, signals, showEdges, showAm, disableAm, verbose):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
@@ -505,16 +523,20 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm):
         # Find CW pulses
         pulse = find_pulses(signal,
                             negIndices, posIndices,
-                            pulseWidths)
+                            pulseWidths,
+                            verbose)
 
         # Find AM pulses
         if pulse is None:
             if not disableAm:
                 am, posIndices, negIndices = find_am(signal,
                                                      posIndices, negIndices,
-                                                     showAm)
+                                                     showAm, verbose)
                 if am is not None:
-                    pulse = find_pulses(am, negIndices, posIndices, pulseWidths)
+                    pulse = find_pulses(am,
+                                        negIndices, posIndices,
+                                        pulseWidths,
+                                        verbose)
                     if pulse is not None:
                         pulse.set_modulation('AM')
         else:
@@ -675,6 +697,9 @@ if __name__ == '__main__':
         frequencies = scan(baseband, fs, samples, args.scan)
 
         print '\t\tSignals to demodulate: {}'.format(len(frequencies))
+        if args.verbose:
+            for freq in frequencies:
+                print '\t\t\t{:.3f}MHz'.format((baseband + freq) / 1e6)
 
         # Demodulate
         signals = demod(fs, samples, frequencies).T
@@ -683,7 +708,7 @@ if __name__ == '__main__':
         smooth(signals, 4)
         # Detect pulses
         pulses = detect(baseband, frequencies, signals,
-                        args.edges, args.am, args.disableAm)
+                        args.edges, args.am, args.disableAm, args.verbose)
 
         # Plot results
         ax = plt.subplot(111)
