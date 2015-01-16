@@ -154,7 +154,7 @@ def error(error, fatal=True):
 
 
 # Parse command line arguments
-def parse_arguments():
+def parse_arguments(argList=None):
     parser = argparse.ArgumentParser(description='Receiver test')
 
     parser.add_argument('-i', '--info', help='Display summary info',
@@ -174,7 +174,7 @@ def parse_arguments():
     parser.add_argument('-v', '--verbose', help='Be more verbose',
                         action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
-    args = parser.parse_args()
+    args = parser.parse_args(argList)
 
     if args.file is None:
         error('Please specify a file')
@@ -269,7 +269,7 @@ def find_edges(edges, pulseWidths):
 # Find pulses
 def find_pulses(signal, negIndices, posIndices, pulseWidths, verbose):
     pulse = None
-    length = signals.shape[1]
+    length = signal.size
     # Find pulses of pulseWidths
     widthsFound = negIndices - posIndices
     # Ignore negative pulse widths:
@@ -329,7 +329,7 @@ def find_tone(signal, indices, freqs, verbose):
     if not len(indices):
         return None, None
 
-    sampleRate = signals.shape[1] / float(SAMPLE_TIME)
+    sampleRate = signal.size / float(SAMPLE_TIME)
     periods = [sampleRate / freq for freq in freqs]
     periods = calc_tolerances(periods, TONE_TOL)
 
@@ -372,7 +372,7 @@ def find_tone(signal, indices, freqs, verbose):
 
 
 # Find AM signal
-def find_am(signal, posIndices, negIndices, showAm, verbose):
+def find_am(signal, posIndices, negIndices, showAm, verbose, timing):
     # Find +ve cycles
     freq, amPos = find_tone(signal, posIndices, TONES, verbose)
     if freq is None:
@@ -421,7 +421,7 @@ def find_am(signal, posIndices, negIndices, showAm, verbose):
 # Scan for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
-def scan(baseband, fs, samples, showScan):
+def scan(baseband, fs, samples, showScan, timing):
     if samples.size < SCAN_BINS:
         error('Sample too short')
 
@@ -468,7 +468,7 @@ def scan(baseband, fs, samples, showScan):
 
 
 # Analyse blocks from capture
-def demod(fs, samples, frequencies):
+def demod(fs, samples, frequencies, timing):
     chunks = samples.size / DEMOD_BINS
     if chunks == 0:
         error('Sample time too long')
@@ -504,7 +504,8 @@ def smooth(signals, boxLen):
 
 
 # Find pulses and their frequency
-def detect(baseband, frequencies, signals, showEdges, showAm, disableAm, verbose):
+def detect(baseband, frequencies, signals, showEdges, showAm, disableAm, verbose,
+           timing):
     pulses = []
 
     # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
@@ -530,7 +531,8 @@ def detect(baseband, frequencies, signals, showEdges, showAm, disableAm, verbose
             if not disableAm:
                 am, posIndices, negIndices = find_am(signal,
                                                      posIndices, negIndices,
-                                                     showAm, verbose)
+                                                     showAm, verbose,
+                                                     timing)
                 if am is not None:
                     pulse = find_pulses(am,
                                         negIndices, posIndices,
@@ -647,12 +649,10 @@ def remove_child(axes, gid):
                 child.remove()
 
 
-# Main entry point
-if __name__ == '__main__':
+def main(argList=None):
     timing = Timing()
 
-    # Parse command line arguments
-    args = parse_arguments()
+    args = parse_arguments(argList)
 
     # Read source file
     baseband, fs, iq = read_data(args.file)
@@ -693,7 +693,7 @@ if __name__ == '__main__':
         sampleStart = blockNum * sampleSize
         samples = iq[sampleStart:sampleStart + sampleSize]
 
-        frequencies = scan(baseband, fs, samples, args.scan)
+        frequencies = scan(baseband, fs, samples, args.scan, timing)
 
         print '\t\tSignals to demodulate: {}'.format(len(frequencies))
         if args.verbose:
@@ -701,13 +701,14 @@ if __name__ == '__main__':
                 print '\t\t\t{:.3f}MHz'.format((baseband + freq) / 1e6)
 
         # Demodulate
-        signals = demod(fs, samples, frequencies).T
+        signals = demod(fs, samples, frequencies, timing).T
 
         # Reduce noise
         smooth(signals, 4)
         # Detect pulses
         pulses = detect(baseband, frequencies, signals,
-                        args.edges, args.am, args.disableAm, args.verbose)
+                        args.edges, args.am, args.disableAm, args.verbose,
+                        timing)
 
         # Plot results
         ax = plt.subplot(111)
@@ -736,3 +737,7 @@ if __name__ == '__main__':
     timing.print_timings()
 
     print 'Done'
+
+# Main entry point
+if __name__ == '__main__':
+    main()
