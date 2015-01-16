@@ -155,8 +155,7 @@ def error(error, fatal=True):
 
 # Parse command line arguments
 def parse_arguments():
-    parser = argparse.ArgumentParser(prog='demod_test.py',
-                                     description='Demodulation test')
+    parser = argparse.ArgumentParser(description='Receiver test')
 
     parser.add_argument('-i', '--info', help='Display summary info',
                         action='store_true')
