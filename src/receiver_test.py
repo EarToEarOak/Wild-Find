@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 
 import argparse
+from collections import OrderedDict
 import os
 import re
 import sys
 import time
 
 import matplotlib
-from collections import OrderedDict
-matplotlib.use('TkAgg')
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
@@ -16,6 +15,9 @@ import numpy
 from scipy.io import wavfile
 
 import matplotlib.pyplot as plt
+
+
+matplotlib.use('TkAgg')
 
 
 #
@@ -171,6 +173,8 @@ def parse_arguments(argList=None):
                         type=int, default=0)
     parser.add_argument('-da', '--disableAm', help='Disable AM detection',
                         action='store_true')
+    parser.add_argument('-n', '--noise', help='Add noise (dB)',
+                        type=float, default=0)
     parser.add_argument('-v', '--verbose', help='Be more verbose',
                         action='store_true')
     parser.add_argument('file', help='IQ wav file', nargs='?')
@@ -188,7 +192,7 @@ def parse_arguments(argList=None):
 
 
 # Read data from wav file
-def read_data(filename):
+def read_data(filename, noiseLevel):
     name = os.path.split(filename)[1]
 
     print 'Loading:'
@@ -215,6 +219,13 @@ def read_data(filename):
     data = data / 256.
     # Convert right/left to complex numbers
     iq = data[:, 1] + 1j * data[:, 0]
+
+    # Add noise
+    if noiseLevel > 0:
+        noiseI = numpy.random.uniform(-1, 1, iq.size)
+        noiseQ = numpy.random.uniform(-1, 1, iq.size)
+
+        iq += (noiseI + 1j * noiseQ) * 10. ** (noiseLevel / 10.)
 
     return baseband, fs, iq
 
@@ -655,7 +666,7 @@ def main(argList=None):
     args = parse_arguments(argList)
 
     # Read source file
-    baseband, fs, iq = read_data(args.file)
+    baseband, fs, iq = read_data(args.file, args.noise)
 
     if args.info:
         info = ('Info:\n'
