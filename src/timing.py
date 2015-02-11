@@ -28,16 +28,20 @@ class Timing(object):
         self._timings[self._name][2] += 1
 
     def print_timings(self):
-        formatTimings = '\t{:<8} {:>4d} {:>10.3f} {:>13.3f}'
+        formatTimings = '\t{:<8} {:>6d} {:>10.3f} {:>13.3f}'
         print 'Timings:'
-        print '\t{:<8} {:>4} {:>10} {:>12}'.format('Routine', 'Runs', 'Total (s)', 'Average (ms)')
+        print '\t{:<8} {:>6} {:>10} {:>12}'.format('Routine', 'Runs',
+                                                   'Total (s)', 'Average (ms)')
         timeTotal = 0
+        aveTotal = 0
         for name, timing in self._timings.iteritems():
             if timing[2] != 0:
                 timeTotal += timing[1]
+                ave = timing[1] * 1000. / timing[2]
+                aveTotal += ave
                 print formatTimings.format(name,
                                            int(timing[2]),
                                            timing[1],
-                                           timing[1] * 1000. / timing[2])
+                                           ave)
 
-        print '\t{:<8} {:>15.3f}s'.format('Total', timeTotal)
+        print '\t{:<8} {:>17.3f} {:>13.3f}\n'.format('Total', timeTotal, aveTotal)

@@ -44,7 +44,7 @@ def parse_arguments(argList=None):
                         type=float, default=0)
     parser.add_argument('-v', '--verbose', help='Be more verbose',
                         action='store_true')
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-w', '--wav', help='IQ wav file', nargs='?')
     group.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
                        type=float, default=150)
@@ -116,7 +116,7 @@ def source_wav(fs, iq):
 def source_sdr(sdr, timing):
     samples = SAMPLE_RATE * SAMPLE_TIME
     while (True):
-        print '\tCapturing...'
+        print 'Capturing...'
         timing.start('Radio')
         capture = sdr.read_samples(samples)
         timing.stop()
@@ -266,7 +266,6 @@ def main(argList=None):
         print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
         sdr = rtlsdr.RtlSdr()
         sdr.set_sample_rate(fs)
-        sdr.set_manual_gain_enabled(0)
         sdr.set_center_freq(baseband)
         source = source_sdr(sdr, timing)
 
@@ -293,18 +292,17 @@ def main(argList=None):
         plt.show()
 
     # Analyse capture
-    print 'Analysis:'
     blockNum = 0
     for samples in source:
         if args.block > 0 and args.block != blockNum + 1:
             continue
 
-        print '\tBlock {}'.format(blockNum + 1)
+        print 'Block {}'.format(blockNum + 1)
 
         scan = Scan(fs, samples, timing)
         frequencies = scan.search()
         if args.scan:
-            # Plot results
+            # Show scan results
             freqs, levels = scan.get_spectrum()
             peaks = scan.get_peaks()
             _fig, ax = plt.subplots()
@@ -324,10 +322,10 @@ def main(argList=None):
                                           drawtype='box', useblit=True)
             plt.show()
 
-        print '\t\tSignals to demodulate: {}'.format(len(frequencies))
+        print '\tSignals to demodulate: {}'.format(len(frequencies))
         if args.verbose:
             for freq in frequencies:
-                print '\t\t\t{:.3f}MHz'.format((baseband + freq) / 1e6)
+                print '\t\t{:.3f}MHz'.format((baseband + freq) / 1e6)
 
         # Detect
         detect = Detect(fs, samples, frequencies, timing, debug)
@@ -345,6 +343,8 @@ def main(argList=None):
         startTime = blockNum * SAMPLE_TIME
         x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals[0].shape[0])
 
+        timing.print_timings()
+
         # Plot the signals
         for pulse in pulses:
             signalNum = pulse.get_signal_number()
@@ -358,8 +358,6 @@ def main(argList=None):
                                       drawtype='box', useblit=True)
         plt.show()
         blockNum += 1
-
-    timing.print_timings()
 
     print 'Done'
 
