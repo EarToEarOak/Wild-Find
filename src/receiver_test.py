@@ -11,7 +11,7 @@ from matplotlib.widgets import RectangleSelector
 import numpy
 from scipy.io import wavfile
 
-from constants import SAMPLE_TIME
+from constants import SAMPLE_TIME, SAMPLE_RATE
 from detect import Detect, DetectDebug
 import matplotlib.pyplot as plt
 from scan import Scan
@@ -44,12 +44,13 @@ def parse_arguments(argList=None):
                         type=float, default=0)
     parser.add_argument('-v', '--verbose', help='Be more verbose',
                         action='store_true')
-    parser.add_argument('file', help='IQ wav file', nargs='?')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-w', '--wav', help='IQ wav file', nargs='?')
+    group.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
+                       type=float, default=150)
     args = parser.parse_args(argList)
 
-    if args.file is None:
-        Utils.error('Please specify a file')
-    if not os.path.isfile(args.file):
+    if args.wav is not None and not os.path.isfile(args.wav):
         Utils.error('Cannot find file')
 
     if args.am and args.disableAm:
@@ -59,10 +60,10 @@ def parse_arguments(argList=None):
 
 
 # Read data from wav file
-def read_data(filename, noiseLevel):
+def read_wav(filename, noiseLevel):
     name = os.path.split(filename)[1]
 
-    print 'Loading:'
+    print 'Wav file:'
     print '\tLoading capture file: {}'.format(name)
     fs, data = wavfile.read(filename)
 
@@ -79,8 +80,8 @@ def read_data(filename, noiseLevel):
     else:
         baseband = 0
 
-    print '\tCapture sample rate (MSPS): {:.2f}'.format(fs / 1e6)
-    print '\tCapture length (s): {:.2f}'.format(float(len(data)) / fs)
+    print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
+    print '\tLength: {:.2f}s'.format(float(len(data)) / fs)
 
     # Scale data to +/-1
     data = data / 256.
@@ -97,6 +98,32 @@ def read_data(filename, noiseLevel):
     return baseband, fs, iq
 
 
+# Return wav file samples
+def source_wav(fs, iq):
+    sampleSize = fs * SAMPLE_TIME
+    sampleBlocks = iq.size / sampleSize
+    if sampleBlocks == 0:
+        Utils.error('Capture too short')
+
+    for blockNum in range(sampleBlocks):
+        sampleStart = blockNum * sampleSize
+        samples = iq[sampleStart:sampleStart + sampleSize]
+
+        yield samples
+
+
+# Return rtlsdr samples
+def source_sdr(sdr, timing):
+    samples = SAMPLE_RATE * SAMPLE_TIME
+    while (True):
+        print '\tCapturing...'
+        timing.start('Radio')
+        capture = sdr.read_samples(samples)
+        timing.stop()
+        yield capture
+
+
+# Callback to display edge plot
 def callback_egdes(edge, signalNum, pulse, frequencies,
                    threshPos, threshNeg, posIndices, negIndices):
     x = numpy.linspace(0, SAMPLE_TIME, edge.size)
@@ -122,6 +149,7 @@ def callback_egdes(edge, signalNum, pulse, frequencies,
     plt.show()
 
 
+# Callback to display AM plot
 def callback_am(signal, am, freq, amPosIndices, amNegIndices):
     x = numpy.linspace(0, SAMPLE_TIME, signal.size)
     ax = plt.subplot(111)
@@ -225,8 +253,22 @@ def main(argList=None):
     callAm = callback_am if args.am else None
     debug.set_callbacks(callEdge, callAm)
 
-    # Read source file
-    baseband, fs, iq = read_data(args.file, args.noise)
+    if args.wav is not None:
+        # Read source file
+        baseband, fs, iq = read_wav(args.wav, args.noise)
+        source = source_wav(fs, iq)
+    else:
+        import rtlsdr
+        baseband = args.frequency * 1e6
+        fs = SAMPLE_RATE
+        print 'RTLSDR:'
+        print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
+        print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
+        sdr = rtlsdr.RtlSdr()
+        sdr.set_sample_rate(fs)
+        sdr.set_manual_gain_enabled(0)
+        sdr.set_center_freq(baseband)
+        source = source_sdr(sdr, timing)
 
     if args.info:
         info = ('Info:\n'
@@ -250,20 +292,14 @@ def main(argList=None):
                                       drawtype='box', useblit=True)
         plt.show()
 
-    sampleSize = fs * SAMPLE_TIME
-    sampleBlocks = iq.size / sampleSize
-    if sampleBlocks == 0:
-        Utils.error('Capture too short')
-
+    # Analyse capture
     print 'Analysis:'
-    # Split input file into SAMPLE_TIME seconds blocks
-    for blockNum in range(sampleBlocks):
+    blockNum = 0
+    for samples in source:
         if args.block > 0 and args.block != blockNum + 1:
             continue
 
-        print '\tBlock {}/{}'.format(blockNum + 1, sampleBlocks)
-        sampleStart = blockNum * sampleSize
-        samples = iq[sampleStart:sampleStart + sampleSize]
+        print '\tBlock {}'.format(blockNum + 1)
 
         scan = Scan(fs, samples, timing)
         frequencies = scan.search()
@@ -321,6 +357,7 @@ def main(argList=None):
         _selector = RectangleSelector(ax, selection_time,
                                       drawtype='box', useblit=True)
         plt.show()
+        blockNum += 1
 
     timing.print_timings()
 
