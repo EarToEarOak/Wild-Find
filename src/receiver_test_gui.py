@@ -32,7 +32,7 @@ if __name__ == '__main__':
         dlg.Destroy()
 
         if result == wx.ID_OK:
-            argList = ['-w{}'.format(dlg.GetPath())]
+            argList = ['wav', '{}'.format(dlg.GetPath())]
             argList.extend(args.args)
             receiver_test.main(argList)
         else:

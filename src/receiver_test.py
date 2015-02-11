@@ -40,18 +40,26 @@ def parse_arguments(argList=None):
                         type=int, default=0)
     parser.add_argument('-da', '--disableAm', help='Disable AM detection',
                         action='store_true')
-    parser.add_argument('-n', '--noise', help='Add noise (dB)',
-                        type=float, default=0)
     parser.add_argument('-v', '--verbose', help='Be more verbose',
                         action='store_true')
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-w', '--wav', help='IQ wav file', nargs='?')
-    group.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
-                       type=float, default=150)
+
+    subparser = parser.add_subparsers(help='Source')
+
+    parserWav = subparser.add_parser('wav')
+    parserWav.add_argument('-n', '--noise', help='Add noise (dB)',
+                           type=float, default=0)
+    parserWav.add_argument('wav', help='IQ wav file')
+
+    parserRtl = subparser.add_parser('rtlsdr')
+    parserRtl.add_argument('-f', '--frequency', help='RTLSDR frequency (MHz)',
+                           type=float, required=True)
+    parserRtl.add_argument('-g', '--gain', help='RTLSDR gain (dB)',
+                           type=float, default=None)
+
     args = parser.parse_args(argList)
 
-    if args.wav is not None and not os.path.isfile(args.wav):
-        Utils.error('Cannot find file')
+    if 'wav' in args and args.wav is not None and not os.path.isfile(args.wav):
+            Utils.error('Cannot find file')
 
     if args.am and args.disableAm:
         Utils.error('AM detection disabled - will not display graphs', False)
@@ -253,7 +261,7 @@ def main(argList=None):
     callAm = callback_am if args.am else None
     debug.set_callbacks(callEdge, callAm)
 
-    if args.wav is not None:
+    if 'wav' in args:
         # Read source file
         baseband, fs, iq = read_wav(args.wav, args.noise)
         source = source_wav(fs, iq)
@@ -266,6 +274,9 @@ def main(argList=None):
         print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
         sdr = rtlsdr.RtlSdr()
         sdr.set_sample_rate(fs)
+        if args.gain is not None:
+            sdr.set_gain(args.gain)
+            print '\tGain: {:.1f}dB'.format(args.gain)
         sdr.set_center_freq(baseband)
         source = source_sdr(sdr, timing)
 
