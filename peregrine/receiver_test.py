@@ -82,7 +82,7 @@ def parse_arguments(argList=None):
     args = parser.parse_args(argList)
 
     if 'wav' in args and args.wav is not None and not os.path.isfile(args.wav):
-            Utils.error('Cannot find file')
+        Utils.error('Cannot find file')
 
     if args.am and args.disableAm:
         Utils.error('AM detection disabled - will not display graphs', False)
@@ -104,7 +104,7 @@ def read_wav(filename, noiseLevel):
         Utils.error('Unexpected format')
 
     # Get baseband from filename
-    regex = re.compile('_(\d+)kHz_IQ')
+    regex = re.compile(r'_(\d+)kHz_IQ')
     matches = regex.search(name)
     if matches is not None:
         baseband = int(matches.group(1)) * 1000
@@ -146,7 +146,7 @@ def source_wav(fs, iq):
 # Return rtlsdr samples
 def source_sdr(sdr, timing):
     samples = SAMPLE_RATE * SAMPLE_TIME
-    while (True):
+    while True:
         print 'Capturing...'
         timing.start('Radio')
         capture = sdr.read_samples(samples)
@@ -161,7 +161,7 @@ def callback_egdes(edge, signalNum, pulse, frequencies,
     ax = plt.subplot(111)
     title = 'Signal Edges ({})'.format(signalNum + 1)
     if pulse is not None:
-        title += ' (Pulses Found - {})'.format(pulse.get_modulation())
+        title += ' (Pulses Found - {})'.format(pulse.mod)
     plt.title(title)
     plt.grid()
     label = '{:.3f}MHz'.format((frequencies[signalNum]) / 1e6)
@@ -375,14 +375,16 @@ def main(argList=None):
 
         # Create the x axis time points
         startTime = blockNum * SAMPLE_TIME
-        x = numpy.linspace(startTime, startTime + SAMPLE_TIME, signals[0].shape[0])
+        x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
+                           signals[0].shape[0])
 
         timing.print_timings()
 
         # Plot the signals
         for pulse in pulses:
-            signalNum = pulse.get_signal_number()
-            plt.plot(x, signals[signalNum], label=pulse.get_description(baseband))
+            signalNum = pulse.signalNum
+            plt.plot(x, signals[signalNum],
+                     label=pulse.get_description(baseband))
 
         if len(pulses):
             plt.legend(prop={'size': 10}, framealpha=0.5)

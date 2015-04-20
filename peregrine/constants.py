@@ -21,10 +21,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#
-# Sampling
-#
-# Sampling time per location (s)
+# Sampling time per location (seconds)
 SAMPLE_TIME = 4
-
+# Sample rate (Hertz)
 SAMPLE_RATE = 2.4e6
+
+# Maximum age for a valid location (seconds)
+LOCATION_AGE = 5
+
+

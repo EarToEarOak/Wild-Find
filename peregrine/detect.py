@@ -23,7 +23,7 @@
 
 import numpy
 from utils import Utils
-from pulse import Pulse
+import collar
 from constants import SAMPLE_TIME
 
 
@@ -130,16 +130,16 @@ class Detect(object):
                             level += numpy.average(pulseSignal)
                         level /= len(pulseValid)
                         # Store valid pulse
-                        pulse = Pulse(widthsValid.size,
-                                      freq * 60.,
-                                      level,
-                                      width * SAMPLE_TIME * 1000. / length)
+                        pulse = collar.Collar(widthsValid.size,
+                                              freq * 60.,
+                                              level,
+                                              width * SAMPLE_TIME * 1000. / length)
                         break
                     elif self._debug is not None and self._debug.verbose:
                         Utils.error('Invalid rate {:.1f}PPM'.format(rate),
                                     False)
                 elif self._debug is not None and self._debug.verbose:
-                    msg = 'Pulse rate deviation {:.1f} >= {:.1f}ms'
+                    msg = 'Collar rate deviation {:.1f} >= {:.1f}ms'
                     msg = msg.format(1000 * numpy.std(pulseRate) * SAMPLE_TIME / length,
                                      1000 * maxDeviation * SAMPLE_TIME / length)
                     Utils.error(msg, False)
@@ -234,7 +234,7 @@ class Detect(object):
 
         # Find pulses and their frequency
     def __detect(self, signals):
-        pulses = []
+        collars = []
 
         # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
         sampleRate = signals.shape[1] / float(SAMPLE_TIME)
@@ -252,30 +252,31 @@ class Detect(object):
             (threshPos, threshNeg,
              posIndices, negIndices) = self.__find_edges(edge, pulseWidths)
 
-            # Find CW pulses
+            # Find CW collars
             pulse = self.__find_pulses(signal,
                                        negIndices, posIndices,
                                        pulseWidths)
 
-            # Find AM pulses
+            # Find AM collars
             if pulse is None:
                 if self._debug is not None and not self._debug.disableAm:
                     am, posIndices, negIndices = self.__find_am(signal,
                                                                 posIndices,
                                                                 negIndices)
-                if not self._debug.disableAm and am is not None:
-                    pulse = self.__find_pulses(am,
-                                               negIndices, posIndices,
-                                               pulseWidths)
-                    if pulse is not None:
-                        pulse.set_modulation('AM')
+                if self._debug is not None:
+                    if not self._debug.disableAm and am is not None:
+                        pulse = self.__find_pulses(am,
+                                                   negIndices, posIndices,
+                                                   pulseWidths)
+                        if pulse is not None:
+                            pulse.mod = collar.AM
             else:
-                pulse.set_modulation('CW')
+                pulse.mod = collar.CW
 
             if pulse is not None:
-                pulse.set_signal_number(signalNum)
-                pulse.set_frequency(self._frequencies[signalNum])
-                pulses.append(pulse)
+                pulse.signalNum = signalNum
+                pulse.freq = self._frequencies[signalNum]
+                collars.append(pulse)
 
             if self._timing is not None:
                 self._timing.stop()
@@ -288,7 +289,7 @@ class Detect(object):
 
             signalNum += 1
 
-        return pulses
+        return collars
 
     # Analyse blocks from capture
     def __demod(self):

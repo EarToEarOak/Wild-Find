@@ -21,10 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import matplotlib
 import numpy
 
 from utils import Utils
+from matplotlib.mlab import psd
 
 # Search for possible signals
 # Filtered to SCAN_BINS
@@ -53,7 +53,7 @@ class Scan(object):
             self._timing.start('Scan')
 
         # TODO: implement PSD in Numpy rather than add another import
-        l, f = matplotlib.mlab.psd(self._samples, Scan.SCAN_BINS, Fs=self._fs)
+        l, f = psd(self._samples, Scan.SCAN_BINS, Fs=self._fs)
         decibels = 10 * numpy.log10(l)
 
         diff = numpy.diff(decibels)

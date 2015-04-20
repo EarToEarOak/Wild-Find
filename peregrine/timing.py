@@ -67,4 +67,6 @@ class Timing(object):
                                            timing[1],
                                            ave)
 
-        print '\t{:<8} {:>17.3f} {:>13.3f}\n'.format('Total', timeTotal, aveTotal)
+        print '\t{:<8} {:>17.3f} {:>13.3f}\n'.format('Total',
+                                                     timeTotal,
+                                                     aveTotal)
