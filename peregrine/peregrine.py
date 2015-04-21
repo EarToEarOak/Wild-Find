@@ -26,6 +26,7 @@
 import Queue
 import argparse
 import os
+import signal
 import sys
 import time
 
@@ -49,6 +50,9 @@ class Peregrine(object):
         self._receive = Receive(settings, queue)
         self._gps = Gps(settings.gps, queue)
 
+        self._exiting = False
+        self._signal = signal.signal(signal.SIGINT, self.__close)
+
         if settings.delay is not None:
             events.Post(queue).scan_done()
 
@@ -57,7 +61,6 @@ class Peregrine(object):
                 self.__process_queue(settings, queue)
 
         self.__close()
-        print 'Exiting\n'
 
     def __arguments(self):
         parser = argparse.ArgumentParser(description=
@@ -75,7 +78,8 @@ class Peregrine(object):
         args = parser.parse_args()
 
         if not os.path.exists(args.conf):
-            sys.stderr.write('Configuration file {} not found\n'.format(args.conf))
+            error = 'Configuration file {} not found\n'.format(args.conf)
+            sys.stderr.write(error)
             parser.exit(1)
 
         if os.path.exists(args.file):
@@ -86,6 +90,9 @@ class Peregrine(object):
         return args
 
     def __process_queue(self, settings, queue):
+        if self._exiting:
+            return
+
         event = queue.get()
         eventType = event.get_type()
 
@@ -137,9 +144,15 @@ class Peregrine(object):
         else:
             self._status.set_status(eventType)
 
-        time.sleep(0.05)
+        try:
+            time.sleep(0.05)
+        except IOError:
+            pass
 
-    def __close(self):
+    def __close(self, _signal=None, _frame=None):
+        signal.signal(signal.SIGINT, self._signal)
+        self._exiting = True
+        print '\nExiting\n'
         self._gps.stop()
         self._receive.stop()
         self._database.stop()

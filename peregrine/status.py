@@ -20,6 +20,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import sys
 import time
 
@@ -66,8 +67,8 @@ class Status(object):
 
     def append_log(self, log):
         self._log.append(log)
-        while len(log) > 24:
-            del log[0]
+        while len(self._log) > 24:
+            del self._log[0]
 
     def get_location(self):
         return self._location
