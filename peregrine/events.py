@@ -25,7 +25,8 @@ import threading
 import time
 
 
-SCAN, SCAN_DONE, LOC, SATS, DB_SCANS, WARN, ERR = range(7)
+SCAN, SCAN_DONE, LOC, SATS, DB_SCANS, WARN, ERR, \
+    STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS = range(11)
 
 
 class Event(object):
@@ -54,6 +55,11 @@ class Post(object):
         else:
             thread = threading.Timer(delay, self._queue.put, args=(event,))
             thread.start()
+
+    def status(self, eventType):
+        if eventType >= STATUS_IDLE and eventType <= STATUS_PROCESS:
+            event = Event(eventType)
+            self.__post(event)
 
     def scan(self, delay=0):
         event = Event(SCAN)

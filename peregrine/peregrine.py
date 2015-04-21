@@ -35,7 +35,7 @@ import events
 from gps import Gps
 from receive import Receive
 from settings import Settings
-import status
+from status import Status
 
 
 class Peregrine(object):
@@ -43,6 +43,7 @@ class Peregrine(object):
         queue = Queue.Queue()
 
         settings = Settings(self.__arguments())
+        self._status = Status()
 
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
@@ -90,50 +91,53 @@ class Peregrine(object):
 
         # Start scan
         if eventType == events.SCAN:
-            if status.location is None or time.time() - status.location[1] > LOCATION_AGE:
-                status.receive = status.WAIT_LOC
+            location = self._status.get_location()
+            if location is None or time.time() - location[1] > LOCATION_AGE:
+                self._status.set_status(events.STATUS_WAIT)
                 events.Post(queue).scan(1)
-            elif self._receive is not None:
-                status.receive = status.RUN
+            elif self._status is not None:
                 self._receive.receive()
 
         # Scan finished
         elif eventType == events.SCAN_DONE:
-            status.receive = status.IDLE
             timeStamp = event.get_arg('time')
             collars = event.get_arg('collars')
             if collars is not None:
                 for collar in collars:
                     collar.freq += settings.freq * 1e6
-                    collar.lon = status.location[0][0]
-                    collar.lat = status.location[0][1]
+                    location = self._status.get_location()[0]
+                    collar.lon = location[0]
+                    collar.lat = location[1]
                     self._database.append(timeStamp, collar)
             if settings.delay is not None:
                 events.Post(queue).scan(settings.delay)
 
         # Location
         elif eventType == events.LOC:
-            status.location = event.get_arg('location')
-            self._database.get_scans()
+            self._status.set_location(event.get_arg('location'))
 
         # Satellites
         elif eventType == events.SATS:
-            status.sats = event.get_arg('satellites')
+            self._status.set_sats(event.get_arg('satellites'))
 
         # Warning
         elif eventType == events.WARN:
             warning = 'Warning: {}'.format(event.get_arg('warning'))
             print warning
-            status.log_append(warning)
+            self._status.append_log(warning)
 
         # Error
         elif eventType == events.ERR:
-            sys.stderr.write(event.get_arg('error'))
+            error = event.get_arg('error')
+            sys.stderr.write(error)
+            self._status.append_log(error)
             self.__close()
             exit(3)
 
         else:
-            time.sleep(0.05)
+            self._status.set_status(eventType)
+
+        time.sleep(0.05)
 
     def __close(self):
         self._gps.stop()
