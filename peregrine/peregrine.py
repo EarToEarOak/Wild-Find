@@ -45,8 +45,8 @@ class Peregrine(object):
         settings = Settings(self.__arguments())
 
         self._database = Database(settings.db, queue)
-        self._gps = Gps(settings.gps, queue)
         self._receive = Receive(settings, queue)
+        self._gps = Gps(settings.gps, queue)
 
         if settings.delay is not None:
             events.Post(queue).scan_done()

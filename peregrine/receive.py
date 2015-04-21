@@ -42,7 +42,13 @@ class Receive(threading.Thread):
         self._cancel = False
         self._receive = False
 
-        self.start()
+        devices = rtlsdr.librtlsdr.rtlsdr_get_device_count()
+        if self._settings.recvIndex >= devices:
+            error = 'Cannot find device at index {}'
+            error = error.format(self._settings.recvIndex)
+            events.Post(self._queue).error(error=error)
+        else:
+            self.start()
 
     def __capture(self):
         sdr = rtlsdr.RtlSdr(device_index=self._settings.recvIndex)
