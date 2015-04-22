@@ -95,9 +95,9 @@ class Settings(object):
             if config.has_option('gps', 'soft'):
                 self.gps.soft = config.getboolean('gps', 'soft')
 
-        except ConfigParser.Error as e:
-            sys.stderr.write('Configuration error: {}\n'.format(e))
+        except ConfigParser.Error as error:
+            sys.stderr.write('Configuration error: {}\n'.format(error))
             exit(2)
-        except ValueError as e:
-            sys.stderr.write('Configuration error: {}\n'.format(e))
+        except ValueError as error:
+            sys.stderr.write('Configuration error: {}\n'.format(error))
             exit(2)

@@ -29,4 +29,3 @@ SAMPLE_RATE = 2.4e6
 # Maximum age for a valid location (seconds)
 LOCATION_AGE = 5
 
-

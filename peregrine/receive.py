@@ -78,7 +78,8 @@ class Receive(threading.Thread):
         collars = detect.search()
 
         events.Post(self._queue).status(events.STATUS_IDLE)
-        events.Post(self._queue).scan_done(collars=collars, time=timeStamp)
+        events.Post(self._queue).scan_done(collars=collars,
+                                           timeStamp=timeStamp)
 
     def run(self):
         while not self._cancel:

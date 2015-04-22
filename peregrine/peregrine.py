@@ -35,6 +35,7 @@ from database import Database
 import events
 from gps import Gps
 from receive import Receive
+from server import Server
 from settings import Settings
 from status import Status
 
@@ -44,13 +45,15 @@ class Peregrine(object):
         queue = Queue.Queue()
 
         settings = Settings(self.__arguments())
-        self._status = Status()
 
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
         self._gps = Gps(settings.gps, queue)
+        self._status = Status()
+        self._server = Server(queue, self._status, self._database)
 
-        self._exiting = False
+        self._isScanning = False
+        self._isExiting = False
         self._signal = signal.signal(signal.SIGINT, self.__close)
 
         if settings.delay is not None:
@@ -90,7 +93,7 @@ class Peregrine(object):
         return args
 
     def __process_queue(self, settings, queue):
-        if self._exiting:
+        if self._isExiting:
             return
 
         event = queue.get()
@@ -102,20 +105,24 @@ class Peregrine(object):
             if location is None or time.time() - location[1] > LOCATION_AGE:
                 self._status.set_status(events.STATUS_WAIT)
                 events.Post(queue).scan(1)
-            elif self._status is not None:
+            elif not self._isScanning:
                 self._receive.receive()
 
         # Scan finished
         elif eventType == events.SCAN_DONE:
+            self._isScanning = False
             timeStamp = event.get_arg('time')
             collars = event.get_arg('collars')
             if collars is not None:
+                self._status.set_signals(len(collars))
                 for collar in collars:
                     collar.freq += settings.freq * 1e6
                     location = self._status.get_location()[0]
                     collar.lon = location[0]
                     collar.lat = location[1]
                     self._database.append(timeStamp, collar)
+            else:
+                self._status.set_signals(0)
             if settings.delay is not None:
                 events.Post(queue).scan(settings.delay)
 
@@ -151,8 +158,9 @@ class Peregrine(object):
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
-        self._exiting = True
+        self._isExiting = True
         print '\nExiting\n'
+        self._server.close()
         self._gps.stop()
         self._receive.stop()
         self._database.stop()

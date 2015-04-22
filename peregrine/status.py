@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from collections import OrderedDict
 import sys
 import time
 
@@ -76,3 +77,13 @@ class Status(object):
 
     def get_location(self):
         return self._location
+
+    def get(self):
+        resp = OrderedDict()
+        resp['status'] = self._status - events.STATUS_IDLE
+        resp['signals'] = self._signals
+        resp['lon'] = self._location[0][0]
+        resp['lat'] = self._location[0][1]
+        resp['fix'] = self._location[1]
+
+        return resp

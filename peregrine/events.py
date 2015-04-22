@@ -25,8 +25,8 @@ import threading
 import time
 
 
-SCAN, SCAN_DONE, LOC, SATS, DB_SCANS, WARN, ERR, \
-    STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS = range(11)
+SCAN, SCAN_DONE, LOC, SATS, WARN, ERR, \
+    STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS = range(10)
 
 
 class Event(object):
@@ -65,8 +65,8 @@ class Post(object):
         event = Event(SCAN)
         self.__post(event, delay)
 
-    def scan_done(self, collars=None, time=None):
-        event = Event(SCAN_DONE, collars=collars, time=time)
+    def scan_done(self, collars=None, timeStamp=None):
+        event = Event(SCAN_DONE, collars=collars, time=timeStamp)
         self.__post(event)
 
     def location(self, location):
@@ -77,10 +77,6 @@ class Post(object):
     def satellites(self, satellites):
         event = Event(SATS,
                       satellites=(satellites, time.time()))
-        self.__post(event)
-
-    def db_scans(self, scans):
-        event = Event(DB_SCANS, scans=scans)
         self.__post(event)
 
     def error(self, error):
