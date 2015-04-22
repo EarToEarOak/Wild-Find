@@ -31,31 +31,35 @@ LOG_SIZE = 25
 
 
 class Status(object):
-    STATUS = ['Idle', 'Waiting for fix', 'Capturing', 'Processing']
+    STATUS = ['Idle', 'Locate', 'Capture', 'Process']
 
     _status = events.STATUS_IDLE
+    _signals = 0
     _location = None
     _sats = []
     _log = []
 
     def __display(self):
-        fix = '      --'
         lon = '        --'
         lat = '        --'
+        fix = '      --'
         if self._location is not None:
-            lon = '{:10.5f}'.format(self._location[0][0])
-            lat = '{:10.5f}'.format(self._location[0][1])
+            lon = '{: 10.5f}'.format(self._location[0][0])
+            lat = '{: 09.5f}'.format(self._location[0][1])
             fix = time.strftime('%H:%M:%S',
                                 time.localtime(self._location[1]))
         desc = Status.STATUS[self._status - events.STATUS_IDLE]
 
-        status = '\rStatus: {:15}  Lon: {:15}  Lat: {:15} Fix time: {:8}'
-        status = status.format(desc, lon, lat, fix)
+        status = '\rStatus {:7}  Lon {:11}  Lat {:10}  Fix {:8}  Signals {:2}'
+        status = status.format(desc, lon, lat, fix, self._signals)
         sys.stdout.write(status)
 
     def set_status(self, status):
         self._status = status
         self.__display()
+
+    def set_signals(self, signals):
+        self._signals = signals
 
     def set_location(self, location):
         self._location = location
