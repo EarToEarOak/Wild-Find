@@ -22,10 +22,13 @@
 #
 
 import Queue
+import os
 import sqlite3
 import threading
 import time
+
 import events
+
 
 VERSION = 1
 
@@ -44,6 +47,11 @@ class Database(threading.Thread):
 
         self._conn = None
         self._queue = Queue.Queue()
+
+        if os.path.exists(path):
+            print 'Appending data to {}'.format(path)
+        else:
+            print 'Creating {}'.format(path)
 
         self.start()
 

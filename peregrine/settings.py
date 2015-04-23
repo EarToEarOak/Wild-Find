@@ -35,6 +35,8 @@ class Settings(object):
         self.delay = None
 
         self.freq = args.frequency
+        self.test = args.test
+
         self.recvIndex = None
         self.recvGain = None
         self.gps = Comm()

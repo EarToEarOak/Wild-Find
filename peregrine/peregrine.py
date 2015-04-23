@@ -28,6 +28,7 @@ import argparse
 import os
 import signal
 import sys
+from testmode import TestMode
 import time
 
 from constants import LOCATION_AGE
@@ -42,9 +43,15 @@ from status import Status
 
 class Peregrine(object):
     def __init__(self):
+        print 'Peregrine'
+
         queue = Queue.Queue()
 
         settings = Settings(self.__arguments())
+
+        if settings.test:
+            TestMode(settings)
+            return
 
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
@@ -75,6 +82,8 @@ class Peregrine(object):
                             type=float, required=True)
         parser.add_argument("-c", "--conf", help="Configuration file",
                             default=os.path.expanduser("~/peregrine.conf"))
+        parser.add_argument("-t", "--test", help="Test mode",
+                            action="store_true")
         parser.add_argument("file", help='Database path', nargs='?',
                             default=os.path.expanduser("~/peregrine.db"))
 
@@ -84,11 +93,6 @@ class Peregrine(object):
             error = 'Configuration file {} not found\n'.format(args.conf)
             sys.stderr.write(error)
             parser.exit(1)
-
-        if os.path.exists(args.file):
-            print 'Appending data to {}'.format(args.file)
-        else:
-            print 'Creating {}'.format(args.file)
 
         return args
 
@@ -160,10 +164,14 @@ class Peregrine(object):
         signal.signal(signal.SIGINT, self._signal)
         self._isExiting = True
         print '\nExiting\n'
-        self._server.close()
-        self._gps.stop()
-        self._receive.stop()
-        self._database.stop()
+        if self._server is not None:
+            self._server.close()
+        if self._gps is not None:
+            self._gps.stop()
+        if self._receive is not None:
+            self._receive.stop()
+        if self._database is not None:
+            self._database.stop()
 
 
 if __name__ == '__main__':

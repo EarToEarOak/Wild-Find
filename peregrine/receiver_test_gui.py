@@ -32,7 +32,7 @@ import receiver_test
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='GUI for receiver test')
+    parser = argparse.ArgumentParser(description='GUI for receiver testmode')
 
     parser.add_argument('dir', help='Capture directory',
                         nargs='?', default=os.getcwd())

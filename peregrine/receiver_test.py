@@ -47,7 +47,7 @@ matplotlib.use('TkAgg')
 
 # Parse command line arguments
 def parse_arguments(argList=None):
-    parser = argparse.ArgumentParser(description='Receiver test')
+    parser = argparse.ArgumentParser(description='Receiver testmode')
 
     parser.add_argument('-i', '--info', help='Display summary info',
                         action='store_true')
