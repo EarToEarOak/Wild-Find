@@ -137,6 +137,8 @@ class Database(threading.Thread):
         cmd = 'select * from Signals order by Id desc limit 1'
         cursor.execute(cmd)
         signals = cursor.fetchall()
+        for signal in signals:
+            del signal['Id']
         callback(signals)
 
     def __get_signals(self, callback, timeStamp):
@@ -144,6 +146,8 @@ class Database(threading.Thread):
         cmd = 'select * from Signals where TimeStamp = ?'
         cursor.execute(cmd, (timeStamp,))
         signals = cursor.fetchall()
+        for signal in signals:
+            del signal['Id']
         callback(signals)
 
     def __del_scan(self, callback, timeStamp):
