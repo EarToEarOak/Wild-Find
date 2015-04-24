@@ -29,6 +29,7 @@ import threading
 
 import events
 
+VERSION = 1
 
 PORT = 12014
 
@@ -235,6 +236,7 @@ class Server(threading.Thread):
 
                         client.sendall('\r\nPeregrine\r\n')
                         self._client = client
+                        self.__result('Version', VERSION)
                     except socket.error:
                         self._client = None
                 elif sock is self._client:
