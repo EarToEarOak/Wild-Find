@@ -103,6 +103,9 @@ class Server(threading.Thread):
             if method == Cmd.STATUS:
                 self.__result(method, self._status.get())
 
+            elif method == Cmd.SATELLITES:
+                self.__result(method, self._status.get_satellites())
+
             elif method == Cmd.SCAN:
                 if command == Cmd.RUN:
                     events.Post(self._queue).scan()
@@ -120,9 +123,6 @@ class Server(threading.Thread):
 
             elif method == Cmd.SIGNALS:
                 self._database.get_signals(self.__result_signals, value)
-
-            elif method == Cmd.DATABASE:
-                self._database.del_all(self.__result_signals)
 
         except ValueException as error:
             self.__error('Value error', error.message)
@@ -247,28 +247,31 @@ class Server(threading.Thread):
 
 
 class Cmd(object):
+    # Commands
     COMMAND = 'command'
     GET = 'get'
     SET = 'set'
     RUN = 'run'
     DEL = 'del'
 
+    # Methods
     METHOD = 'method'
     STATUS = 'status'
+    SATELLITES = 'satellites'
     SCAN = 'scan'
     SCANS = 'scans'
-    SCANS_ALL = 'scans_all'
     SIGNALS_LAST = 'signals_last'
     SIGNALS = 'signals'
 
     VALUE = 'value'
 
     COMMANDS = [GET, SET, RUN, DEL]
-    METHODS = [STATUS, SCAN, SCANS, SCANS_ALL, SIGNALS_LAST, SIGNALS]
+    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS]
 
     def __init__(self):
         self._params = {}
         self.__set(Cmd.STATUS, canGet=True)
+        self.__set(Cmd.SATELLITES, canGet=True)
         self.__set(Cmd.SCAN, canRun=True, canDel=True, delVal=True)
         self.__set(Cmd.SCANS, canGet=True, canDel=True)
         self.__set(Cmd.SIGNALS_LAST, canGet=True)

@@ -78,6 +78,9 @@ class Status(object):
     def get_location(self):
         return self._location
 
+    def get_satellites(self):
+        return self._sats
+
     def get(self):
         resp = OrderedDict()
         resp['status'] = self._status - events.STATUS_IDLE
