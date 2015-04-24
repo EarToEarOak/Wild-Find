@@ -57,6 +57,7 @@ class Database(threading.Thread):
 
     def __create(self):
         self._conn = sqlite3.connect(self._path)
+        self._conn.row_factory = self.__name_factory
 
         with self._conn:
             cmd = 'pragma foreign_keys = 1;'
@@ -117,19 +118,26 @@ class Database(threading.Thread):
                                      signal.lon,
                                      signal.lat))
 
+    def __name_factory(self, cursor, row):
+        names = {}
+        for i, column in enumerate(cursor.description):
+            names[column[0]] = row[i]
+
+        return names
+
     def __get_scans(self, callback):
         cursor = self._conn.cursor()
         cmd = 'select * from Scans'
         cursor.execute(cmd)
         scans = cursor.fetchall()
-        callback([scan[0] for scan in scans])
+        callback(scans)
 
     def __get_signals_last(self, callback):
         cursor = self._conn.cursor()
         cmd = 'select * from Signals order by Id desc limit 1'
         cursor.execute(cmd)
         signals = cursor.fetchall()
-        callback(signals[0])
+        callback(signals)
 
     def __get_signals(self, callback, timeStamp):
         cursor = self._conn.cursor()

@@ -85,7 +85,8 @@ class Gps(threading.Thread):
                 used = False
             else:
                 level = int(level)
-            self._sats[sat] = [level, used]
+            self._sats[sat] = {'Level': level,
+                               'Used': used}
 
         if message == messages and len(self._sats) == viewed:
             events.Post(self._queue).satellites(self._sats)

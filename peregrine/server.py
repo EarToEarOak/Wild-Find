@@ -42,6 +42,8 @@ class Server(threading.Thread):
         self._status = status
         self._database = database
 
+        self._updates = False
+
         self._cmd = Cmd()
 
         self._client = None
@@ -123,6 +125,9 @@ class Server(threading.Thread):
 
             elif method == Cmd.SIGNALS:
                 self._database.get_signals(self.__result_signals, value)
+
+            elif method == Cmd.UPDATES:
+                self._updates = value
 
         except ValueException as error:
             self.__error('Value error', error.message)
@@ -241,6 +246,10 @@ class Server(threading.Thread):
                     self._client = None
                 sock.close()
 
+    def update_scan(self, scan):
+        if self._updates:
+            self.__result_scans(scan)
+
     def close(self):
         self._cancel = True
         self._server.close()
@@ -262,11 +271,12 @@ class Cmd(object):
     SCANS = 'scans'
     SIGNALS_LAST = 'signals_last'
     SIGNALS = 'signals'
+    UPDATES = 'ipdates'
 
     VALUE = 'value'
 
     COMMANDS = [GET, SET, RUN, DEL]
-    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS]
+    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS, UPDATES]
 
     def __init__(self):
         self._params = {}
@@ -276,6 +286,7 @@ class Cmd(object):
         self.__set(Cmd.SCANS, canGet=True, canDel=True)
         self.__set(Cmd.SIGNALS_LAST, canGet=True)
         self.__set(Cmd.SIGNALS, canGet=True, getVal=True)
+        self.__set(Cmd.UPDATES, canSet=True, setVal=True)
 
     def __set(self, method,
               canGet=False, canSet=False, canRun=False, canDel=False,
