@@ -42,7 +42,7 @@ class Server(threading.Thread):
         self._status = status
         self._database = database
 
-        self._updates = False
+        self._push_last = False
 
         self._cmd = Cmd()
 
@@ -121,13 +121,14 @@ class Server(threading.Thread):
                     self._database.del_scans(self.__result_scans)
 
             elif method == Cmd.SIGNALS_LAST:
-                self._database.get_signals_last(self.__result_signals_last)
+                if command == Cmd.GET:
+                    self._database.get_signals_last(self.__result_signals_last)
+                elif command == Cmd.REQ:
+                    self.__result(method, value)
+                    self._push_last = value
 
             elif method == Cmd.SIGNALS:
                 self._database.get_signals(self.__result_signals, value)
-
-            elif method == Cmd.UPDATES:
-                self._updates = value
 
         except ValueException as error:
             self.__error('Value error', error.message)
@@ -141,6 +142,7 @@ class Server(threading.Thread):
 
         canGet = self._cmd.can_get(method)
         canSet = self._cmd.can_set(method)
+        canReq = self._cmd.can_req(method)
         canRun = self._cmd.can_run(method)
         canDel = self._cmd.can_del(method)
         reqGet = self._cmd.req_get_val(method)
@@ -154,6 +156,10 @@ class Server(threading.Thread):
 
             if command == Cmd.SET and not canSet:
                 error = '\'{}\' is read only'.format(method)
+                raise ParameterException(error)
+
+            if command == Cmd.REQ and not canReq:
+                error = '\'{}\' cannot request push updates'.format(method)
                 raise ParameterException(error)
 
             if command == Cmd.RUN and not canRun:
@@ -246,9 +252,13 @@ class Server(threading.Thread):
                     self._client = None
                 sock.close()
 
-    def update_scan(self, scan):
-        if self._updates:
-            self.__result_scans(scan)
+    def push_signals(self, timeStamp, signals):
+        if self._push_last:
+            resp = []
+            for signal in signals:
+                resp.append(signal.get_dict(timeStamp))
+
+            self.__result_signals_last(resp)
 
     def close(self):
         self._cancel = True
@@ -260,6 +270,7 @@ class Cmd(object):
     COMMAND = 'command'
     GET = 'get'
     SET = 'set'
+    REQ = 'req'
     RUN = 'run'
     DEL = 'del'
 
@@ -271,12 +282,11 @@ class Cmd(object):
     SCANS = 'scans'
     SIGNALS_LAST = 'signals_last'
     SIGNALS = 'signals'
-    UPDATES = 'ipdates'
 
     VALUE = 'value'
 
-    COMMANDS = [GET, SET, RUN, DEL]
-    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS, UPDATES]
+    COMMANDS = [GET, SET, REQ, RUN, DEL]
+    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS]
 
     def __init__(self):
         self._params = {}
@@ -284,15 +294,15 @@ class Cmd(object):
         self.__set(Cmd.SATELLITES, canGet=True)
         self.__set(Cmd.SCAN, canRun=True, canDel=True, delVal=True)
         self.__set(Cmd.SCANS, canGet=True, canDel=True)
-        self.__set(Cmd.SIGNALS_LAST, canGet=True)
+        self.__set(Cmd.SIGNALS_LAST, canGet=True, canReq=True)
         self.__set(Cmd.SIGNALS, canGet=True, getVal=True)
-        self.__set(Cmd.UPDATES, canSet=True, setVal=True)
 
     def __set(self, method,
-              canGet=False, canSet=False, canRun=False, canDel=False,
+              canGet=False, canSet=False, canReq=False, canRun=False, canDel=False,
               setVal=False, getVal=False, delVal=False):
         self._params[method] = {'canGet': canGet,
                                 'canSet': canSet,
+                                'canReq': canReq,
                                 'canDel': canDel,
                                 'canRun': canRun,
                                 'setVal': setVal,
@@ -304,6 +314,9 @@ class Cmd(object):
 
     def can_set(self, method):
         return self._params[method]['canSet']
+
+    def can_req(self, method):
+        return self._params[method]['canReq']
 
     def can_run(self, method):
         return self._params[method]['canRun']

@@ -127,6 +127,9 @@ class Peregrine(object):
                     self._database.append(timeStamp, collar)
             else:
                 self._status.set_signals(0)
+
+            self._server.push_signals(timeStamp, collars)
+
             if settings.delay is not None:
                 events.Post(queue).scan(settings.delay)
 

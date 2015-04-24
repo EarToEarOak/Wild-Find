@@ -62,3 +62,17 @@ class Collar(object):
                            self.level, self.width)
 
         return desc
+
+    def get_dict(self, timeStamp):
+        names = {'TimeStamp': timeStamp,
+                 'Freq': self.freq,
+                 'Mod': self.mod,
+                 'Rate': self.rate,
+                 'Level': self.level,
+                 'Lon': self.lon,
+                 'Lat': self.lat
+                 }
+
+        return names
+
+
