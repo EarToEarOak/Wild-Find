@@ -28,7 +28,7 @@ import os
 
 import wx
 
-import receiver_test
+import receiver_debug
 
 
 def parse_arguments():
@@ -57,6 +57,6 @@ if __name__ == '__main__':
         if result == wx.ID_OK:
             argList = ['wav', '{}'.format(dlg.GetPath())]
             argList.extend(args.args)
-            receiver_test.main(argList)
+            receiver_debug.main(argList)
         else:
             break
