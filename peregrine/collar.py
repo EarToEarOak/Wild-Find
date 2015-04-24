@@ -75,4 +75,3 @@ class Collar(object):
 
         return names
 
-
