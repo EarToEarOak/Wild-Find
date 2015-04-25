@@ -70,6 +70,10 @@ class Status(object):
         self._sats = sats
         self.__display()
 
+    def clear_gps(self):
+        self._location = None
+        self._sats = []
+
     def append_log(self, log):
         self._log.append(log)
         while len(self._log) > 24:

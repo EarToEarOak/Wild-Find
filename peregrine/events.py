@@ -25,8 +25,10 @@ import threading
 import time
 
 
-SCAN, SCAN_DONE, LOC, SATS, WARN, ERR, \
-    STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS = range(10)
+SCAN_START, SCAN_DONE, \
+    GPS_OPEN, GPS_LOC, GPS_SATS, GPS_ERR, \
+    STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS, \
+    WARN, ERR = range(12)
 
 
 class Event(object):
@@ -62,21 +64,29 @@ class Post(object):
             self.__post(event)
 
     def scan(self, delay=0):
-        event = Event(SCAN)
+        event = Event(SCAN_START)
         self.__post(event, delay)
 
     def scan_done(self, collars=None, timeStamp=None):
         event = Event(SCAN_DONE, collars=collars, time=timeStamp)
         self.__post(event)
 
-    def location(self, location):
-        event = Event(LOC,
+    def gps_open(self, delay):
+        event = Event(GPS_OPEN)
+        self.__post(event, delay)
+
+    def gps_location(self, location):
+        event = Event(GPS_LOC,
                       location=(location, time.time()))
         self.__post(event)
 
-    def satellites(self, satellites):
-        event = Event(SATS,
+    def gps_satellites(self, satellites):
+        event = Event(GPS_SATS,
                       satellites=(satellites, time.time()))
+        self.__post(event)
+
+    def gps_error(self, error):
+        event = Event(GPS_ERR, error=error)
         self.__post(event)
 
     def error(self, error):

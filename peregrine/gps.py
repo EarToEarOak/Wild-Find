@@ -29,6 +29,8 @@ from serial.serialutil import SerialException
 
 import events
 
+TIMEOUT = 2
+
 
 class Gps(threading.Thread):
     def __init__(self, gps, queue):
@@ -65,7 +67,7 @@ class Gps(threading.Thread):
             lat = self.__coord(data[2], data[3])
             lon = self.__coord(data[4], data[5])
 
-            events.Post(self._queue).location((lon, lat))
+            events.Post(self._queue).gps_location((lon, lat))
 
     def __sats(self, data):
         message = int(data[1])
@@ -89,7 +91,7 @@ class Gps(threading.Thread):
                                'Used': used}
 
         if message == messages and len(self._sats) == viewed:
-            events.Post(self._queue).satellites(self._sats)
+            events.Post(self._queue).gps_satellites(self._sats)
 
     def __coord(self, coord, orient):
         pos = None
@@ -123,22 +125,29 @@ class Gps(threading.Thread):
                                        bytesize=self._gps.bits,
                                        parity=self._gps.parity,
                                        stopbits=self._gps.stops,
-                                       xonxoff=self._gps.soft)
+                                       xonxoff=self._gps.soft,
+                                       timeout=TIMEOUT)
             buff = io.BufferedReader(self._comm, 1)
             self._commIo = io.TextIOWrapper(buff,
                                             newline='\r',
                                             line_buffering=True)
         except SerialException as error:
-            events.Post(self._queue).error(error.message)
+            events.Post(self._queue).gps_error(error.message)
             return False
         except OSError as error:
-            events.Post(self._queue).error(error)
+            events.Post(self._queue).gps_error(error)
+            return False
+        except ValueError as error:
+            events.Post(self._queue).gps_error(error)
             return False
 
         return True
 
     def __read(self):
         for resp in self.__serial_read():
+            if not len(resp):
+                events.Post(self._queue).gps_error('GPS timed out')
+                break
             resp = resp.replace('\n', '')
             resp = resp.replace('\r', '')
             resp = resp[1::]

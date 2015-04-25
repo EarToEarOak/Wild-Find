@@ -41,6 +41,9 @@ from settings import Settings
 from status import Status
 
 
+GPS_RETRY = 5
+
+
 class Peregrine(object):
     def __init__(self):
         print 'Peregrine'
@@ -53,9 +56,9 @@ class Peregrine(object):
             TestMode(settings)
             return
 
+        self._gps = None
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
-        self._gps = Gps(settings.gps, queue)
         self._status = Status()
         self._server = Server(queue, self._status, self._database)
 
@@ -63,10 +66,11 @@ class Peregrine(object):
         self._isExiting = False
         self._signal = signal.signal(signal.SIGINT, self.__close)
 
+        events.Post(queue).gps_open(0)
         if settings.delay is not None:
             events.Post(queue).scan_done()
 
-        while self._gps.isAlive():
+        while not self._isExiting:
             if not queue.empty():
                 self.__process_queue(settings, queue)
 
@@ -104,7 +108,7 @@ class Peregrine(object):
         eventType = event.get_type()
 
         # Start scan
-        if eventType == events.SCAN:
+        if eventType == events.SCAN_START:
             location = self._status.get_location()
             if location is None or time.time() - location[1] > LOCATION_AGE:
                 self._status.set_status(events.STATUS_WAIT)
@@ -133,18 +137,32 @@ class Peregrine(object):
             if settings.delay is not None:
                 events.Post(queue).scan(settings.delay)
 
-        # Location
-        elif eventType == events.LOC:
+        # Open GPS
+        elif eventType == events.GPS_OPEN:
+            print '\nStarting GPS'
+            self._gps = Gps(settings.gps, queue)
+
+        # GPS location
+        elif eventType == events.GPS_LOC:
             self._status.set_location(event.get_arg('location'))
 
-        # Satellites
-        elif eventType == events.SATS:
+        # GPS satellites
+        elif eventType == events.GPS_SATS:
             self._status.set_sats(event.get_arg('satellites'))
+
+        # GPS error
+        elif eventType == events.GPS_ERR:
+            warning = '\nGPS error: {}'.format(event.get_arg('error'))
+            print warning
+            print 'Retry in {}s'.format(GPS_RETRY)
+            events.Post(queue).gps_open(GPS_RETRY)
 
         # Warning
         elif eventType == events.WARN:
-            warning = 'Warning: {}'.format(event.get_arg('warning'))
+            self._status.clear_gps()
+            warning = '\nWarning: {}'.format(event.get_arg('warning'))
             print warning
+            print 'R'
             self._status.append_log(warning)
 
         # Error
