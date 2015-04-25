@@ -44,13 +44,14 @@ class Parse(object):
     SCANS = 'scans'
     SIGNALS_LAST = 'signals_last'
     SIGNALS = 'signals'
+    LOG = 'log'
 
     # Values
     VALUE = 'value'
     INT, BOOL = range(2)
 
     COMMANDS = [GET, SET, REQ, RUN, DEL]
-    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS]
+    METHODS = [STATUS, SATELLITES, SCAN, SCANS, SIGNALS_LAST, SIGNALS, LOG]
 
     def __init__(self, queue, status, database, server):
         self._queue = queue
@@ -68,6 +69,7 @@ class Parse(object):
                    valReq=Parse.BOOL)
         self.__set(Parse.SIGNALS, canGet=True,
                    valGet=Parse.INT)
+        self.__set(Parse.LOG, canGet=True)
 
     def __set(self, method,
               canGet=False, canSet=False, canReq=False,
@@ -138,6 +140,9 @@ class Parse(object):
 
         elif method == Parse.SIGNALS:
             self._database.get_signals(self.result_signals, value)
+
+        elif method == Parse.LOG:
+            return self.result(method, self._status.get_log())
 
     def __check_method(self, command, method, _value):
         canGet = self.__can_get(method)

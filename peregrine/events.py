@@ -63,7 +63,7 @@ class Post(object):
             event = Event(eventType)
             self.__post(event)
 
-    def scan(self, delay=0):
+    def scan_start(self, delay=0):
         event = Event(SCAN_START)
         self.__post(event, delay)
 

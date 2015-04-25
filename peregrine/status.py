@@ -28,7 +28,7 @@ import time
 import events
 
 
-LOG_SIZE = 25
+LOG_SIZE = 200
 
 
 class Status(object):
@@ -74,8 +74,9 @@ class Status(object):
         self._location = None
         self._sats = []
 
-    def append_log(self, log):
-        self._log.append(log)
+    def append_log(self, message):
+        self._log.append({'timeStamp': time.time(),
+                          'message': message})
         while len(self._log) > 24:
             del self._log[0]
 
@@ -84,6 +85,9 @@ class Status(object):
 
     def get_satellites(self):
         return self._sats
+
+    def get_log(self):
+        return {'log': self._log}
 
     def get(self):
         resp = OrderedDict()

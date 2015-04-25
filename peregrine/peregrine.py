@@ -68,7 +68,7 @@ class Peregrine(object):
 
         events.Post(queue).gps_open(0)
         if settings.delay is not None:
-            events.Post(queue).scan_done()
+            events.Post(queue).scan_start()
 
         while not self._isExiting:
             if not queue.empty():
@@ -112,7 +112,7 @@ class Peregrine(object):
             location = self._status.get_location()
             if location is None or time.time() - location[1] > LOCATION_AGE:
                 self._status.set_status(events.STATUS_WAIT)
-                events.Post(queue).scan(1)
+                events.Post(queue).scan_start(1)
             elif not self._isScanning:
                 self._receive.receive()
 
@@ -133,9 +133,11 @@ class Peregrine(object):
                 self._status.set_signals(0)
 
             self._server.push_signals(timeStamp, collars)
+            log = 'Found {} signals'.format(len(collars))
+            self._status.append_log(log)
 
             if settings.delay is not None:
-                events.Post(queue).scan(settings.delay)
+                events.Post(queue).scan_start(settings.delay)
 
         # Open GPS
         elif eventType == events.GPS_OPEN:
@@ -152,8 +154,9 @@ class Peregrine(object):
 
         # GPS error
         elif eventType == events.GPS_ERR:
-            warning = '\nGPS error: {}'.format(event.get_arg('error'))
-            print warning
+            error = '\nGPS error: {}'.format(event.get_arg('error'))
+            self._status.append_log(error)
+            print error
             print 'Retry in {}s'.format(GPS_RETRY)
             events.Post(queue).gps_open(GPS_RETRY)
 
