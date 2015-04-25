@@ -26,5 +26,12 @@ SAMPLE_TIME = 4
 # Sample rate (Hertz)
 SAMPLE_RATE = 2.4e6
 
+# Retry GPS delay (seconds)
+GPS_RETRY = 5
 # Maximum age for a valid location (seconds)
-LOCATION_AGE = 5
+GPS_AGE = 5
+
+# Log size (lines)
+LOG_SIZE = 50
+
+

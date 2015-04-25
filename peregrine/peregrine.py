@@ -28,10 +28,9 @@ import argparse
 import os
 import signal
 import sys
-from testmode import TestMode
 import time
 
-from constants import LOCATION_AGE
+from constants import GPS_AGE, GPS_RETRY
 from database import Database
 import events
 from gps import Gps
@@ -39,9 +38,7 @@ from receive import Receive
 from server import Server
 from settings import Settings
 from status import Status
-
-
-GPS_RETRY = 5
+from testmode import TestMode
 
 
 class Peregrine(object):
@@ -110,7 +107,7 @@ class Peregrine(object):
         # Start scan
         if eventType == events.SCAN_START:
             location = self._status.get_location()
-            if location is None or time.time() - location[1] > LOCATION_AGE:
+            if location is None or time.time() - location[1] > GPS_AGE:
                 self._status.set_status(events.STATUS_WAIT)
                 events.Post(queue).scan_start(1)
             elif not self._isScanning:
@@ -128,13 +125,13 @@ class Peregrine(object):
                     location = self._status.get_location()[0]
                     collar.lon = location[0]
                     collar.lat = location[1]
-                    self._database.append(timeStamp, collar)
+                    self._database.append_signal(timeStamp, collar)
             else:
                 self._status.set_signals(0)
 
             self._server.push_signals(timeStamp, collars)
             log = 'Found {} signals'.format(len(collars))
-            self._status.append_log(log)
+            self._database.append_log(log)
 
             if settings.delay is not None:
                 events.Post(queue).scan_start(settings.delay)
@@ -155,7 +152,8 @@ class Peregrine(object):
         # GPS error
         elif eventType == events.GPS_ERR:
             error = '\nGPS error: {}'.format(event.get_arg('error'))
-            self._status.append_log(error)
+            self._database.append_log(error)
+            self._status.clear_gps()
             print error
             print 'Retry in {}s'.format(GPS_RETRY)
             events.Post(queue).gps_open(GPS_RETRY)
@@ -166,13 +164,13 @@ class Peregrine(object):
             warning = '\nWarning: {}'.format(event.get_arg('warning'))
             print warning
             print 'R'
-            self._status.append_log(warning)
+            self._database.append_log(warning)
 
         # Error
         elif eventType == events.ERR:
             error = event.get_arg('error')
             sys.stderr.write(error)
-            self._status.append_log(error)
+            self._database.append_log(error)
             self.__close()
             exit(3)
 

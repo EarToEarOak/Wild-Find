@@ -142,7 +142,7 @@ class Parse(object):
             self._database.get_signals(self.result_signals, value)
 
         elif method == Parse.LOG:
-            return self.result(method, self._status.get_log())
+            return self.result(method, self._database.get_log(self.result_log))
 
     def __check_method(self, command, method, _value):
         canGet = self.__can_get(method)
@@ -298,6 +298,9 @@ class Parse(object):
 
     def result_signals(self, results):
         self._server.send(self.result(Parse.SIGNALS, results))
+
+    def result_log(self, results):
+        self._server.send(self.result(Parse.LOG, results))
 
 
 class SyntaxException(Exception):

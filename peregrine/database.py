@@ -27,14 +27,16 @@ import sqlite3
 import threading
 import time
 
+from constants import LOG_SIZE
 import events
 
 
 VERSION = 1
 
-ADD_SCAN, GET_SCANS, \
-    GET_SIGNALS_LAST, GET_SIGNALS, DEL_SCAN, DEL_SCANS, \
-    CLOSE = range(7)
+ADD_SIGNAL, GET_SIGNALS_LAST, GET_SIGNALS, \
+    GET_SCANS, DEL_SCAN, DEL_SCANS, \
+    ADD_LOG, GET_LOG, \
+    CLOSE = range(9)
 
 
 class Database(threading.Thread):
@@ -55,6 +57,13 @@ class Database(threading.Thread):
 
         self.start()
 
+    def __name_factory(self, cursor, row):
+        names = {}
+        for i, column in enumerate(cursor.description):
+            names[column[0]] = row[i]
+
+        return names
+
     def __create(self):
         self._conn = sqlite3.connect(self._path)
         self._conn.row_factory = self.__name_factory
@@ -65,6 +74,7 @@ class Database(threading.Thread):
             cmd = 'pragma auto_vacuum = incremental;'
             self._conn.execute(cmd)
 
+            # Info table
             cmd = ('create table if not exists '
                    'Info ('
                    '    Key text primary key,'
@@ -80,10 +90,13 @@ class Database(threading.Thread):
                 events.Post(self._notify).error(error=err)
                 return
 
+            # Scans table
             cmd = ('create table if not exists '
                    'Scans ('
                    '    TimeStamp integer primary key)')
             self._conn.execute(cmd)
+
+            # Signals table
             cmd = ('create table if not exists '
                    'Signals ('
                    '    Id integer primary key autoincrement,'
@@ -98,7 +111,25 @@ class Database(threading.Thread):
                    '        on delete cascade)')
             self._conn.execute(cmd)
 
-    def __add(self, **kwargs):
+            # Log table
+            cmd = ('create table if not exists '
+                   'Log ('
+                   '    Id integer primary key autoincrement,'
+                   '    TimeStamp text,'
+                   '    Message )')
+            self._conn.execute(cmd)
+
+            # Log pruning trigger
+            cmd = ('create trigger LogPrune insert on Log when '
+                   '(select count(*) from log) > {} '
+                   'begin'
+                   '    delete from Log where Log.Id not in '
+                   '      (select Log.Id from Log order by'
+                   '          Id desc limit {});'
+                   'end;').format(LOG_SIZE, LOG_SIZE - 1)
+            self._conn.execute(cmd)
+
+    def __add_signal(self, **kwargs):
         with self._conn:
             timeStamp = int(kwargs['timeStamp'])
             signal = kwargs['signal']
@@ -118,12 +149,13 @@ class Database(threading.Thread):
                                      signal.lon,
                                      signal.lat))
 
-    def __name_factory(self, cursor, row):
-        names = {}
-        for i, column in enumerate(cursor.description):
-            names[column[0]] = row[i]
+    def __add_log(self, **kwargs):
+        with self._conn:
+            timeStamp = int(kwargs['timeStamp'])
+            message = kwargs['message']
 
-        return names
+            cmd = 'insert into Log values (null, ?, ?)'
+            self._conn.execute(cmd, (timeStamp, message))
 
     def __get_scans(self, callback):
         cursor = self._conn.cursor()
@@ -145,6 +177,15 @@ class Database(threading.Thread):
         cursor = self._conn.cursor()
         cmd = 'select * from Signals where TimeStamp = ?'
         cursor.execute(cmd, (timeStamp,))
+        signals = cursor.fetchall()
+        for signal in signals:
+            del signal['Id']
+        callback(signals)
+
+    def __get_log(self, callback):
+        cursor = self._conn.cursor()
+        cmd = 'select * from Log'
+        cursor.execute(cmd)
         signals = cursor.fetchall()
         for signal in signals:
             del signal['Id']
@@ -173,8 +214,8 @@ class Database(threading.Thread):
                 event = self._queue.get()
                 eventType = event.get_type()
 
-                if eventType == ADD_SCAN:
-                    self.__add(**event.get_args())
+                if eventType == ADD_SIGNAL:
+                    self.__add_signal(**event.get_args())
                 elif eventType == GET_SCANS:
                     callback = event.get_arg('callback')
                     self.__get_scans(callback)
@@ -192,6 +233,11 @@ class Database(threading.Thread):
                 elif eventType == DEL_SCANS:
                     callback = event.get_arg('callback')
                     self.__del_scans(callback)
+                if eventType == ADD_LOG:
+                    self.__add_log(**event.get_args())
+                if eventType == GET_LOG:
+                    callback = event.get_arg('callback')
+                    self.__get_log(callback)
                 elif eventType == CLOSE:
                     self._conn.close()
                 else:
@@ -199,8 +245,12 @@ class Database(threading.Thread):
 
         self._conn.close()
 
-    def append(self, timeStamp, signal):
-        event = events.Event(ADD_SCAN, signal=signal, timeStamp=timeStamp)
+    def append_signal(self, timeStamp, signal):
+        event = events.Event(ADD_SIGNAL, signal=signal, timeStamp=timeStamp)
+        self._queue.put(event)
+
+    def append_log(self, message):
+        event = events.Event(ADD_LOG, message=message, timeStamp=time.time())
         self._queue.put(event)
 
     def get_scans(self, callback):
@@ -214,6 +264,10 @@ class Database(threading.Thread):
     def get_signals(self, callback, timeStamp):
         event = events.Event(GET_SIGNALS, callback=callback,
                              timeStamp=timeStamp)
+        self._queue.put(event)
+
+    def get_log(self, callback):
+        event = events.Event(GET_LOG, callback=callback)
         self._queue.put(event)
 
     def del_scan(self, callback, timeStamp):
