@@ -41,7 +41,7 @@ class Receive(threading.Thread):
         self._queue = queue
 
         self._cancel = False
-        self._status = False
+        self._receive = False
 
         devices = rtlsdr.librtlsdr.rtlsdr_get_device_count()
         if self._settings.recvIndex >= devices:
@@ -64,7 +64,7 @@ class Receive(threading.Thread):
         return capture
 
     def __receive(self):
-        self._status = False
+        self._receive = False
 
         events.Post(self._queue).status(events.STATUS_CAPTURE)
         timeStamp = time.time()
@@ -83,13 +83,13 @@ class Receive(threading.Thread):
 
     def run(self):
         while not self._cancel:
-            if self._status:
+            if self._receive:
                 self.__receive()
             else:
                 time.sleep(0.05)
 
     def receive(self):
-        self._status = True
+        self._receive = True
 
     def stop(self):
         self._cancel = True

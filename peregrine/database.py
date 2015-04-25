@@ -120,7 +120,7 @@ class Database(threading.Thread):
             self._conn.execute(cmd)
 
             # Log pruning trigger
-            cmd = ('create trigger LogPrune insert on Log when '
+            cmd = ('create trigger if not exists LogPrune insert on Log when '
                    '(select count(*) from log) > {} '
                    'begin'
                    '    delete from Log where Log.Id not in '
@@ -240,8 +240,8 @@ class Database(threading.Thread):
                     self.__get_log(callback)
                 elif eventType == CLOSE:
                     self._conn.close()
-                else:
-                    time.sleep(0.05)
+            else:
+                time.sleep(0.05)
 
         self._conn.close()
 

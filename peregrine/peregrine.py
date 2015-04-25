@@ -70,6 +70,8 @@ class Peregrine(object):
         while not self._isExiting:
             if not queue.empty():
                 self.__process_queue(settings, queue)
+            else:
+                time.sleep(0.05)
 
         self.__close()
 
@@ -176,11 +178,6 @@ class Peregrine(object):
 
         else:
             self._status.set_status(eventType)
-
-        try:
-            time.sleep(0.05)
-        except IOError:
-            pass
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
