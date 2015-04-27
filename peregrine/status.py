@@ -77,11 +77,19 @@ class Status(object):
         return self._sats
 
     def get(self):
+        lon = None
+        lat = None
+        fix = None
+        if self._location is not None:
+            lon = self._location[0][0]
+            lat = self._location[0][1]
+            fix = self._location[1]
+
         resp = OrderedDict()
         resp['status'] = self._status - events.STATUS_IDLE
         resp['signals'] = self._signals
-        resp['lon'] = self._location[0][0]
-        resp['lat'] = self._location[0][1]
-        resp['fix'] = self._location[1]
+        resp['lon'] = lon
+        resp['lat'] = lat
+        resp['fix'] = fix
 
         return resp

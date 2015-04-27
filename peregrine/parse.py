@@ -85,33 +85,6 @@ class Parse(object):
                                 'valReq': valReq,
                                 'valDel': valDel}
 
-    def __can_get(self, method):
-        return self._params[method]['canGet']
-
-    def __can_set(self, method):
-        return self._params[method]['canSet']
-
-    def __can_req(self, method):
-        return self._params[method]['canReq']
-
-    def __can_run(self, method):
-        return self._params[method]['canRun']
-
-    def __can_del(self, method):
-        return self._params[method]['canDel']
-
-    def __get_get_val(self, method):
-        return self._params[method]['valGet']
-
-    def __get_set_val(self, method):
-        return self._params[method]['valSet']
-
-    def __get_req_val(self, method):
-        return self._params[method]['valReq']
-
-    def __get_del_val(self, method):
-        return self._params[method]['valDel']
-
     def __execute(self, command, method, value):
         if method == Parse.STATUS:
             return self.result(method, self._status.get())
@@ -145,10 +118,11 @@ class Parse(object):
             return self.result(method, self._database.get_log(self.result_log))
 
     def __check_method(self, command, method, _value):
-        canGet = self.__can_get(method)
-        canSet = self.__can_set(method)
-        canReq = self.__can_req(method)
-        canDel = self.__can_del(method)
+        canGet = self._params[method]['canGet']
+        canSet = self._params[method]['canSet']
+        canReq = self._params[method]['canReq']
+        canRun = self._params[method]['canRun']
+        canDel = self._params[method]['canDel']
 
         if command == Parse.GET and canGet is None:
             error = '\'{}\' is not readable'.format(method)
@@ -162,15 +136,19 @@ class Parse(object):
             error = '\'{}\' cannot request push updates'.format(method)
             raise MethodException(error)
 
+        elif command == Parse.RUN and canRun is None:
+            error = '\'{}\' cannot be run'.format(method)
+            raise MethodException(error)
+
         elif command == Parse.DEL and canDel is None:
             error = '\'{}\' cannot delete'.format(method)
             raise MethodException(error)
 
     def __check_value(self, command, method, value):
-        valGet = self.__get_get_val(method)
-        valSet = self.__get_set_val(method)
-        valReq = self.__get_req_val(method)
-        valDel = self.__get_del_val(method)
+        valGet = self._params[method]['valGet']
+        valSet = self._params[method]['valSet']
+        valReq = self._params[method]['valReq']
+        valDel = self._params[method]['valDel']
 
         if command == Parse.GET:
             if valGet is not None:
@@ -197,10 +175,10 @@ class Parse(object):
                     raise ValueException(error)
 
     def __check_value_type(self, command, method, value):
-        valGet = self.__get_get_val(method)
-        valSet = self.__get_set_val(method)
-        valReq = self.__get_req_val(method)
-        valDel = self.__get_del_val(method)
+        valGet = self._params[method]['valGet']
+        valSet = self._params[method]['valSet']
+        valReq = self._params[method]['valReq']
+        valDel = self._params[method]['valDel']
 
         valType = None
 
