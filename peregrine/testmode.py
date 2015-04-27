@@ -52,7 +52,7 @@ class TestMode(object):
         event = queue.get()
         eventType = event.get_type()
 
-        if eventType == events.SCAN:
+        if eventType == events.SCAN_START:
             print 'Scanning...'
             self._receive.receive()
 
