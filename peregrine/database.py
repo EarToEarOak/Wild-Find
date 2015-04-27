@@ -93,7 +93,8 @@ class Database(threading.Thread):
             # Scans table
             cmd = ('create table if not exists '
                    'Scans ('
-                   '    TimeStamp integer primary key)')
+                   '    TimeStamp integer primary key,'
+                   '    Freq real)')
             self._conn.execute(cmd)
 
             # Signals table
@@ -133,10 +134,11 @@ class Database(threading.Thread):
         with self._conn:
             timeStamp = int(kwargs['timeStamp'])
             signal = kwargs['signal']
+            frequency = kwargs['frequency']
 
-            cmd = 'insert into Scans values(?)'
+            cmd = 'insert into Scans values(?, ?)'
             try:
-                self._conn.execute(cmd, (timeStamp,))
+                self._conn.execute(cmd, (timeStamp, frequency))
             except sqlite3.IntegrityError:
                 pass
 
@@ -245,8 +247,9 @@ class Database(threading.Thread):
 
         self._conn.close()
 
-    def append_signal(self, timeStamp, signal):
-        event = events.Event(ADD_SIGNAL, signal=signal, timeStamp=timeStamp)
+    def append_signal(self, timeStamp, signal, frequency):
+        event = events.Event(ADD_SIGNAL, signal=signal, frequency=frequency,
+                             timeStamp=timeStamp)
         self._queue.put(event)
 
     def append_log(self, message):

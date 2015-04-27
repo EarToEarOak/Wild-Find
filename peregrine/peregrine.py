@@ -30,7 +30,7 @@ import signal
 import sys
 import time
 
-from constants import GPS_AGE, GPS_RETRY
+from constants import GPS_AGE, GPS_RETRY, SAMPLE_RATE
 from database import Database
 import events
 from gps import Gps
@@ -62,6 +62,10 @@ class Peregrine(object):
         self._isScanning = False
         self._isExiting = False
         self._signal = signal.signal(signal.SIGINT, self.__close)
+
+        halfBand = SAMPLE_RATE / 2e6
+        print 'Scanning {:.2f}-{:.2f}MHz'.format(settings.freq - halfBand,
+                                                 settings.freq + halfBand)
 
         events.Post(queue).gps_open(0)
         if settings.delay is not None:
@@ -127,7 +131,7 @@ class Peregrine(object):
                     location = self._status.get_location()[0]
                     collar.lon = location[0]
                     collar.lat = location[1]
-                    self._database.append_signal(timeStamp, collar)
+                    self._database.append_signal(timeStamp, collar, settings.freq)
             else:
                 self._status.set_signals(0)
 
