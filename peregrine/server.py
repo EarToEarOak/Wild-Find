@@ -125,6 +125,6 @@ class Server(threading.Thread):
             result = self._parse.result_signals_last(resp)
             self.send(result)
 
-    def close(self):
+    def stop(self):
         self._cancel = True
         self._server.close()

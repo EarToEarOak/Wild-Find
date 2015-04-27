@@ -241,7 +241,7 @@ class Database(threading.Thread):
                     callback = event.get_arg('callback')
                     self.__get_log(callback)
                 elif eventType == CLOSE:
-                    self._conn.close()
+                    break
             else:
                 time.sleep(0.05)
 

@@ -71,7 +71,7 @@ class Peregrine(object):
         if settings.delay is not None:
             events.Post(queue).scan_start()
 
-        while not self._isExiting:
+        while self._receive.isAlive():
             if not queue.empty():
                 self.__process_queue(settings, queue)
             else:
@@ -188,7 +188,7 @@ class Peregrine(object):
         self._isExiting = True
         print '\nExiting\n'
         if self._server is not None:
-            self._server.close()
+            self._server.stop()
         if self._gps is not None:
             self._gps.stop()
         if self._receive is not None:
