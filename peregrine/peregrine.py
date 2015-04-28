@@ -27,6 +27,7 @@ import Queue
 import argparse
 import os
 import signal
+import socket
 import sys
 import time
 
@@ -43,7 +44,10 @@ from testmode import TestMode
 
 class Peregrine(object):
     def __init__(self):
-        print 'Peregrine'
+        print 'Peregrine\n'
+
+        hostname = socket.gethostname()
+        print 'Host name: {}'.format(hostname)
 
         queue = Queue.Queue()
 
