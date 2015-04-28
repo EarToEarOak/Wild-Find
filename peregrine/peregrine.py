@@ -64,7 +64,7 @@ class Peregrine(object):
         self._server = Server(queue, self._status, self._database)
 
         self._isScanning = False
-        self._isExiting = False
+        self._cancel = False
         self._signal = signal.signal(signal.SIGINT, self.__close)
 
         halfBand = SAMPLE_RATE / 2e6
@@ -75,7 +75,7 @@ class Peregrine(object):
         if settings.delay is not None:
             events.Post(queue).scan_start()
 
-        while self._receive.isAlive():
+        while not self._cancel:
             if not queue.empty():
                 self.__process_queue(settings, queue)
             else:
@@ -108,7 +108,7 @@ class Peregrine(object):
         return args
 
     def __process_queue(self, settings, queue):
-        if self._isExiting:
+        if self._cancel:
             return
 
         event = queue.get()
@@ -189,7 +189,7 @@ class Peregrine(object):
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
-        self._isExiting = True
+        self._cancel = True
         print '\nExiting\n'
         if self._server is not None:
             self._server.stop()

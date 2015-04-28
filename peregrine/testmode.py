@@ -86,7 +86,6 @@ class TestMode(object):
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
-        self._isExiting = True
         print '\nExiting\n'
         if self._server is not None:
             self._server.close()
