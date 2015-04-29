@@ -176,3 +176,8 @@ class Gps(threading.Thread):
 
     def stop(self):
         self._cancel = True
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

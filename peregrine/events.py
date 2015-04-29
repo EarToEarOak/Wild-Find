@@ -96,3 +96,8 @@ class Post(object):
     def warning(self, warning):
         event = Event(WARN, warning=warning)
         self.__post(event)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

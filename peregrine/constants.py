@@ -35,3 +35,6 @@ GPS_AGE = 5
 LOG_SIZE = 50
 
 
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

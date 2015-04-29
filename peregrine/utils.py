@@ -39,3 +39,8 @@ class Utils(object):
         valuesMin = [value * (100 - tolerance) / 100. for value in values]
         valuesMax = [value * (100 + tolerance) / 100. for value in values]
         return zip(valuesMax, valuesMin)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

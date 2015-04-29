@@ -103,3 +103,9 @@ class Settings(object):
         except ValueError as error:
             sys.stderr.write('Configuration error: {}\n'.format(error))
             exit(2)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)
+

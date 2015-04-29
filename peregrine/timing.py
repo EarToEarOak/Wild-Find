@@ -70,3 +70,8 @@ class Timing(object):
         print '\t{:<8} {:>17.3f} {:>13.3f}\n'.format('Total',
                                                      timeTotal,
                                                      aveTotal)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

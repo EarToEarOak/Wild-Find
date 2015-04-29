@@ -128,3 +128,8 @@ class Server(threading.Thread):
     def stop(self):
         self._cancel = True
         self._server.close()
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

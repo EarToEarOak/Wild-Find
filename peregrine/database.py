@@ -285,3 +285,8 @@ class Database(threading.Thread):
     def stop(self):
         event = events.Event(CLOSE)
         self._queue.put(event)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

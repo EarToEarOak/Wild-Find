@@ -42,3 +42,8 @@ class Comm(object):
 
     def get_bauds(self):
         return serial.Serial.BAUDRATES
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

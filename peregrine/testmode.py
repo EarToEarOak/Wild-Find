@@ -95,3 +95,8 @@ class TestMode(object):
             self._receive.stop()
         if self._database is not None:
             self._database.stop()
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)

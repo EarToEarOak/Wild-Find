@@ -350,3 +350,8 @@ class DetectDebug(object):
     def callback_am(self, *args):
         if self._callbackAm is not None:
             self._callbackAm(*args)
+
+
+if __name__ == '__main__':
+    print 'Please run peregrine.py'
+    exit(1)
