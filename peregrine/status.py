@@ -36,6 +36,9 @@ class Status(object):
     _location = None
     _sats = []
 
+    def __init__(self, database):
+        self._database = database
+
     def __display(self):
         lon = '        --'
         lat = '        --'
@@ -85,12 +88,16 @@ class Status(object):
             lat = self._location[0][1]
             fix = self._location[1]
 
+        size, space = self._database.get_size()
+
         resp = OrderedDict()
         resp['status'] = self._status - events.STATUS_IDLE
         resp['signals'] = self._signals
         resp['lon'] = lon
         resp['lat'] = lat
         resp['fix'] = fix
+        resp['size'] = size
+        resp['space'] = space
 
         return resp
 

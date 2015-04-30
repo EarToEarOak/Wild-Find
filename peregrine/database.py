@@ -22,7 +22,9 @@
 #
 
 import Queue
+import ctypes
 import os
+import platform
 import sqlite3
 import threading
 import time
@@ -255,6 +257,26 @@ class Database(threading.Thread):
     def append_log(self, message):
         event = events.Event(ADD_LOG, message=message, timeStamp=time.time())
         self._queue.put(event)
+
+    def get_size(self):
+        path = os.path.realpath(self._path)
+        folder, _tail = os.path.split(path)
+
+        size = os.path.getsize(path)
+
+        space = 0
+        if platform.system() == 'Windows':
+            puSpace = ctypes.c_ulonglong(0)
+            ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder), # @UndefinedVariable
+                                                       None,
+                                                       None,
+                                                       ctypes.pointer(puSpace))
+            space = puSpace.value
+        else:
+            statvfs = os.statvfs(folder)  # @UndefinedVariable
+            space = statvfs.f_frsize * statvfs.f_bfree
+
+        return size, space
 
     def get_scans(self, callback):
         event = events.Event(GET_SCANS, callback=callback)

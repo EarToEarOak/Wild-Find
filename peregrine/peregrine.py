@@ -60,7 +60,7 @@ class Peregrine(object):
         self._gps = None
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
-        self._status = Status()
+        self._status = Status(self._database)
         self._server = Server(queue, self._status, self._database)
 
         self._isScanning = False
