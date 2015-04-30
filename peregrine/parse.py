@@ -124,23 +124,23 @@ class Parse(object):
         canRun = self._params[method]['canRun']
         canDel = self._params[method]['canDel']
 
-        if command == Parse.GET and canGet is None:
+        if command == Parse.GET and not canGet:
             error = '\'{}\' is not readable'.format(method)
             raise MethodException(error)
 
-        elif command == Parse.SET and canSet is None:
+        elif command == Parse.SET and not canSet:
             error = '\'{}\' is read only'.format(method)
             raise MethodException(error)
 
-        elif command == Parse.REQ and canReq is None:
+        elif command == Parse.REQ and not canReq:
             error = '\'{}\' cannot request push updates'.format(method)
             raise MethodException(error)
 
-        elif command == Parse.RUN and canRun is None:
+        elif command == Parse.RUN and not canRun:
             error = '\'{}\' cannot be run'.format(method)
             raise MethodException(error)
 
-        elif command == Parse.DEL and canDel is None:
+        elif command == Parse.DEL and not canDel:
             error = '\'{}\' cannot delete'.format(method)
             raise MethodException(error)
 
@@ -217,7 +217,7 @@ class Parse(object):
         try:
             instruction = json.loads(data.lower())
         except ValueError:
-            raise SyntaxError('Expected a JSON string')
+            raise SyntaxException('Expected a JSON string')
 
         if Parse.COMMAND not in instruction:
             raise CommandException('\'Command\' not found')
