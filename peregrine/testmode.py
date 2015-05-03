@@ -40,7 +40,7 @@ class TestMode(object):
         self._receive = Receive(settings, queue)
         self._signal = signal.signal(signal.SIGINT, self.__close)
 
-        events.Post(queue).scan_done()
+        events.Post(queue).scan_start()
 
         while self._receive.isAlive():
             if not queue.empty():
@@ -70,7 +70,7 @@ class TestMode(object):
                                              collar.level)
                 else:
                     print '\tNo signals found'
-            events.Post(queue).scan()
+            events.Post(queue).scan_done()
 
         elif eventType == events.WARN:
             warning = 'Warning: {}'.format(event.get_arg('warning'))
