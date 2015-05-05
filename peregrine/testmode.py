@@ -70,7 +70,7 @@ class TestMode(object):
                                              collar.level)
                 else:
                     print '\tNo signals found'
-            events.Post(queue).scan()
+            events.Post(queue).scan_start()
 
         elif eventType == events.WARN:
             warning = 'Warning: {}'.format(event.get_arg('warning'))
