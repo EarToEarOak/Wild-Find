@@ -34,12 +34,12 @@ from matplotlib.widgets import RectangleSelector
 import numpy
 from scipy.io import wavfile
 
-from constants import SAMPLE_TIME, SAMPLE_RATE
-from detect import Detect, DetectDebug
 import matplotlib.pyplot as plt
-from scan import Scan
-from timing import Timing
-from utils import Utils
+from peregrine.constants import SAMPLE_TIME, SAMPLE_RATE
+from peregrine.detect import DetectDebug, Detect
+from peregrine.scan import Scan
+from peregrine.timing import Timing
+from peregrine.utils import Utils
 
 
 matplotlib.use('TkAgg')

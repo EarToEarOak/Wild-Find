@@ -92,3 +92,11 @@ def create_database(connection):
         connection.execute(cmd)
 
         return None
+
+
+def name_factory(cursor, row):
+    names = {}
+    for i, column in enumerate(cursor.description):
+        names[column[0]] = row[i]
+
+    return names

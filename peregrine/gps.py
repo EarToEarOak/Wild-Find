@@ -27,7 +27,8 @@ import threading
 import serial
 from serial.serialutil import SerialException
 
-import events
+from peregrine import events
+
 
 TIMEOUT = 2
 

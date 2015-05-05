@@ -24,7 +24,7 @@
 from collections import OrderedDict
 import json
 
-import events
+from peregrine import events
 
 
 class Parse(object):

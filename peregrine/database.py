@@ -29,7 +29,7 @@ import sqlite3
 import threading
 import time
 
-from common.database import create_database
+from common.database import create_database, name_factory
 from peregrine import events
 
 
@@ -57,16 +57,9 @@ class Database(threading.Thread):
 
         self.start()
 
-    def __name_factory(self, cursor, row):
-        names = {}
-        for i, column in enumerate(cursor.description):
-            names[column[0]] = row[i]
-
-        return names
-
     def __connect(self):
         self._conn = sqlite3.connect(self._path)
-        self._conn.row_factory = self.__name_factory
+        self._conn.row_factory = name_factory
 
         error = create_database(self._conn)
         if error is not None:

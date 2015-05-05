@@ -26,9 +26,9 @@ import signal
 import sys
 import time
 
-from collar import MOD_DESC
-import events
-from receive import Receive
+from peregrine import events
+from peregrine.collar import MOD_DESC
+from peregrine.receive import Receive
 
 
 class TestMode(object):

@@ -25,7 +25,7 @@ from collections import OrderedDict
 import sys
 import time
 
-import events
+from peregrine import events
 
 
 class Status(object):
