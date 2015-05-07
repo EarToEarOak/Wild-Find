@@ -56,6 +56,9 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
+        if not self.__file_warn():
+            return
+
         dialog = QtGui.QFileDialog(self)
         dialog.setFileMode(QtGui.QFileDialog.AnyFile)
         dialog.setNameFilter('Database (*.db)')
@@ -65,11 +68,13 @@ class Falconer(QtGui.QMainWindow):
             fileName = dialog.selectedFiles()[0]
             if os.path.exists(fileName):
                 os.remove(fileName)
-            self._database.open(fileName)
-            self.__set_signals()
+            self.__open(fileName)
 
     @QtCore.Slot()
     def on_actionOpen_triggered(self):
+        if not self.__file_warn():
+            return
+
         dialog = QtGui.QFileDialog(self)
         dialog.setFileMode(QtGui.QFileDialog.AnyFile)
         dialog.setNameFilter('Database (*.db)')
@@ -81,6 +86,9 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot(str)
     def __on_actionHistory_triggered(self, fileName):
+        if not self.__file_warn():
+            return
+
         self.__open(fileName)
 
     @QtCore.Slot()
@@ -100,6 +108,19 @@ class Falconer(QtGui.QMainWindow):
     def closeEvent(self, _event):
         self._settings.close()
         self._server.close()
+
+    def __file_warn(self):
+        if self._database.isConnected():
+            flags = (QtGui.QMessageBox.StandardButton.Yes |
+                     QtGui.QMessageBox.StandardButton.No)
+            message = 'Close existing file?'
+            response = QtGui.QMessageBox.question(self, 'Warning',
+                                                  message,
+                                                  flags)
+            if response == QtGui.QMessageBox.No:
+                return False
+
+        return True
 
     def __open(self, fileName):
         self._database.open(fileName)

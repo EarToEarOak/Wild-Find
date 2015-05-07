@@ -42,6 +42,13 @@ class Database():
     def close(self):
         if self._conn is not None:
             self._conn.close()
+            self._conn = None
+
+    def isConnected(self):
+        if self._conn is None:
+            return False
+
+        return True
 
     def get_scans(self):
         cursor = self._conn.cursor()
@@ -49,16 +56,6 @@ class Database():
         cursor.execute(cmd)
 
         return cursor.fetchall()
-
-#    def get_signals(self):
-#        cursor = self._conn.cursor()
-#        cmd = 'select * from Signals'
-#        cursor.execute(cmd)
-#        signals = cursor.fetchall()
-#        for signal in signals:
-#            del signal['Id']
-#
-#        return signals
 
     def get_frequencies(self):
         cursor = self._conn.cursor()
