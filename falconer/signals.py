@@ -25,6 +25,7 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from PySide.QtCore import QModelIndex
 
 
 class WidgetSignals(QtGui.QWidget):
@@ -73,42 +74,45 @@ class ModelSignals(QtCore.QAbstractTableModel):
         return len(self.HEADER)
 
     def headerData(self, col, orientation, role):
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
             return self.HEADER[col]
         return None
 
     def data(self, index, role):
         value = self._frequencies[index.row()][index.column()]
-        if index.column() != 0 and role == QtCore.Qt.DisplayRole:
+        data = None
+
+        if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
-                value = self._frequencies[index.row()][index.column()]
                 data = '{:7.3f}'.format(value / 1e6)
-            else:
-                data = self._frequencies[index.row()][index.column()]
-            return data
-        elif index.column() == 0 and role == QtCore.Qt.CheckStateRole:
-            return value
+            elif index.column() != 0:
+                data = value
+        elif role == QtCore.Qt.CheckStateRole:
+            if index.column() == 0:
+                data = value
 
-    def setData(self, index, value, role):
-        if role == QtCore.Qt.CheckStateRole:
-            self._frequencies[index.row()][index.column()] = value
-            return True
+        return data
 
-        return False
+#    def setData(self, index, value, role):
+#        if role == QtCore.Qt.CheckStateRole:
+#            self._frequencies[index.row()][index.column()] = value
+#            return True
+#
+#        return False
 
-    def flags(self, index):
-        flags = (QtCore.Qt.ItemIsEnabled)
-        if index.column() == 0:
-            flags |= (QtCore.Qt.ItemIsSelectable |
-                      QtCore.Qt.ItemIsEditable |
-                      QtCore.Qt.ItemIsUserCheckable)
-
-        return flags
+#    def flags(self, index):
+#        flags = (QtCore.Qt.ItemIsEnabled)
+#        if index.column() == 0:
+#            flags |= (QtCore.Qt.ItemIsEditable |
+#                      QtCore.Qt.ItemIsUserCheckable)
+#
+#        return flags
 
     def set(self, frequencies):
         self.beginResetModel()
-        self._frequencies = [[QtCore.Qt.Checked, freq, count]
-                             for freq, count in frequencies]
+        del self._frequencies[:]
+        for freq, count in frequencies:
+            self._frequencies.append([QtCore.Qt.Checked, freq, count])
         self.endResetModel()
 
 

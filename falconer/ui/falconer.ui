@@ -84,17 +84,6 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuRemote">
-    <property name="title">
-     <string>&amp;Remote</string>
-    </property>
-    <addaction name="actionConnect"/>
-    <addaction name="separator"/>
-    <addaction name="actionScan"/>
-    <addaction name="actionAutoScan"/>
-    <addaction name="actionScanDelay"/>
-    <addaction name="separator"/>
-   </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>&amp;Help</string>
@@ -111,7 +100,6 @@
    </widget>
    <addaction name="_menuFile"/>
    <addaction name="menu_edit"/>
-   <addaction name="menuRemote"/>
    <addaction name="menu_Help"/>
   </widget>
   <widget class="QStatusBar" name="_statusbar"/>
@@ -132,9 +120,6 @@
    <addaction name="actionOpen"/>
    <addaction name="actionClose"/>
    <addaction name="separator"/>
-   <addaction name="actionConnect"/>
-   <addaction name="actionScan"/>
-   <addaction name="actionAutoScan"/>
   </widget>
   <action name="actionOpen">
    <property name="text">

@@ -54,6 +54,8 @@ class Falconer(QtGui.QMainWindow):
 
         self.statusBar().showMessage('Ready')
 
+        self._widgetFilters.set_callback_time(self.__on_signal_filter_time)
+
     @QtCore.Slot()
     def on_actionNew_triggered(self):
         if not self.__file_warn():
@@ -105,6 +107,11 @@ class Falconer(QtGui.QMainWindow):
         dlg = DialogPreferences(self)
         dlg.show()
 
+    @QtCore.Slot(bool, bool, float, float)
+    def __on_signal_filter_time(self, fromEnabled, toEnabled, fromTime, toTime):
+        timeRange = (fromEnabled, toEnabled, fromTime, toTime)
+        self.__set_signals(timeRange)
+
     def closeEvent(self, _event):
         self._settings.close()
         self._server.close()
@@ -126,9 +133,11 @@ class Falconer(QtGui.QMainWindow):
         self._database.open(fileName)
         self.__set_signals()
 
-    def __set_signals(self):
-        self._widgetSignals.set(self._database.get_frequencies())
-        self._widgetFilters.set(self._database.get_scans())
+    def __set_signals(self, timeRange=None):
+        frequencies = self._database.get_frequencies(timeRange)
+        scans = self._database.get_scans()
+        self._widgetSignals.set(frequencies)
+        self._widgetFilters.set(scans)
 
     def __clear_signals(self):
         self._widgetSignals.clear()
