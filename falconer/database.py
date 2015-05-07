@@ -36,27 +36,6 @@ class Database():
 
         create_database(self._conn)
 
-    def __time_range(self, timeRange):
-        cond = ' '
-
-        if timeRange is not None:
-            fromEnabled = timeRange[0]
-            toEnabled = timeRange[1]
-            fromTime = timeRange[2]
-            toTime = timeRange[3]
-
-            if fromEnabled and toEnabled:
-                cond = ' where TimeStamp >= {} and TimeStamp <= {} '
-                cond = cond.format(fromTime, toTime)
-            elif fromEnabled:
-                cond = ' where TimeStamp >= {} '
-                cond = cond.format(fromTime)
-            elif toEnabled:
-                cond = ' where TimeStamp <= {} '
-                cond = cond.format(toTime)
-
-        return cond
-
     def open(self, fileName):
         self.__connect(fileName)
 
@@ -75,18 +54,29 @@ class Database():
         cursor = self._conn.cursor()
         cmd = 'select * from Scans'
         cursor.execute(cmd)
+        rows = cursor.fetchall()
+        scans = [[row['TimeStamp'], row['Freq']] for row in rows]
 
-        return cursor.fetchall()
+        return scans
 
-    def get_frequencies(self, timeRange):
-        cond = self.__time_range(timeRange)
-        cmd = 'select Freq, count(Freq) from Signals' + cond + 'group by Freq'
+    def get_signals(self, filtered):
+        cond = ' '
+
+        if len(filtered):
+            cond = ' where TimeStamp not in ('
+            cond += str(filtered).strip('[]')
+            cond += ')'
+
+        cmd = 'select Freq, count(Freq) from Signals'
+        cmd += cond
+        cmd += 'group by Freq'
+
         cursor = self._conn.cursor()
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        freqs = [[row['Freq'], row['count(Freq)']] for row in rows]
+        signals = [[row['Freq'], row['count(Freq)']] for row in rows]
 
-        return freqs
+        return signals
 
 
 if __name__ == '__main__':

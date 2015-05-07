@@ -27,31 +27,31 @@ from PySide import QtGui, QtCore
 from falconer import ui
 
 
-class WidgetSignals(QtGui.QWidget):
+class WidgetScans(QtGui.QWidget):
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
-        ui.loadUi(self, 'signals.ui')
+        ui.loadUi(self, 'scans.ui')
 
-        self._model = ModelSignals()
+        self._model = ModelScans()
         proxyModel = QtGui.QSortFilterProxyModel(self)
         proxyModel.setDynamicSortFilter(True)
         proxyModel.setSourceModel(self._model)
 
-        self._tableSignals.setModel(proxyModel)
-        self._tableSignals.resizeColumnsToContents()
+        self._tableScans.setModel(proxyModel)
+        self._tableScans.resizeColumnsToContents()
 
-        header = self._tableSignals.horizontalHeader()
+        header = self._tableScans.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
 
         self.__set_width()
 
     def __set_width(self):
         margins = self.layout().contentsMargins()
-        width = self._tableSignals.verticalHeader().width()
-        width += self._tableSignals.horizontalHeader().length()
-        width += self._tableSignals.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
-        width += self._tableSignals.frameWidth() * 2
+        width = self._tableScans.verticalHeader().width()
+        width += self._tableScans.horizontalHeader().length()
+        width += self._tableScans.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
+        width += self._tableScans.frameWidth() * 2
         width += margins.left() + margins.right()
         width += self.layout().spacing()
         self.setMaximumWidth(width)
@@ -59,11 +59,11 @@ class WidgetSignals(QtGui.QWidget):
     def connect(self, slot):
         self._model.connect(slot)
 
-    def set(self, frequencies):
-        self._model.set(frequencies)
-        self._tableSignals.resizeColumnsToContents()
+    def set(self, scans):
+        self._model.set(scans)
+        self._tableScans.resizeColumnsToContents()
         self.__set_width()
-        self._tableSignals.setEnabled(True)
+        self._tableScans.setEnabled(True)
 
     def get_filtered(self):
         return self._model.get_filtered()
@@ -71,38 +71,37 @@ class WidgetSignals(QtGui.QWidget):
     def clear(self):
         self._model.set([])
         self._model.clear_filtered()
-        self._tableSignals.setEnabled(False)
+        self._tableScans.setEnabled(False)
 
 
-class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = ['', 'Frequency\n(MHz)', 'Detections']
+class ModelScans(QtCore.QAbstractTableModel):
+    HEADER = ['', 'Time', 'Frequency\n(MHz)']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
 
         self._signal = SignalFilter()
-        self._signals = []
+        self._scans = []
         self._filtered = []
 
     def rowCount(self, _parent):
-        return len(self._signals)
+        return len(self._scans)
 
     def columnCount(self, _parent):
         return len(self.HEADER)
 
     def headerData(self, col, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return self.HEADER[col]
+        if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
+            return self.HEADER[col]
         return None
 
     def data(self, index, role):
-        value = self._signals[index.row()][index.column()]
+        value = self._scans[index.row()][index.column()]
         data = None
 
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
-                data = '{:7.3f}'.format(value / 1e6)
+                data = QtCore.QDateTime().fromTime_t(value)
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
@@ -113,13 +112,13 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
     def setData(self, index, value, role):
         if role == QtCore.Qt.CheckStateRole:
-            self._signals[index.row()][index.column()] = value
-            frequency = self._signals[index.row()][1]
+            self._scans[index.row()][index.column()] = value
+            timeStamp = self._scans[index.row()][1]
             checked = value == QtCore.Qt.Checked
             if checked:
-                self._filtered.remove(frequency)
+                self._filtered.remove(timeStamp)
             else:
-                self._filtered.append(frequency)
+                self._filtered.append(timeStamp)
 
             self._signal.filter.emit()
             return True
@@ -137,14 +136,14 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def connect(self, slot):
         self._signal.filter.connect(slot)
 
-    def set(self, signals):
+    def set(self, scans):
         self.beginResetModel()
-        del self._signals[:]
-        for frequency, count in signals:
+        del self._scans[:]
+        for timeStamp, count in scans:
             checked = QtCore.Qt.Checked
-            if frequency in self._filtered:
+            if timeStamp in self._filtered:
                 checked = QtCore.Qt.Unchecked
-            self._signals.append([checked, frequency, count])
+            self._scans.append([checked, timeStamp, count])
         self.endResetModel()
 
     def get_filtered(self):

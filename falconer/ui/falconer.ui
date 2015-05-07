@@ -14,45 +14,16 @@
    <string>Falconer</string>
   </property>
   <widget class="QWidget" name="_centralwidget">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <property name="leftMargin">
-     <number>5</number>
-    </property>
-    <property name="topMargin">
-     <number>5</number>
-    </property>
-    <property name="rightMargin">
-     <number>5</number>
-    </property>
-    <property name="bottomMargin">
-     <number>5</number>
-    </property>
-    <item row="0" column="0">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
      <widget class="QSplitter" name="splitter">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <property name="childrenCollapsible">
-       <bool>false</bool>
-      </property>
       <widget class="WidgetMap" name="_widgetMap" native="true"/>
+      <widget class="WidgetScans" name="_widgetScans" native="true"/>
       <widget class="WidgetSignals" name="_widgetSignals" native="true"/>
      </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="WidgetFilters" name="_widgetFilters" native="true"/>
     </item>
    </layout>
   </widget>
@@ -197,9 +168,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>WidgetFilters</class>
+   <class>WidgetScans</class>
    <extends>QWidget</extends>
-   <header>widgetfilters.h</header>
+   <header>widgetscans.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

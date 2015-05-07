@@ -28,12 +28,12 @@
       </font>
      </property>
      <property name="text">
-      <string>Signals</string>
+      <string>Scans</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="_tableSignals">
+    <widget class="QTableView" name="_tableScans">
      <property name="enabled">
       <bool>false</bool>
      </property>

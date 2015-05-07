@@ -28,12 +28,12 @@ from PySide import QtGui, QtCore
 
 from falconer import ui
 from falconer.database import Database
-from falconer.filters import WidgetFilters
 from falconer.map import WidgetMap
 from falconer.preferences import DialogPreferences
+from falconer.scans import WidgetScans
 from falconer.server import Server
-from falconer.signals import WidgetSignals
 from falconer.settings import Settings
+from falconer.signals import WidgetSignals
 
 
 class Falconer(QtGui.QMainWindow):
@@ -41,20 +41,24 @@ class Falconer(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
 
         self.customWidgets = {'WidgetMap': WidgetMap,
-                              'WidgetSignals': WidgetSignals,
-                              'WidgetFilters': WidgetFilters}
+                              'WidgetScans': WidgetScans,
+                              'WidgetSignals': WidgetSignals}
+
         ui.loadUi(self, 'falconer.ui')
+
         self.splitter.setCollapsible(1, True)
+        self.splitter.setCollapsible(2, True)
+
+        self._widgetScans.connect(self.__on_scan_filter)
+        self._widgetSignals.connect(self.__on_signal_filter)
 
         self._settings = Settings(self,
                                   self._menuBar,
-                                  self.__on_actionHistory_triggered)
+                                  self.on_actionHistory_triggered)
         self._server = Server()
         self._database = Database()
 
         self.statusBar().showMessage('Ready')
-
-        self._widgetFilters.set_callback_time(self.__on_signal_filter_time)
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
@@ -87,7 +91,7 @@ class Falconer(QtGui.QMainWindow):
             self.__open(fileName)
 
     @QtCore.Slot(str)
-    def __on_actionHistory_triggered(self, fileName):
+    def on_actionHistory_triggered(self, fileName):
         if not self.__file_warn():
             return
 
@@ -96,7 +100,7 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def on_actionClose_triggered(self):
         self._database.close()
-        self.__clear_signals()
+        self.__clear_scans()
 
     @QtCore.Slot()
     def on_actionExit_triggered(self):
@@ -107,11 +111,16 @@ class Falconer(QtGui.QMainWindow):
         dlg = DialogPreferences(self)
         dlg.show()
 
-    @QtCore.Slot(bool, bool, float, float)
-    def __on_signal_filter_time(self, fromEnabled, toEnabled, fromTime, toTime):
-        timeRange = (fromEnabled, toEnabled, fromTime, toTime)
-        self.__set_signals(timeRange)
+    @QtCore.Slot()
+    def __on_scan_filter(self):
+        self.__set_signals()
+        self.__set_map()
 
+    @QtCore.Slot()
+    def __on_signal_filter(self):
+        self.__set_map()
+
+    @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):
         self._settings.close()
         self._server.close()
@@ -131,17 +140,26 @@ class Falconer(QtGui.QMainWindow):
 
     def __open(self, fileName):
         self._database.open(fileName)
+        self.__clear_scans()
+        self.__set_scans()
         self.__set_signals()
+        self.__set_map()
 
-    def __set_signals(self, timeRange=None):
-        frequencies = self._database.get_frequencies(timeRange)
+    def __set_scans(self):
         scans = self._database.get_scans()
-        self._widgetSignals.set(frequencies)
-        self._widgetFilters.set(scans)
+        self._widgetScans.set(scans)
 
-    def __clear_signals(self):
+    def __set_signals(self):
+        filtered = self._widgetScans.get_filtered()
+        signals = self._database.get_signals(filtered)
+        self._widgetSignals.set(signals)
+
+    def __set_map(self):
+        pass
+
+    def __clear_scans(self):
+        self._widgetScans.clear()
         self._widgetSignals.clear()
-        self._widgetFilters.clear()
 
 
 if __name__ == '__main__':
