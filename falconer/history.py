@@ -31,14 +31,15 @@ from functools import partial
 MAX_HISTORY = 5
 
 
-class FileHistory(QtCore.QObject):
+class FileHistory(object):
     def __init__(self, menuBar, callback):
-        QtCore.QObject.__init__(self)
-        self._callback = callback
+
+        self._signal = FileHistorySignal()
+        self._signal.open[str].connect(callback)
+
         self._menuBar = menuBar
         self._history = []
         self._actions = []
-        self.open = QtCore.Signal(str)
 
     def __set_menu(self):
         menuRecent = self._menuBar.findChildren(QtGui.QMenu, '_menuRecent')[0]
@@ -47,8 +48,8 @@ class FileHistory(QtCore.QObject):
         self._actions = []
         for fileName in self._history:
             name = os.path.basename(fileName)
-            action = QtGui.QAction(name, self)
-            callback = partial(self._callback, fileName)
+            action = QtGui.QAction(name, self._signal)
+            callback = partial(self._signal.open.emit, fileName)
             action.triggered.connect(callback)
             self._actions.append(action)
             menuRecent.addAction(action)
@@ -68,6 +69,10 @@ class FileHistory(QtCore.QObject):
             self._history.pop()
 
         self.__set_menu()
+
+
+class FileHistorySignal(QtCore.QObject):
+    open = QtCore.Signal(str)
 
 
 if __name__ == '__main__':

@@ -46,7 +46,9 @@ class Falconer(QtGui.QMainWindow):
         ui.loadUi(self, 'falconer.ui')
         self.splitter.setCollapsible(1, True)
 
-        self._settings = Settings(self, self._menuBar, self.__on_history_open)
+        self._settings = Settings(self,
+                                  self._menuBar,
+                                  self.__on_actionHistory_triggered)
         self._server = Server()
         self._database = Database()
 
@@ -77,6 +79,10 @@ class Falconer(QtGui.QMainWindow):
             self._settings.add_history(fileName)
             self.__open(fileName)
 
+    @QtCore.Slot(str)
+    def __on_actionHistory_triggered(self, fileName):
+        self.__open(fileName)
+
     @QtCore.Slot()
     def on_actionClose_triggered(self):
         self._database.close()
@@ -94,9 +100,6 @@ class Falconer(QtGui.QMainWindow):
     def closeEvent(self, _event):
         self._settings.close()
         self._server.close()
-
-    def __on_history_open(self, fileName):
-        self.__open(fileName)
 
     def __open(self, fileName):
         self._database.open(fileName)
