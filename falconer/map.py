@@ -34,21 +34,50 @@ class WidgetMap(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         url = 'http://localhost:{}/map.html'.format(server.PORT)
-        webMap = QtWebKit.QWebView(self)
+        webMap = QtWebKit.QWebView()
+        webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         webMap.load(QtCore.QUrl(url))
+
+        page = webMap.page()
+        settings = page.settings()
+        settings.setAttribute(QtWebKit.QWebSettings.DeveloperExtrasEnabled,
+                              True)
+        self._inspector = QtWebKit.QWebInspector(self)
+        self._inspector.setPage(page)
+        self._inspector.setVisible(False)
+        shortcut = QtGui.QShortcut(self)
+        shortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F12))
+        shortcut.activated.connect(self.__on_inspector)
+
         frame = webMap.page().mainFrame()
         frame.setScrollBarPolicy(QtCore.Qt.Orientation.Horizontal,
                                  QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         frame.setScrollBarPolicy(QtCore.Qt.Orientation.Vertical,
                                  QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        controls = WidgetMapControls(self, webMap)
+        self._controls = WidgetMapControls(self, webMap)
+
+        splitter = QtGui.QSplitter(self)
+        splitter.setOrientation(QtCore.Qt.Vertical)
+        splitter.addWidget(webMap)
+        splitter.addWidget(self._inspector)
 
         layoutV = QtGui.QVBoxLayout()
-        layoutV.addWidget(webMap)
-        layoutV.addWidget(controls)
+        layoutV.addWidget(splitter)
+        layoutV.addWidget(self._controls)
 
         self.setLayout(layoutV)
+
+    @QtCore.Slot()
+    def __on_inspector(self):
+        self._inspector.setVisible(not self._inspector.isVisible())
+
+    def set_locations(self, locations):
+        self.clear()
+        self._controls.set_locations(locations)
+
+    def clear(self):
+        self._controls.clear()
 
 
 class WidgetMapControls(QtGui.QWidget):
@@ -57,54 +86,101 @@ class WidgetMapControls(QtGui.QWidget):
 
         self._parent = parent
         self._webMap = webMap
-        self._track = True
+
+        self._follow = True
 
         ui.loadUi(self, 'map_controls.ui')
 
         self._comboLayers.addItem('Waiting...')
-        self._buttonTrack.setChecked(self._track)
 
-        mapLink = MapLink(self)
         frame = self._webMap.page().mainFrame()
-        frame.addToJavaScriptWindowObject('mapLink', mapLink)
+        self._mapLink = MapLink(self, frame)
+        frame.addToJavaScriptWindowObject('mapLink', self._mapLink)
 
     @QtCore.Slot(int)
     def on__comboLayers_activated(self, index):
-        frame = self._webMap.page().mainFrame()
-        frame.evaluateJavaScript('setLayer({});'.format(index))
+        self._mapLink.set_layer(index)
 
     @QtCore.Slot(bool)
-    def on__buttonTrack_clicked(self, checked):
-        self._track = checked
+    def on__checkFollow_clicked(self, checked):
+        self._follow = checked
+        self.__follow()
 
-    def update_comboLayers(self, names):
+    @QtCore.Slot(bool)
+    def on__checkLocations_clicked(self, checked):
+        self._mapLink.show_locations(checked)
+        self.__follow()
+
+    @QtCore.Slot(bool)
+    def on__checkHeatmap_clicked(self, checked):
+        pass
+
+    def __follow(self):
+        if self._follow:
+            self._mapLink.follow()
+
+    def update_layers(self, names):
         self._comboLayers.clear()
         self._comboLayers.addItems(names)
 
-        frame = self._webMap.page().mainFrame()
-        layer = frame.evaluateJavaScript('getLayer();')
+        layer = self._mapLink.get_layer()
         self._comboLayers.setCurrentIndex(layer)
 
-        self._comboLayers.setEnabled(True)
-        self._buttonTrack.setEnabled(True)
+        self.setEnabled(True)
 
     def cancel_track(self):
-        self._track = False
-        self._buttonTrack.setChecked(self._track)
+        self._follow = False
+        self._checkFollow.setChecked(self._follow)
+
+    def set_locations(self, locations):
+        self._mapLink.set_locations(locations)
+        self.__follow()
+
+    def clear(self):
+        self._mapLink.clear()
 
 
 class MapLink(QtCore.QObject):
-    def __init__(self, parent):
+    def __init__(self, parent, frame):
         QtCore.QObject.__init__(self)
         self._parent = parent
+        self._frame = frame
+
+    def __exec_js(self, js):
+        return self._frame.evaluateJavaScript(js)
 
     @QtCore.Slot()
     def on_interaction(self):
         self._parent.cancel_track()
 
     @QtCore.Slot(str)
-    def layer_names(self, names):
-        self._parent.update_comboLayers(json.loads(names))
+    def on_layer_names(self, names):
+        self._parent.update_layers(json.loads(names))
+
+    def get_layer(self):
+        js = 'getLayer();'
+        return self.__exec_js(js)
+
+    def set_layer(self, layer):
+        js = 'setLayer({});'.format(layer)
+        self.__exec_js(js)
+
+    def set_locations(self, locations):
+        for location in locations:
+            js = 'addLocations({},{});'.format(location[0], location[1])
+            self.__exec_js(js)
+
+    def show_locations(self, show):
+        js = 'showLocations({});'.format('{}'.format(show).lower())
+        self.__exec_js(js)
+
+    def follow(self):
+        js = 'follow();'
+        self.__exec_js(js)
+
+    def clear(self):
+        js = 'clearLocations();'
+        self.__exec_js(js)
 
 
 if __name__ == '__main__':

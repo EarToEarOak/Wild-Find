@@ -21,17 +21,35 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-*/
+ */
 
 layers = [];
 
-function init() {
+view = new ol.View({
+	projection : 'EPSG:900913',
+	center : [ 0, 0 ],
+	zoom : 4
+});
 
-	view = new ol.View({
-		projection : 'EPSG:900913',
-		center : [ 0, 0 ],
-		zoom : 4
-	});
+locations = new ol.source.Vector();
+layerLocations = new ol.layer.Vector({
+	source : locations,
+	style : new ol.style.Style({
+		image : new ol.style.Circle({
+			stroke : new ol.style.Stroke({
+				color : 'black',
+				opacity : 0.2,
+				width : 0.5
+			}),
+			radius : 5,
+			fill : new ol.style.Fill({
+				color : 'ff6000'
+			})
+		})
+	})
+});
+
+function init() {
 
 	layers.push(new ol.layer.Tile({
 		name : 'MapQuest Satellite',
@@ -65,11 +83,22 @@ function init() {
 		layers : layers
 	});
 
-	map.on('pointerdrag', onInteraction);
-	view.on('change:resolution', onInteraction)
+	map.addLayer(layerLocations)
+
+	setListeners(true);
 
 	setLayer(layers.length - 1);
 	sendLayerNames();
+}
+
+function setListeners(enable) {
+	if (enable) {
+		map.on('pointerdrag', onInteraction);
+		view.on('change:resolution', onInteraction);
+	} else {
+		map.un('pointerdrag', onInteraction);
+		view.un('change:resolution', onInteraction);
+	}
 }
 
 function onInteraction() {
@@ -85,7 +114,7 @@ function sendLayerNames() {
 	for (var i = 0; i < layers.length; i++)
 		names.push(layers[i].get('name'));
 
-	mapLink.layer_names(JSON.stringify(names));
+	mapLink.on_layer_names(JSON.stringify(names));
 }
 
 function getLayer() {
@@ -101,4 +130,30 @@ function setLayer(index) {
 		layers[i].setVisible(false);
 
 	layers[index].setVisible(true);
+}
+
+function addLocations(lon, lat) {
+	point = new ol.geom.Point([ lon, lat ]);
+	point.transform('EPSG:4326', 'EPSG:900913');
+
+	feature = new ol.Feature({
+		geometry : point
+	});
+
+	locations.addFeature(feature);
+}
+
+function showLocations(show) {
+	layerLocations.setVisible(show);
+}
+
+function clearLocations() {
+	locations.clear();
+}
+
+function follow() {
+	setListeners(false);
+	extent = locations.getExtent();
+	view.fitExtent(extent, map.getSize());
+	setListeners(true);
 }

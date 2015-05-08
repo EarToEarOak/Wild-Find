@@ -54,7 +54,7 @@ class Falconer(QtGui.QMainWindow):
 
         self._settings = Settings(self,
                                   self._menuBar,
-                                  self.on_actionHistory_triggered)
+                                  self.__on_open_history)
         self._server = Server()
         self._database = Database()
 
@@ -90,13 +90,6 @@ class Falconer(QtGui.QMainWindow):
             self._settings.add_history(fileName)
             self.__open(fileName)
 
-    @QtCore.Slot(str)
-    def on_actionHistory_triggered(self, fileName):
-        if not self.__file_warn():
-            return
-
-        self.__open(fileName)
-
     @QtCore.Slot()
     def on_actionClose_triggered(self):
         self._database.close()
@@ -110,6 +103,13 @@ class Falconer(QtGui.QMainWindow):
     def on_actionPreferences_triggered(self):
         dlg = DialogPreferences(self)
         dlg.show()
+
+    @QtCore.Slot(str)
+    def __on_open_history(self, fileName):
+        if not self.__file_warn():
+            return
+
+        self.__open(fileName)
 
     @QtCore.Slot()
     def __on_scan_filter(self):
@@ -155,11 +155,16 @@ class Falconer(QtGui.QMainWindow):
         self._widgetSignals.set(signals)
 
     def __set_map(self):
-        pass
+        filteredScans = self._widgetScans.get_filtered()
+        filteredSignals = self._widgetSignals.get_filtered()
+        locations = self._database.get_locations(filteredScans,
+                                                 filteredSignals)
+        self._widgetMap.set_locations(locations)
 
     def __clear_scans(self):
         self._widgetScans.clear()
         self._widgetSignals.clear()
+        self._widgetMap.clear()
 
 
 if __name__ == '__main__':

@@ -2,6 +2,17 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
+  <property name="enabled">
+   <bool>false</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>293</width>
+    <height>30</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
     <horstretch>0</horstretch>
@@ -26,14 +37,14 @@
    </property>
    <item>
     <widget class="QComboBox" name="_comboLayers">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="currentText">
+      <string/>
      </property>
      <property name="sizeAdjustPolicy">
       <enum>QComboBox::AdjustToContents</enum>
@@ -41,7 +52,27 @@
     </widget>
    </item>
    <item>
-    <spacer name="horizontalSpacer">
+    <widget class="QCheckBox" name="_checkLocations">
+     <property name="text">
+      <string>Locations</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="_checkHeatmap">
+     <property name="text">
+      <string>Heat map</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="spacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -57,10 +88,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QCheckBox" name="_buttonTrack">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
+    <widget class="QCheckBox" name="_checkFollow">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -68,9 +96,12 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Track</string>
+      <string>Follow</string>
      </property>
      <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
       <bool>true</bool>
      </property>
     </widget>

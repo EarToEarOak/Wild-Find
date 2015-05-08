@@ -36,6 +36,29 @@ class Database():
 
         create_database(self._conn)
 
+    def __filter(self, filteredScans, filteredSignals=None):
+        condition = ' '
+
+        if len(filteredScans):
+            condScans = ' TimeStamp not in ('
+            condScans += str(filteredScans).strip('[]')
+            condScans += ') '
+
+        if filteredSignals is not None and len(filteredSignals):
+            condSignals = ' Freq not in ('
+            condSignals += str(filteredSignals).strip('[]')
+            condSignals += ') '
+
+        if len(filteredScans) and filteredSignals is not None and len(filteredSignals):
+            condition = ' where ' + condScans + 'and' + condSignals
+        elif len(filteredScans):
+            condition = ' where ' + condScans
+        elif filteredSignals is not None and len(filteredSignals):
+            condition = ' where ' + condSignals
+            condition = ' where ' + condSignals
+
+        return condition
+
     def open(self, fileName):
         self.__connect(fileName)
 
@@ -59,16 +82,9 @@ class Database():
 
         return scans
 
-    def get_signals(self, filtered):
-        cond = ' '
-
-        if len(filtered):
-            cond = ' where TimeStamp not in ('
-            cond += str(filtered).strip('[]')
-            cond += ')'
-
+    def get_signals(self, filteredScans):
         cmd = 'select Freq, count(Freq) from Signals'
-        cmd += cond
+        cmd += self.__filter(filteredScans)
         cmd += 'group by Freq'
 
         cursor = self._conn.cursor()
@@ -77,6 +93,29 @@ class Database():
         signals = [[row['Freq'], row['count(Freq)']] for row in rows]
 
         return signals
+
+    def get_locations(self, filteredScans, filteredSignals):
+        cmd = 'select Lon, Lat from Signals'
+        cmd += self.__filter(filteredScans, filteredSignals)
+        cmd += 'group by Lon, Lat'
+
+        cursor = self._conn.cursor()
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        signals = [[row['Lon'], row['Lat']] for row in rows]
+
+        return signals
+
+    def get_telemetry(self, filteredScans, filteredSignals):
+        cmd = 'select Lon, Lat, Level from Signals'
+        cmd += self.__filter(filteredScans, filteredSignals)
+
+        cursor = self._conn.cursor()
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        telemetry = [[row['Lon'], row['Lat'], row['Level']] for row in rows]
+
+        return telemetry
 
 
 if __name__ == '__main__':
