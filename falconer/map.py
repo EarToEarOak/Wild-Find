@@ -24,9 +24,13 @@
 
 import json
 
-from PySide import QtGui, QtWebKit, QtCore
+from PySide import QtGui, QtWebKit, QtCore, QtNetwork
 
 from falconer import server, ui
+
+
+RETRY_TIME = 2000
+RETRIES = 5
 
 
 class WidgetMap(QtGui.QWidget):
@@ -34,14 +38,20 @@ class WidgetMap(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         url = 'http://localhost:{}/map.html'.format(server.PORT)
-        webMap = QtWebKit.QWebView()
-        webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
-        webMap.load(QtCore.QUrl(url))
+        self._url = QtCore.QUrl(url)
+        self._retries = RETRIES
 
-        page = webMap.page()
+        self._webMap = QtWebKit.QWebView()
+        self._webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+
+        page = self._webMap.page()
+        manager = page.networkAccessManager()
+        manager.finished[QtNetwork.QNetworkReply].connect(self.__loaded)
+
         settings = page.settings()
         settings.setAttribute(QtWebKit.QWebSettings.DeveloperExtrasEnabled,
                               True)
+
         self._inspector = QtWebKit.QWebInspector(self)
         self._inspector.setPage(page)
         self._inspector.setVisible(False)
@@ -49,17 +59,17 @@ class WidgetMap(QtGui.QWidget):
         shortcut.setKey(QtGui.QKeySequence(QtCore.Qt.Key_F12))
         shortcut.activated.connect(self.__on_inspector)
 
-        frame = webMap.page().mainFrame()
+        frame = self._webMap.page().mainFrame()
         frame.setScrollBarPolicy(QtCore.Qt.Orientation.Horizontal,
                                  QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         frame.setScrollBarPolicy(QtCore.Qt.Orientation.Vertical,
                                  QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self._controls = WidgetMapControls(self, webMap)
+        self._controls = WidgetMapControls(self, self._webMap)
 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
-        splitter.addWidget(webMap)
+        splitter.addWidget(self._webMap)
         splitter.addWidget(self._inspector)
 
         layoutV = QtGui.QVBoxLayout()
@@ -68,9 +78,24 @@ class WidgetMap(QtGui.QWidget):
 
         self.setLayout(layoutV)
 
+        self._webMap.load(self._url)
+
+    @QtCore.Slot(QtNetwork.QNetworkReply)
+    def __loaded(self, reply):
+        if reply.error() != QtNetwork.QNetworkReply.NoError:
+            if self._retries:
+                self._retries -= 1
+                QtCore.QTimer.singleShot(RETRY_TIME, self.__on_retry)
+            else:
+                self._webMap.setHtml('Could not load map')
+
     @QtCore.Slot()
     def __on_inspector(self):
         self._inspector.setVisible(not self._inspector.isVisible())
+
+    @QtCore.Slot()
+    def __on_retry(self):
+        self._webMap.load(self._url)
 
     def set_locations(self, locations):
         self.clear()
