@@ -37,16 +37,23 @@ class Settings(object):
         return QtCore.QSettings('Ear to Ear Oak', 'Falconer')
 
     def __load_history(self):
+        history = []
+
         settings = self.__open()
         settings.beginGroup('History')
-        history = settings.value('files', [])
+        files = settings.value('files', 0)
+        for i in range(int(files)):
+            history.append(settings.value('{}'.format(i)))
         settings.endGroup()
         self._history.set(history)
 
     def __save_history(self):
         settings = self.__open()
         settings.beginGroup('History')
-        settings.setValue('files', self._history.get())
+        history = self._history.get()
+        settings.setValue('files', len(history))
+        for i in range(len(history)):
+            settings.setValue('{}'.format(i), history[i])
         settings.endGroup()
 
     def __load(self):
