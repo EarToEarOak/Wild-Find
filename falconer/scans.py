@@ -80,7 +80,7 @@ class ModelScans(QtCore.QAbstractTableModel):
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
 
-        self._signal = SignalFilter()
+        self._signal = SignalScans()
         self._scans = []
         self._filtered = []
 
@@ -153,7 +153,7 @@ class ModelScans(QtCore.QAbstractTableModel):
         self._filtered = []
 
 
-class SignalFilter(QtCore.QObject):
+class SignalScans(QtCore.QObject):
     filter = QtCore.Signal()
 
 
