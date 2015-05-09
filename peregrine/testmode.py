@@ -26,9 +26,9 @@ import signal
 import sys
 import time
 
-from collar import MOD_DESC
-import events
-from receive import Receive
+from peregrine import events
+from peregrine.collar import MOD_DESC
+from peregrine.receive import Receive
 
 
 class TestMode(object):
@@ -70,7 +70,8 @@ class TestMode(object):
                                              collar.level)
                 else:
                     print '\tNo signals found'
-            events.Post(queue).scan_done()
+
+            events.Post(queue).scan_start()
 
         elif eventType == events.WARN:
             warning = 'Warning: {}'.format(event.get_arg('warning'))

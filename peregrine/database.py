@@ -29,11 +29,9 @@ import sqlite3
 import threading
 import time
 
-from constants import LOG_SIZE
-import events
+from common.database import create_database, name_factory
+from peregrine import events
 
-
-VERSION = 1
 
 ADD_SIGNAL, GET_SIGNALS_LAST, GET_SIGNALS, \
     GET_SCANS, DEL_SCAN, DEL_SCANS, \
@@ -59,78 +57,13 @@ class Database(threading.Thread):
 
         self.start()
 
-    def __name_factory(self, cursor, row):
-        names = {}
-        for i, column in enumerate(cursor.description):
-            names[column[0]] = row[i]
-
-        return names
-
-    def __create(self):
+    def __connect(self):
         self._conn = sqlite3.connect(self._path)
-        self._conn.row_factory = self.__name_factory
+        self._conn.row_factory = name_factory
 
-        with self._conn:
-            cmd = 'pragma foreign_keys = 1;'
-            self._conn.execute(cmd)
-            cmd = 'pragma auto_vacuum = incremental;'
-            self._conn.execute(cmd)
-
-            # Info table
-            cmd = ('create table if not exists '
-                   'Info ('
-                   '    Key text primary key,'
-                   '    Value blob)')
-            self._conn.execute(cmd)
-            try:
-                cmd = 'insert into info VALUES ("DbVersion", ?)'
-                self._conn.execute(cmd, (VERSION,))
-            except sqlite3.IntegrityError as error:
-                pass
-            except sqlite3.OperationalError as error:
-                err = 'Database error: {}'.format(error.message)
-                events.Post(self._notify).error(error=err)
-                return
-
-            # Scans table
-            cmd = ('create table if not exists '
-                   'Scans ('
-                   '    TimeStamp integer primary key,'
-                   '    Freq real)')
-            self._conn.execute(cmd)
-
-            # Signals table
-            cmd = ('create table if not exists '
-                   'Signals ('
-                   '    Id integer primary key autoincrement,'
-                   '    TimeStamp integer,'
-                   '    Freq real,'
-                   '    Mod integer,'
-                   '    Rate real,'
-                   '    Level real,'
-                   '    Lon real,'
-                   '    Lat real,'
-                   '    foreign key (TimeStamp) REFERENCES Scans (TimeStamp)'
-                   '        on delete cascade)')
-            self._conn.execute(cmd)
-
-            # Log table
-            cmd = ('create table if not exists '
-                   'Log ('
-                   '    Id integer primary key autoincrement,'
-                   '    TimeStamp text,'
-                   '    Message )')
-            self._conn.execute(cmd)
-
-            # Log pruning trigger
-            cmd = ('create trigger if not exists LogPrune insert on Log when '
-                   '(select count(*) from log) > {} '
-                   'begin'
-                   '    delete from Log where Log.Id not in '
-                   '      (select Log.Id from Log order by'
-                   '          Id desc limit {});'
-                   'end;').format(LOG_SIZE, LOG_SIZE - 1)
-            self._conn.execute(cmd)
+        error = create_database(self._conn)
+        if error is not None:
+            events.Post(self._notify).error(error=error)
 
     def __add_signal(self, **kwargs):
         with self._conn:
@@ -211,7 +144,7 @@ class Database(threading.Thread):
         callback(cursor.rowcount)
 
     def run(self):
-        self.__create()
+        self.__connect()
 
         while True:
             if not self._queue.empty():

@@ -24,7 +24,7 @@
 import ConfigParser
 import sys
 
-from comm import Comm
+from peregrine.comm import Comm
 
 
 class Settings(object):

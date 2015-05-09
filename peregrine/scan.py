@@ -21,16 +21,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from matplotlib.mlab import psd
 import numpy
 
-from utils import Utils
-from matplotlib.mlab import psd
+from peregrine.utils import Utils
+
 
 # Search for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
-
-
 class Scan(object):
     # FFT bins used to search
     SCAN_BINS = 4096

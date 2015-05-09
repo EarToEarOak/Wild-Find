@@ -26,10 +26,10 @@ import time
 
 import rtlsdr
 
-from constants import SAMPLE_RATE, SAMPLE_TIME
-from detect import Detect
-import events
-from scan import Scan
+from peregrine import events
+from peregrine.constants import SAMPLE_RATE, SAMPLE_TIME
+from peregrine.detect import Detect
+from peregrine.scan import Scan
 
 
 class Receive(threading.Thread):

@@ -22,9 +22,10 @@
 #
 
 import numpy
-from utils import Utils
-import collar
-from constants import SAMPLE_TIME
+
+from peregrine import collar
+from peregrine.constants import SAMPLE_TIME
+from peregrine.utils import Utils
 
 
 class Detect(object):

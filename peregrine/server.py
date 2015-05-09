@@ -25,8 +25,8 @@ import select
 import socket
 import threading
 
-import events
-from parse import Parse
+from peregrine import events
+from peregrine.parse import Parse
 
 
 VERSION = 1
