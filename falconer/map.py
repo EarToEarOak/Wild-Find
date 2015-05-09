@@ -137,6 +137,8 @@ class WidgetMapControls(QtGui.QWidget):
         self.__follow()
 
     def clear(self):
+        self._follow = True
+        self._checkFollow.setChecked(self._follow)
         self._mapLink.clear()
 
 
