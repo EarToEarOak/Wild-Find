@@ -200,7 +200,7 @@ class Database(threading.Thread):
         space = 0
         if platform.system() == 'Windows':
             puSpace = ctypes.c_ulonglong(0)
-            ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder), # @UndefinedVariable
+            ctypes.windll.kernel32.GetDiskFreeSpaceExW(ctypes.c_wchar_p(folder),  # @UndefinedVariable
                                                        None,
                                                        None,
                                                        ctypes.pointer(puSpace))

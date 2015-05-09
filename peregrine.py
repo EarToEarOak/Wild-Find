@@ -135,7 +135,9 @@ class Peregrine(object):
                     location = self._status.get_location()[0]
                     collar.lon = location[0]
                     collar.lat = location[1]
-                    self._database.append_signal(timeStamp, collar, settings.freq)
+                    self._database.append_signal(timeStamp,
+                                                 collar,
+                                                 settings.freq)
             else:
                 self._status.set_signals(0)
 
