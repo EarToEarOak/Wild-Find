@@ -112,6 +112,7 @@ class Falconer(QtGui.QMainWindow):
         if not self.__file_warn():
             return
 
+        self._settings.add_history(fileName)
         self.__open(fileName)
 
     @QtCore.Slot()
