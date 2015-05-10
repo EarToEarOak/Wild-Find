@@ -33,7 +33,9 @@ PORT = 12015
 
 
 class Server(object):
-    def __init__(self):
+    def __init__(self, heatmap):
+        handler = Handler
+        handler.heatmap = heatmap
         self._server = ThreadedServer(('localhost', PORT), Handler)
 
         thread = threading.Thread(target=self._server.serve_forever)
@@ -48,19 +50,30 @@ class ThreadedServer(ThreadingMixIn, HTTPServer):
 
 
 class Handler(BaseHTTPRequestHandler):
+    heatmap = None
+
     def do_GET(self):
-        path = add_program_path('falconer', 'htdocs', self.path.lstrip('/'))
-
-        if os.path.exists(path):
+        if self.path == '/heatmap.png':
             self.send_response(200)
-            self.__send_content_type(path)
+            self.send_header('Content-type', 'image/png')
             self.end_headers()
-
-            f = open(path, 'r')
-            self.wfile.write(f.read())
-            f.close()
+            self.heatmap.seek(0)
+            self.wfile.write(self.heatmap)
         else:
-            self.send_response(404)
+            path = add_program_path('falconer',
+                                    'htdocs',
+                                    self.path.lstrip('/'))
+
+            if os.path.exists(path):
+                self.send_response(200)
+                self.__send_content_type(path)
+                self.end_headers()
+
+                f = open(path, 'r')
+                self.wfile.write(f.read())
+                f.close()
+            else:
+                self.send_response(404)
 
     def __send_content_type(self, path):
         content = 'text/plain'

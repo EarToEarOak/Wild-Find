@@ -101,6 +101,9 @@ class WidgetMap(QtGui.QWidget):
         self.clear()
         self._controls.set_locations(locations)
 
+    def update_heatmap(self, bounds):
+        self._controls.update_heatmap(bounds)
+
     def clear(self):
         self._controls.clear()
 
@@ -138,7 +141,7 @@ class WidgetMapControls(QtGui.QWidget):
 
     @QtCore.Slot(bool)
     def on__checkHeatmap_clicked(self, checked):
-        pass
+        self._mapLink.show_heatmap(checked)
 
     def __follow(self):
         if self._follow:
@@ -160,6 +163,9 @@ class WidgetMapControls(QtGui.QWidget):
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
         self.__follow()
+
+    def update_heatmap(self, bounds):
+        self._mapLink.update_heatmap(bounds)
 
     def clear(self):
         self._follow = True
@@ -198,6 +204,15 @@ class MapLink(QtCore.QObject):
             self.__exec_js(js)
 
     def show_locations(self, show):
+        js = 'showLocations({});'.format('{}'.format(show).lower())
+        self.__exec_js(js)
+
+    def update_heatmap(self, bounds):
+        # TODO: update heatmap bounds
+        pass
+
+    def show_heatmap(self, show):
+        # TODO: add showLocations to map.js
         js = 'showLocations({});'.format('{}'.format(show).lower())
         self.__exec_js(js)
 

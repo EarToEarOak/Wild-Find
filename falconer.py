@@ -28,6 +28,7 @@ from PySide import QtGui, QtCore
 
 from falconer import ui
 from falconer.database import Database
+from falconer.heatmap import HeatMap
 from falconer.map import WidgetMap
 from falconer.preferences import DialogPreferences
 from falconer.scans import WidgetScans
@@ -55,7 +56,9 @@ class Falconer(QtGui.QMainWindow):
         self._settings = Settings(self,
                                   self._menuBar,
                                   self.__on_open_history)
-        self._server = Server()
+
+        self._heatMap = HeatMap(self, self.__on_heatmap)
+        self._server = Server(self._heatMap.get_file())
         self._database = Database()
 
         self.statusBar().showMessage('Ready')
@@ -120,6 +123,10 @@ class Falconer(QtGui.QMainWindow):
     def __on_signal_filter(self):
         self.__set_map()
 
+    @QtCore.Slot(object)
+    def __on_heatmap(self, bounds):
+        self._widgetMap.update_heatmap(bounds)
+
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):
         self._settings.close()
@@ -160,6 +167,10 @@ class Falconer(QtGui.QMainWindow):
         locations = self._database.get_locations(filteredScans,
                                                  filteredSignals)
         self._widgetMap.set_locations(locations)
+
+        telemetry = self._database.get_telemetry(filteredScans,
+                                                 filteredSignals)
+        self._heatMap.set(telemetry)
 
     def __clear_scans(self):
         self._widgetScans.clear()
