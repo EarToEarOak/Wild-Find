@@ -149,6 +149,7 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_filter(self):
         self.__set_map()
+
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):
         self._settings.close()
