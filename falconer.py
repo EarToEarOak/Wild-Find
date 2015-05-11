@@ -120,6 +120,11 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot(str)
     def __on_open_history(self, fileName):
+        if not os.path.exists(fileName):
+            message = 'File does not exist'
+            QtGui.QMessageBox.question(self, 'Warning', message)
+            return
+
         if not self.__file_warn():
             return
 

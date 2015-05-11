@@ -64,11 +64,12 @@ class HeatMap(QtCore.QObject):
             if self._thread is not None and self._thread.isRunning():
                 QtCore.QTimer.singleShot(0.5, self.set)
             else:
-                self._thread = ThreadPlot(self,
-                                          self._telemetry,
-                                          self._tempFile,
-                                          self.__on_plotted)
-                self._thread.start()
+                if len(telemetry):
+                    self._thread = ThreadPlot(self,
+                                              self._telemetry,
+                                              self._tempFile,
+                                              self.__on_plotted)
+                    self._thread.start()
 
 
 class ThreadPlot(QtCore.QThread):
