@@ -43,6 +43,8 @@ class Falconer(QtGui.QMainWindow):
     def __init__(self,):
         QtGui.QMainWindow.__init__(self)
 
+        self._mapLoaded = False
+
         self.customWidgets = {'WidgetMap': WidgetMap,
                               'WidgetScans': WidgetScans,
                               'WidgetSignals': WidgetSignals}
@@ -54,6 +56,7 @@ class Falconer(QtGui.QMainWindow):
 
         self._widgetScans.connect(self.__on_scan_filter)
         self._widgetSignals.connect(self.__on_signal_filter)
+        self._widgetMap.connect(self.__on_signal_map_loaded)
 
         self._settings = Settings(self,
                                   self._menuBar,
@@ -97,8 +100,9 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionClose_triggered(self):
-        self._database.close()
         self.__clear_scans()
+        self._database.close()
+        self.__set_controls()
 
     @QtCore.Slot()
     def on_actionExit_triggered(self):
@@ -108,6 +112,11 @@ class Falconer(QtGui.QMainWindow):
     def on_actionPreferences_triggered(self):
         dlg = DialogPreferences(self)
         dlg.show()
+
+    @QtCore.Slot()
+    def __on_signal_map_loaded(self):
+        self._mapLoaded = True
+        self.__set_controls()
 
     @QtCore.Slot(str)
     def __on_open_history(self, fileName):
@@ -135,6 +144,16 @@ class Falconer(QtGui.QMainWindow):
         self._settings.close()
         self._server.close()
 
+    def __set_controls(self):
+        if self._mapLoaded:
+            self.actionOpen.setEnabled(True)
+            self._menuRecent.setEnabled(True)
+
+        if self._database.isConnected():
+            self.actionClose.setEnabled(True)
+        else:
+            self.actionClose.setEnabled(False)
+
     def __file_warn(self):
         if self._database.isConnected():
             flags = (QtGui.QMessageBox.StandardButton.Yes |
@@ -154,6 +173,7 @@ class Falconer(QtGui.QMainWindow):
         self.__set_scans()
         self.__set_signals()
         self.__set_map()
+        self.__set_controls()
 
     def __set_scans(self):
         scans = self._database.get_scans()

@@ -85,7 +85,7 @@ class ThreadPlot(QtCore.QThread):
     def __save(self, figure):
         try:
             self._tempFile.seek(0)
-            plt.savefig(self._tempFile, format='png', bbox_inches='tight')
+            plt.savefig(self._tempFile)
         except IOError:
             pass
 
@@ -121,7 +121,7 @@ class ThreadPlot(QtCore.QThread):
         axes.pcolormesh(xi, yi, zi)
         plt.axis([west, east, south, north])
 
-        plt.savefig(self._tempFile)
+        self.__save(figure)
 
         self._signal.plotted.emit((north, south, east, west))
 

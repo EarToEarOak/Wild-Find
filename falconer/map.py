@@ -39,6 +39,8 @@ class WidgetMap(QtGui.QWidget):
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
+        self._signal = SignalMap()
+
         url = 'http://localhost:{}/map.html'.format(server.PORT)
         self._url = QtCore.QUrl(url)
         self._retries = RETRIES
@@ -99,6 +101,21 @@ class WidgetMap(QtGui.QWidget):
     def __on_retry(self):
         self._webMap.load(self._url)
 
+    @QtCore.Slot()
+    def on_interaction(self,):
+        self._controls.cancel_track()
+
+    @QtCore.Slot(str)
+    def on_layer_names(self, layers):
+        self._controls.update_layers(json.loads(layers))
+
+    @QtCore.Slot(str)
+    def on_map_loaded(self):
+        self._signal.loaded.emit()
+
+    def connect(self, loaded):
+        self._signal.loaded.connect(loaded)
+
     def transform_coords(self, xyz):
         return self._controls.transform_coords(xyz)
 
@@ -117,7 +134,6 @@ class WidgetMapControls(QtGui.QWidget):
     def __init__(self, parent, webMap):
         QtGui.QWidget.__init__(self, parent)
 
-        self._parent = parent
         self._webMap = webMap
 
         self._follow = True
@@ -127,7 +143,10 @@ class WidgetMapControls(QtGui.QWidget):
         self._comboLayers.addItem('Waiting...')
 
         frame = self._webMap.page().mainFrame()
-        self._mapLink = MapLink(self, frame)
+        self._mapLink = MapLink(frame)
+        self._mapLink.connect(parent.on_interaction,
+                              parent.on_layer_names,
+                              parent.on_map_loaded)
         frame.addToJavaScriptWindowObject('mapLink', self._mapLink)
 
     @QtCore.Slot(int)
@@ -182,21 +201,28 @@ class WidgetMapControls(QtGui.QWidget):
 
 
 class MapLink(QtCore.QObject):
-    def __init__(self, parent, frame):
+    def __init__(self, frame):
         QtCore.QObject.__init__(self)
-        self._parent = parent
         self._frame = frame
+
+        self._signal = SignalMap()
 
     def __exec_js(self, js):
         return self._frame.evaluateJavaScript(js)
 
     @QtCore.Slot()
     def on_interaction(self):
-        self._parent.cancel_track()
+        self._signal.interaction.emit()
 
     @QtCore.Slot(str)
     def on_layer_names(self, names):
-        self._parent.update_layers(json.loads(names))
+        self._signal.layers.emit(names)
+        self._signal.loaded.emit()
+
+    def connect(self, interaction, layer, loaded):
+        self._signal.interaction.connect(interaction)
+        self._signal.layers.connect(layer)
+        self._signal.loaded.connect(loaded)
 
     def transform_coords(self, coords):
         transformed = []
@@ -238,8 +264,14 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def clear(self):
-        js = 'clearLocations();'
+        js = 'clear();'
         self.__exec_js(js)
+
+
+class SignalMap(QtCore.QObject):
+    interaction = QtCore.Signal()
+    layers = QtCore.Signal(str)
+    loaded = QtCore.Signal()
 
 
 if __name__ == '__main__':

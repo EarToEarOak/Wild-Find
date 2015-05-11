@@ -155,8 +155,9 @@ function addLocations(lon, lat) {
 	locations.addFeature(feature);
 }
 
-function clearLocations() {
+function clear() {
 	locations.clear();
+	layerHeatmap.setSource(null)
 }
 
 function setHeatmap(north, south, east, west) {
@@ -169,10 +170,6 @@ function setHeatmap(north, south, east, west) {
 	});
 
 	layerHeatmap.setSource(source)
-}
-
-function clearHeatmap() {
-	showHeatmap(false);
 }
 
 function showLocations(show) {
