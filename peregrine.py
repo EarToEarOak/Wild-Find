@@ -79,7 +79,10 @@ class Peregrine(object):
             if not queue.empty():
                 self.__process_queue(settings, queue)
             else:
-                time.sleep(0.05)
+                try:
+                    time.sleep(0.05)
+                except IOError:
+                    pass
 
         self.__close()
 

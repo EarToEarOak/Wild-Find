@@ -88,7 +88,10 @@ class Receive(threading.Thread):
             if self._receive:
                 self.__receive()
             else:
-                time.sleep(0.05)
+                try:
+                    time.sleep(0.05)
+                except IOError:
+                    pass
 
     def receive(self):
         self._receive = True

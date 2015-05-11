@@ -180,7 +180,10 @@ class Database(threading.Thread):
                 elif eventType == CLOSE:
                     break
             else:
-                time.sleep(0.05)
+                try:
+                    time.sleep(0.05)
+                except IOError:
+                    pass
 
         self._conn.close()
 

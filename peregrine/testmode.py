@@ -85,7 +85,10 @@ class TestMode(object):
             self.__close()
             exit(3)
 
-        time.sleep(0.05)
+        try:
+            time.sleep(0.05)
+        except IOError:
+            pass
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
