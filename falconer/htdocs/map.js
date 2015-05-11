@@ -180,6 +180,10 @@ function showHeatmap(show) {
 	layerHeatmap.setVisible(show);
 }
 
+function setOpacity(opacity){
+	layerHeatmap.setOpacity(opacity)
+}
+
 function follow() {
 	setListeners(false);
 	extent = locations.getExtent();

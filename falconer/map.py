@@ -167,6 +167,10 @@ class WidgetMapControls(QtGui.QWidget):
     def on__checkHeatmap_clicked(self, checked):
         self._mapLink.show_heatmap(checked)
 
+    @QtCore.Slot(int)
+    def on__sliderOpacity_valueChanged(self, opacity):
+        self._mapLink.set_opacity(opacity)
+
     def __follow(self):
         if self._follow:
             self._mapLink.follow()
@@ -257,6 +261,10 @@ class MapLink(QtCore.QObject):
 
     def show_heatmap(self, show):
         js = 'showHeatmap({});'.format('{}'.format(show).lower())
+        self.__exec_js(js)
+
+    def set_opacity(self, opacity):
+        js = 'setOpacity({});'.format(opacity / 100.)
         self.__exec_js(js)
 
     def follow(self):
