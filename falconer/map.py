@@ -29,6 +29,7 @@ import json
 from PySide import QtGui, QtWebKit, QtCore, QtNetwork
 
 from falconer import server, ui
+from matplotlib import cm
 
 
 RETRY_TIME = 2000
@@ -113,8 +114,16 @@ class WidgetMap(QtGui.QWidget):
     def on_map_loaded(self):
         self._signal.loaded.emit()
 
-    def connect(self, loaded):
+    @QtCore.Slot()
+    def on_colour(self):
+        self._signal.colour.emit()
+
+    def connect(self, loaded, colour):
         self._signal.loaded.connect(loaded)
+        self._signal.colour.connect(colour)
+
+    def set_settings(self, settings):
+        self._controls.set_settings(settings)
 
     def transform_coords(self, xyz):
         return self._controls.transform_coords(xyz)
@@ -136,17 +145,25 @@ class WidgetMapControls(QtGui.QWidget):
 
         self._webMap = webMap
 
+        self._settings = None
         self._follow = True
+
+        self._signal = SignalMap()
+        self._signal.colour.connect(parent.on_colour)
 
         ui.loadUi(self, 'map_controls.ui')
 
         self._comboLayers.addItem('Waiting...')
+        colours = [colour for colour in cm.cmap_d]
+        colours.sort()
+        self._comboColour.addItems(colours)
 
         frame = self._webMap.page().mainFrame()
         self._mapLink = MapLink(frame)
         self._mapLink.connect(parent.on_interaction,
                               parent.on_layer_names,
-                              parent.on_map_loaded)
+                              parent.on_map_loaded,
+                              parent.on_colour)
         frame.addToJavaScriptWindowObject('mapLink', self._mapLink)
 
     @QtCore.Slot(int)
@@ -171,9 +188,25 @@ class WidgetMapControls(QtGui.QWidget):
     def on__sliderOpacity_valueChanged(self, opacity):
         self._mapLink.set_opacity(opacity)
 
+    @QtCore.Slot(int)
+    def on__comboColour_activated(self, index):
+        colours = [colour for colour in cm.cmap_d]
+        colours.sort()
+        colour = colours[index]
+        self._settings.heatmapColour = colour
+
+        self._signal.colour.emit()
+
     def __follow(self):
         if self._follow:
             self._mapLink.follow()
+
+    def set_settings(self, settings):
+        self._settings = settings
+        colours = [colour for colour in cm.cmap_d]
+        colours.sort()
+        index = colours.index(settings.heatmapColour)
+        self._comboColour.setCurrentIndex(index)
 
     def update_layers(self, names):
         self._comboLayers.clear()
@@ -223,10 +256,11 @@ class MapLink(QtCore.QObject):
         self._signal.layers.emit(names)
         self._signal.loaded.emit()
 
-    def connect(self, interaction, layer, loaded):
+    def connect(self, interaction, layer, loaded, colour):
         self._signal.interaction.connect(interaction)
         self._signal.layers.connect(layer)
         self._signal.loaded.connect(loaded)
+        self._signal.colour.connect(colour)
 
     def transform_coords(self, coords):
         transformed = []
@@ -280,6 +314,7 @@ class SignalMap(QtCore.QObject):
     interaction = QtCore.Signal()
     layers = QtCore.Signal(str)
     loaded = QtCore.Signal()
+    colour = QtCore.Signal()
 
 
 if __name__ == '__main__':

@@ -54,15 +54,17 @@ class Falconer(QtGui.QMainWindow):
         self.splitter.setCollapsible(1, True)
         self.splitter.setCollapsible(2, True)
 
-        self._widgetScans.connect(self.__on_scan_filter)
-        self._widgetSignals.connect(self.__on_signal_filter)
-        self._widgetMap.connect(self.__on_signal_map_loaded)
-
         self._settings = Settings(self,
                                   self._menuBar,
                                   self.__on_open_history)
 
-        self._heatMap = HeatMap(self, self.__on_heatmap)
+        self._widgetScans.connect(self.__on_scan_filter)
+        self._widgetSignals.connect(self.__on_signal_filter)
+        self._widgetMap.connect(self.__on_signal_map_loaded,
+                                self.__on_signal_map_colour)
+        self._widgetMap.set_settings(self._settings)
+
+        self._heatMap = HeatMap(self, self._settings, self.__on_signal_map_heatmap)
         self._server = Server(self._heatMap.get_file())
         self._database = Database()
 
@@ -113,10 +115,18 @@ class Falconer(QtGui.QMainWindow):
         dlg = DialogPreferences(self)
         dlg.show()
 
+    @QtCore.Slot(object)
+    def __on_signal_map_heatmap(self, bounds):
+        self._widgetMap.update_heatmap(bounds)
+
     @QtCore.Slot()
     def __on_signal_map_loaded(self):
         self._mapLoaded = True
         self.__set_controls()
+
+    @QtCore.Slot()
+    def __on_signal_map_colour(self):
+        self.__set_map()
 
     @QtCore.Slot(str)
     def __on_open_history(self, fileName):
@@ -139,11 +149,6 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_filter(self):
         self.__set_map()
-
-    @QtCore.Slot(object)
-    def __on_heatmap(self, bounds):
-        self._widgetMap.update_heatmap(bounds)
-
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):
         self._settings.close()

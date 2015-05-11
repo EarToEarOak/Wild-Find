@@ -33,6 +33,8 @@ class Settings(object):
         self._parent = parent
         self._history = FileHistory(menuBar, historyCallback)
 
+        self.heatmapColour = 'jet'
+
         self.__load()
 
     def __open(self):
@@ -60,6 +62,7 @@ class Settings(object):
 
     def __load(self):
         settings = self.__open()
+        self.heatmapColour = settings.value('heatmapColour', 'jet')
         settings.beginGroup('MainWindow')
         size = settings.value('size')
         if size is not None:
@@ -73,6 +76,9 @@ class Settings(object):
 
     def __save(self):
         settings = self.__open()
+
+        settings.setValue('heatmapColour', self.heatmapColour)
+
         settings.beginGroup('MainWindow')
         settings.setValue('size', self._parent.size())
         settings.setValue('splitter', self._parent.splitter.saveState())

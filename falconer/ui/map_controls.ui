@@ -77,6 +77,9 @@
     </widget>
    </item>
    <item>
+    <widget class="QComboBox" name="_comboColour"/>
+   </item>
+   <item>
     <spacer name="spacer">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

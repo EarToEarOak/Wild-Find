@@ -40,10 +40,12 @@ IMAGE_SIZE = 300
 
 
 class HeatMap(QtCore.QObject):
-    def __init__(self, parent, callback):
+    def __init__(self, parent, settings, callback):
         QtCore.QObject.__init__(self, parent)
-        self._telemetry = None
+        self._settings = settings
         self._callback = callback
+
+        self._telemetry = None
 
         self._thread = None
         self._tempFile = tempfile.TemporaryFile(suffix='.png')
@@ -66,6 +68,7 @@ class HeatMap(QtCore.QObject):
             else:
                 if len(telemetry):
                     self._thread = ThreadPlot(self,
+                                              self._settings,
                                               self._telemetry,
                                               self._tempFile,
                                               self.__on_plotted)
@@ -73,8 +76,9 @@ class HeatMap(QtCore.QObject):
 
 
 class ThreadPlot(QtCore.QThread):
-    def __init__(self, parent, telemetry, tempFile, callback):
+    def __init__(self, parent, settings, telemetry, tempFile, callback):
         QtCore.QThread.__init__(self, parent)
+        self._settings = settings
         self._telemetry = telemetry
         self._tempFile = tempFile
 
@@ -103,8 +107,8 @@ class ThreadPlot(QtCore.QThread):
         north = max(y)
         south = min(y)
 
-        width = east-west
-        height = north-south
+        width = east - west
+        height = north - south
 
         figure = plt.figure(frameon=False)
         figure.set_size_inches((6, 6. * height / width))
@@ -119,7 +123,7 @@ class ThreadPlot(QtCore.QThread):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             zi = mlab.griddata(x, y, z, xi=xi, yi=yi)
-        axes.pcolormesh(xi, yi, zi)
+        axes.pcolormesh(xi, yi, zi, cmap=self._settings.heatmapColour)
         plt.axis([west, east, south, north])
 
         self.__save(figure)
