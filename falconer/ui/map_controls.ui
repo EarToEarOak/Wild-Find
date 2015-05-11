@@ -5,6 +5,14 @@
   <property name="enabled">
    <bool>false</bool>
   </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>456</width>
+    <height>30</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
     <horstretch>0</horstretch>
@@ -35,6 +43,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>Map type</string>
+     </property>
      <property name="currentText">
       <string/>
      </property>
@@ -45,6 +56,9 @@
    </item>
    <item>
     <widget class="QCheckBox" name="_checkLocations">
+     <property name="toolTip">
+      <string>Show locations</string>
+     </property>
      <property name="text">
       <string>Locations</string>
      </property>
@@ -55,6 +69,9 @@
    </item>
    <item>
     <widget class="QCheckBox" name="_checkHeatmap">
+     <property name="toolTip">
+      <string>Show heat map</string>
+     </property>
      <property name="text">
       <string>Heat map</string>
      </property>
@@ -65,6 +82,9 @@
    </item>
    <item>
     <widget class="QSlider" name="_sliderOpacity">
+     <property name="toolTip">
+      <string>Heat map opacity</string>
+     </property>
      <property name="maximum">
       <number>100</number>
      </property>
@@ -77,7 +97,11 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="_comboColour"/>
+    <widget class="QComboBox" name="_comboColour">
+     <property name="toolTip">
+      <string>Heat map colour</string>
+     </property>
+    </widget>
    </item>
    <item>
     <spacer name="spacer">
@@ -102,6 +126,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Zoom to fit locations</string>
      </property>
      <property name="text">
       <string>Follow</string>

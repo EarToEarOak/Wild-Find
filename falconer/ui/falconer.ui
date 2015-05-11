@@ -102,6 +102,9 @@
    <property name="text">
     <string>&amp;Open...</string>
    </property>
+   <property name="toolTip">
+    <string>Open a file</string>
+   </property>
   </action>
   <action name="actionClose">
    <property name="enabled">
@@ -110,10 +113,19 @@
    <property name="text">
     <string>&amp;Close</string>
    </property>
+   <property name="iconText">
+    <string>Close</string>
+   </property>
+   <property name="toolTip">
+    <string>Closes the file</string>
+   </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>&amp;Exit</string>
+   </property>
+   <property name="iconText">
+    <string>Exit the application</string>
    </property>
   </action>
   <action name="actionHelp">
@@ -137,6 +149,9 @@
   <action name="actionNew">
    <property name="text">
     <string>&amp;New...</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a new file</string>
    </property>
   </action>
  </widget>
