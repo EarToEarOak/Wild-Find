@@ -49,6 +49,10 @@ layerLocations = new ol.layer.Vector({
 	})
 });
 
+layerHeatmap = new ol.layer.Image({
+	opacity : 0.6
+})
+
 function init() {
 
 	layers.push(new ol.layer.Tile({
@@ -83,6 +87,7 @@ function init() {
 		layers : layers
 	});
 
+	map.addLayer(layerHeatmap)
 	map.addLayer(layerLocations)
 
 	setListeners(true);
@@ -117,6 +122,13 @@ function sendLayerNames() {
 	mapLink.on_layer_names(JSON.stringify(names));
 }
 
+function transformCoord(lon, lat) {
+	point = new ol.geom.Point([ lon, lat ]);
+	point.transform('EPSG:4326', 'EPSG:900913');
+
+	return point.getCoordinates();
+}
+
 function getLayer() {
 	for (var i = 0; i < layers.length; i++)
 		if (layers[i].getVisible())
@@ -143,12 +155,32 @@ function addLocations(lon, lat) {
 	locations.addFeature(feature);
 }
 
+function clearLocations() {
+	locations.clear();
+}
+
+function setHeatmap(north, south, east, west) {
+	extent = [ west, south, east, north ]
+
+	url = '/heatmap.png?a=' + Math.random() * 1000000;
+	source = new ol.source.ImageStatic({
+		url : url,
+		imageExtent : extent
+	});
+
+	layerHeatmap.setSource(source)
+}
+
+function clearHeatmap() {
+	showHeatmap(false);
+}
+
 function showLocations(show) {
 	layerLocations.setVisible(show);
 }
 
-function clearLocations() {
-	locations.clear();
+function showHeatmap(show) {
+	layerHeatmap.setVisible(show);
 }
 
 function follow() {

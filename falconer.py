@@ -171,6 +171,7 @@ class Falconer(QtGui.QMainWindow):
 
         telemetry = self._database.get_telemetry(filteredScans,
                                                  filteredSignals)
+        telemetry = self._widgetMap.transform_coords(telemetry)
         self._heatMap.set(telemetry)
 
     def __clear_scans(self):

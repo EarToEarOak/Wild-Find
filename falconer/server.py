@@ -53,12 +53,13 @@ class Handler(BaseHTTPRequestHandler):
     heatmap = None
 
     def do_GET(self):
-        if self.path == '/heatmap.png':
+        if self.path.startswith('/heatmap.png'):
             self.send_response(200)
             self.send_header('Content-type', 'image/png')
+            self.send_header('cache-control', 's-maxage=0 , no-cache')
             self.end_headers()
             self.heatmap.seek(0)
-            self.wfile.write(self.heatmap)
+            self.wfile.write(self.heatmap.read())
         else:
             path = add_program_path('falconer',
                                     'htdocs',
@@ -74,6 +75,9 @@ class Handler(BaseHTTPRequestHandler):
                 f.close()
             else:
                 self.send_response(404)
+
+    def log_message(self, _format, *_args):
+        return
 
     def __send_content_type(self, path):
         content = 'text/plain'

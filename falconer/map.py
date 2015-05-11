@@ -97,6 +97,9 @@ class WidgetMap(QtGui.QWidget):
     def __on_retry(self):
         self._webMap.load(self._url)
 
+    def transform_coords(self, xyz):
+        return self._controls.transform_coords(xyz)
+
     def set_locations(self, locations):
         self.clear()
         self._controls.set_locations(locations)
@@ -164,6 +167,9 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.set_locations(locations)
         self.__follow()
 
+    def transform_coords(self, xyz):
+        return self._mapLink.transform_coords(xyz)
+
     def update_heatmap(self, bounds):
         self._mapLink.update_heatmap(bounds)
 
@@ -190,6 +196,16 @@ class MapLink(QtCore.QObject):
     def on_layer_names(self, names):
         self._parent.update_layers(json.loads(names))
 
+    def transform_coords(self, coords):
+        transformed = []
+        for coord in coords:
+            js = 'transformCoord({}, {});'.format(coord[0], coord[1])
+            trans = self.__exec_js(js)
+            trans.extend([coord[2]])
+            transformed.append(trans)
+
+        return transformed
+
     def get_layer(self):
         js = 'getLayer();'
         return self.__exec_js(js)
@@ -200,20 +216,19 @@ class MapLink(QtCore.QObject):
 
     def set_locations(self, locations):
         for location in locations:
-            js = 'addLocations({},{});'.format(location[0], location[1])
+            js = 'addLocations({}, {});'.format(location[0], location[1])
             self.__exec_js(js)
+
+    def update_heatmap(self, bounds):
+        js = 'setHeatmap({}, {}, {}, {});'.format(*bounds)
+        self.__exec_js(js)
 
     def show_locations(self, show):
         js = 'showLocations({});'.format('{}'.format(show).lower())
         self.__exec_js(js)
 
-    def update_heatmap(self, bounds):
-        # TODO: update heatmap bounds
-        pass
-
     def show_heatmap(self, show):
-        # TODO: add showLocations to map.js
-        js = 'showLocations({});'.format('{}'.format(show).lower())
+        js = 'showHeatmap({});'.format('{}'.format(show).lower())
         self.__exec_js(js)
 
     def follow(self):
