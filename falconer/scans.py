@@ -58,6 +58,14 @@ class WidgetScans(QtGui.QWidget):
         width += self.layout().spacing()
         self.setMaximumWidth(width)
 
+    @QtCore.Slot(bool)
+    def on__buttonRange_clicked(self, _clicked):
+        timeStamps = self._model.get_timestamps()
+        dialog = DialogScansRange(self, timeStamps)
+        if dialog.exec_():
+            filtered = dialog.get_filtered()
+            self._model.set_filtered(filtered)
+
     def connect(self, slot):
         self._model.connect(slot)
 
@@ -65,7 +73,9 @@ class WidgetScans(QtGui.QWidget):
         self._model.set(scans)
         self._tableScans.resizeColumnsToContents()
         self.__set_width()
+
         self._tableScans.setEnabled(True)
+        self._buttonRange.setEnabled(True)
 
     def get_filtered(self):
         return self._model.get_filtered()
@@ -74,6 +84,7 @@ class WidgetScans(QtGui.QWidget):
         self._model.set([])
         self._model.clear_filtered()
         self._tableScans.setEnabled(False)
+        self._buttonRange.setEnabled(False)
 
 
 class ModelScans(QtCore.QAbstractTableModel):
@@ -148,11 +159,77 @@ class ModelScans(QtCore.QAbstractTableModel):
             self._scans.append([checked, timeStamp, count])
         self.endResetModel()
 
+    def get_timestamps(self):
+        timeStamps = [timeStamp for _check, timeStamp, _freq in self._scans]
+        return timeStamps
+
     def get_filtered(self):
         return self._filtered
 
+    def set_filtered(self, filtered):
+        self.beginResetModel()
+        self._filtered = filtered
+        for i in range(len(self._scans)):
+            scan = self._scans[i]
+            if scan[1] in filtered:
+                scan[0] = QtCore.Qt.Unchecked
+            else:
+                scan[0] = QtCore.Qt.Checked
+
+        self.endResetModel()
+        self._signal.filter.emit()
+
     def clear_filtered(self):
         self._filtered = []
+
+
+class DialogScansRange(QtGui.QDialog):
+    def __init__(self, parent, timeStamps):
+        QtGui.QDialog.__init__(self, parent)
+        self._timeStamps = timeStamps
+
+        ui.loadUi(self, 'scans_range.ui')
+
+        timeMin, timeMax = self.__get_range()
+        self._timeFrom = timeMin.toTime_t()
+        self._timeTo = timeMax.toTime_t()
+
+        self._dateFrom.setDateTimeRange(timeMin, timeMax)
+        self._dateFrom.setDateTime(timeMin)
+        self._dateTo.setDateTimeRange(timeMin, timeMax)
+        self._dateTo.setDateTime(timeMax)
+
+    @QtCore.Slot(QtCore.QDateTime)
+    def on__dateFrom_dateTimeChanged(self, dateTime):
+        _timeMin, timeMax = self.__get_range()
+        self._timeFrom = dateTime.toTime_t()
+        self._dateTo.setDateTimeRange(dateTime, timeMax)
+
+    @QtCore.Slot(QtCore.QDateTime)
+    def on__dateTo_dateTimeChanged(self, dateTime):
+        self._timeTo = dateTime.toTime_t()
+
+    @QtCore.Slot()
+    def on__buttonBox_accepted(self):
+        self.accept()
+
+    @QtCore.Slot()
+    def on__buttonBox_rejected(self):
+        self.reject()
+
+    def __get_range(self):
+        timeMin = QtCore.QDateTime.fromTime_t(min(self._timeStamps))
+        timeMax = QtCore.QDateTime.fromTime_t(max(self._timeStamps))
+
+        return timeMin, timeMax
+
+    def get_filtered(self):
+        filtered = []
+        for timeStamp in self._timeStamps:
+            if timeStamp < self._timeFrom or timeStamp > self._timeTo:
+                filtered.append(timeStamp)
+
+        return filtered
 
 
 class SignalScans(QtCore.QObject):
