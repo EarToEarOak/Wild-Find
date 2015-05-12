@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.utils_qt import TableSelectionMenu
 
 
 class WidgetSignals(QtGui.QWidget):
@@ -42,6 +43,8 @@ class WidgetSignals(QtGui.QWidget):
 
         self._tableSignals.setModel(proxyModel)
         self._tableSignals.resizeColumnsToContents()
+        self._contextMenu = TableSelectionMenu(self._tableSignals,
+                                               self._model)
 
         header = self._tableSignals.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
@@ -72,7 +75,7 @@ class WidgetSignals(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._model.clear_filtered()
+        self._model.set_filtered([])
         self._tableSignals.setEnabled(False)
 
 
@@ -149,11 +152,25 @@ class ModelSignals(QtCore.QAbstractTableModel):
             self._signals.append([checked, frequency, count])
         self.endResetModel()
 
+    def get_filters(self):
+        timeStamps = [timeStamp for _check, timeStamp, _freq in self._signals]
+        return timeStamps
+
     def get_filtered(self):
         return self._filtered
 
-    def clear_filtered(self):
-        self._filtered = []
+    def set_filtered(self, filtered):
+        self.beginResetModel()
+        self._filtered = filtered
+        for i in range(len(self._signals)):
+            signal = self._signals[i]
+            if signal[1] in filtered:
+                signal[0] = QtCore.Qt.Unchecked
+            else:
+                signal[0] = QtCore.Qt.Checked
+
+        self.endResetModel()
+        self._signal.filter.emit()
 
 
 class SignalSignals(QtCore.QObject):

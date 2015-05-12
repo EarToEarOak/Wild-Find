@@ -27,6 +27,7 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.utils_qt import TableSelectionMenu
 
 
 class WidgetScans(QtGui.QWidget):
@@ -42,6 +43,8 @@ class WidgetScans(QtGui.QWidget):
 
         self._tableScans.setModel(proxyModel)
         self._tableScans.resizeColumnsToContents()
+        self._contextMenu = TableSelectionMenu(self._tableScans,
+                                               self._model)
 
         header = self._tableScans.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
@@ -60,7 +63,7 @@ class WidgetScans(QtGui.QWidget):
 
     @QtCore.Slot(bool)
     def on__buttonRange_clicked(self, _clicked):
-        timeStamps = self._model.get_timestamps()
+        timeStamps = self._model.get_filters()
         dialog = DialogScansRange(self, timeStamps)
         if dialog.exec_():
             filtered = dialog.get_filtered()
@@ -82,7 +85,7 @@ class WidgetScans(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._model.clear_filtered()
+        self._model.set_filtered([])
         self._tableScans.setEnabled(False)
         self._buttonRange.setEnabled(False)
 
@@ -159,7 +162,7 @@ class ModelScans(QtCore.QAbstractTableModel):
             self._scans.append([checked, timeStamp, count])
         self.endResetModel()
 
-    def get_timestamps(self):
+    def get_filters(self):
         timeStamps = [timeStamp for _check, timeStamp, _freq in self._scans]
         return timeStamps
 
@@ -178,9 +181,6 @@ class ModelScans(QtCore.QAbstractTableModel):
 
         self.endResetModel()
         self._signal.filter.emit()
-
-    def clear_filtered(self):
-        self._filtered = []
 
 
 class DialogScansRange(QtGui.QDialog):

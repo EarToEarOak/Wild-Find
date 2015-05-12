@@ -25,6 +25,8 @@
 import os
 import sys
 
+from PySide import QtCore, QtGui
+
 
 def get_program_path():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
