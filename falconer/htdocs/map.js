@@ -94,6 +94,7 @@ function init() {
 
 	setLayer(layers.length - 1);
 	sendLayerNames();
+	showBusy(false);
 }
 
 function setListeners(enable) {
@@ -162,10 +163,19 @@ function clearLocations() {
 function setHeatmap(north, south, east, west) {
 	extent = [ west, south, east, north ]
 
+	loadFunction = function(image, src) {
+		element = image.getImage();
+		element.src = src;
+		element.onload = function() {
+			showBusy(false);
+		};
+	}
+
 	url = '/heatmap.png?a=' + Math.random() * 1000000;
 	source = new ol.source.ImageStatic({
 		url : url,
-		imageExtent : extent
+		imageExtent : extent,
+		imageLoadFunction : loadFunction
 	});
 
 	layerHeatmap.setSource(source)
@@ -173,6 +183,14 @@ function setHeatmap(north, south, east, west) {
 
 function clearHeatmap() {
 	layerHeatmap.setSource(null)
+}
+
+function showBusy(show) {
+	display = 'none';
+	if (show)
+		display = 'block';
+
+	document.getElementById('busy').style.display = display;
 }
 
 function showLocations(show) {
@@ -183,7 +201,7 @@ function showHeatmap(show) {
 	layerHeatmap.setVisible(show);
 }
 
-function setOpacity(opacity){
+function setOpacity(opacity) {
 	layerHeatmap.setOpacity(opacity)
 }
 

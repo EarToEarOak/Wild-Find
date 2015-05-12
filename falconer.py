@@ -217,6 +217,8 @@ class Falconer(QtGui.QMainWindow):
         self._widgetSignals.set(signals)
 
     def __set_map(self):
+        self._widgetMap.show_busy(True)
+
         filteredScans = self._widgetScans.get_filtered()
         filteredSignals = self._widgetSignals.get_filtered()
         locations = self._database.get_locations(filteredScans,

@@ -72,11 +72,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.__send_content_type(path)
                 self.end_headers()
 
-                f = open(path, 'r')
+                f = open(path, 'rb')
                 self.wfile.write(f.read())
                 f.close()
             else:
                 self.send_response(404)
+                self.end_headers()
 
     def log_message(self, _format, *_args):
         return
@@ -88,6 +89,8 @@ class Handler(BaseHTTPRequestHandler):
             content = 'text/css'
         elif ext == '.html':
             content = 'text/html'
+        elif ext == '.gif':
+            content = 'image/gif'
         elif ext == '.js':
             content = 'text/javascript'
 

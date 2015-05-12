@@ -1,0 +1,17 @@
+#map, #busy {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+}
+
+#map {
+	top: 0;
+	left: 0;
+}
+
+#busy {
+	z-index: 9999;
+	right: 10px;
+	top: 10px;
+    width: auto;
+}
