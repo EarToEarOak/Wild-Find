@@ -40,7 +40,7 @@ from falconer.signals import WidgetSignals
 
 
 class Falconer(QtGui.QMainWindow):
-    def __init__(self,):
+    def __init__(self):
         QtGui.QMainWindow.__init__(self)
 
         self._mapLoaded = False
@@ -67,6 +67,9 @@ class Falconer(QtGui.QMainWindow):
         self._heatMap = HeatMap(self, self._settings, self.__on_signal_map_heatmap)
         self._server = Server(self._heatMap.get_file())
         self._database = Database()
+
+        self._printer = QtGui.QPrinter()
+        self._printer.setCreator('Falconer')
 
         self.statusBar().showMessage('Ready')
 
@@ -105,6 +108,14 @@ class Falconer(QtGui.QMainWindow):
         self.__clear_scans()
         self._database.close()
         self.__set_controls()
+
+    @QtCore.Slot()
+    def on_actionPrint_triggered(self):
+        self._printer.setDocName(self.windowTitle())
+        dialog = QtGui.QPrintPreviewDialog(self._printer, self)
+        dialog.paintRequested.connect(self._widgetMap.get_map().print_)
+        if dialog.exec_():
+            self._printer = dialog.printer()
 
     @QtCore.Slot()
     def on_actionExit_triggered(self):
@@ -161,9 +172,11 @@ class Falconer(QtGui.QMainWindow):
             self._menuRecent.setEnabled(True)
 
         if self._database.isConnected():
-            self.actionClose.setEnabled(True)
+            enabled = True
         else:
-            self.actionClose.setEnabled(False)
+            enabled = False
+        self.actionClose.setEnabled(enabled)
+        self.actionPrint.setEnabled(enabled)
 
     def __file_warn(self):
         if self._database.isConnected():
@@ -185,6 +198,8 @@ class Falconer(QtGui.QMainWindow):
         self.__set_signals()
         self.__set_map()
         self.__set_controls()
+        name = os.path.basename(fileName)
+        self.setWindowTitle('Falconer - {}'.format(name))
 
     def __set_scans(self):
         scans = self._database.get_scans()
@@ -211,6 +226,7 @@ class Falconer(QtGui.QMainWindow):
         self._widgetScans.clear()
         self._widgetSignals.clear()
         self._widgetMap.clear()
+        self.setWindowTitle('Falconer')
 
 
 if __name__ == '__main__':
