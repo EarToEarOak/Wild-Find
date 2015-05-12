@@ -64,7 +64,9 @@ class Falconer(QtGui.QMainWindow):
                                 self.__on_signal_map_colour)
         self._widgetMap.set_settings(self._settings)
 
-        self._heatMap = HeatMap(self, self._settings, self.__on_signal_map_heatmap)
+        self._heatMap = HeatMap(self, self._settings,
+                                self.__on_signal_map_plotted,
+                                self.___on_signal_map_cleared)
         self._server = Server(self._heatMap.get_file())
         self._database = Database()
 
@@ -127,8 +129,12 @@ class Falconer(QtGui.QMainWindow):
         dlg.show()
 
     @QtCore.Slot(object)
-    def __on_signal_map_heatmap(self, bounds):
+    def __on_signal_map_plotted(self, bounds):
         self._widgetMap.update_heatmap(bounds)
+
+    @QtCore.Slot()
+    def ___on_signal_map_cleared(self):
+        self._widgetMap.clear_heatmap()
 
     @QtCore.Slot()
     def __on_signal_map_loaded(self):
@@ -225,7 +231,8 @@ class Falconer(QtGui.QMainWindow):
     def __clear_scans(self):
         self._widgetScans.clear()
         self._widgetSignals.clear()
-        self._widgetMap.clear()
+        self._widgetMap.clear_locations()
+        self._heatMap.set([])
         self.setWindowTitle('Falconer')
 
 

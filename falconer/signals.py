@@ -75,7 +75,6 @@ class WidgetSignals(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._model.set_filtered([])
         self._tableSignals.setEnabled(False)
 
 

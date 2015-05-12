@@ -40,10 +40,9 @@ IMAGE_SIZE = 300
 
 
 class HeatMap(QtCore.QObject):
-    def __init__(self, parent, settings, callback):
+    def __init__(self, parent, settings, on_plotted, on_cleared):
         QtCore.QObject.__init__(self, parent)
         self._settings = settings
-        self._callback = callback
 
         self._telemetry = None
 
@@ -51,11 +50,16 @@ class HeatMap(QtCore.QObject):
         self._tempFile = tempfile.TemporaryFile(suffix='.png')
 
         self._signal = SignalPlot()
-        self._signal.plotted.connect(callback)
+        self._signal.plotted.connect(on_plotted)
+        self._signal.cleared.connect(on_cleared)
 
     @QtCore.Slot(object)
     def __on_plotted(self, bounds):
         self._signal.plotted.emit(bounds)
+
+    @QtCore.Slot()
+    def __on_cleared(self):
+        self._signal.plotted.emit()
 
     def get_file(self):
         return self._tempFile
@@ -65,14 +69,18 @@ class HeatMap(QtCore.QObject):
             self._telemetry = copy.copy(telemetry)
             if self._thread is not None and self._thread.isRunning():
                 QtCore.QTimer.singleShot(0.5, self.set)
+                return
             else:
-                if len(telemetry):
+                if len(telemetry) > 2:
                     self._thread = ThreadPlot(self,
                                               self._settings,
                                               self._telemetry,
                                               self._tempFile,
                                               self.__on_plotted)
                     self._thread.start()
+                    return
+
+        self._signal.cleared.emit()
 
 
 class ThreadPlot(QtCore.QThread):
@@ -97,6 +105,12 @@ class ThreadPlot(QtCore.QThread):
         plt.close(figure)
 
     def run(self):
+        figure = plt.figure(frameon=False)
+        axes = figure.add_axes([0, 0, 1, 1])
+        axes.set_axis_off()
+        figure.patch.set_alpha(0)
+        axes.axesPatch.set_alpha(0)
+
         xyz = zip(*self._telemetry)
         x = xyz[0]
         y = xyz[1]
@@ -110,13 +124,7 @@ class ThreadPlot(QtCore.QThread):
         width = east - west
         height = north - south
 
-        figure = plt.figure(frameon=False)
         figure.set_size_inches((6, 6. * height / width))
-        axes = figure.add_axes([0, 0, 1, 1])
-        axes.set_axis_off()
-
-        figure.patch.set_alpha(0)
-        axes.axesPatch.set_alpha(0)
 
         xi = numpy.linspace(west, east, IMAGE_SIZE)
         yi = numpy.linspace(south, north, IMAGE_SIZE)
@@ -133,6 +141,7 @@ class ThreadPlot(QtCore.QThread):
 
 class SignalPlot(QtCore.QObject):
     plotted = QtCore.Signal(object)
+    cleared = QtCore.Signal()
 
 
 if __name__ == '__main__':

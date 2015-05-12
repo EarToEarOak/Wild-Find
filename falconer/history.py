@@ -34,10 +34,10 @@ MAX_HISTORY = 5
 
 
 class FileHistory(object):
-    def __init__(self, menuBar, callback):
+    def __init__(self, menuBar, on_plotted):
 
         self._signal = FileHistorySignal()
-        self._signal.open[str].connect(callback)
+        self._signal.open[str].connect(on_plotted)
 
         self._menuBar = menuBar
         self._history = []

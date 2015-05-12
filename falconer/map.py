@@ -129,14 +129,17 @@ class WidgetMap(QtGui.QWidget):
         return self._controls.transform_coords(xyz)
 
     def set_locations(self, locations):
-        self.clear()
+        self.clear_locations()
         self._controls.set_locations(locations)
+
+    def clear_locations(self):
+        self._controls.clear_locations()
 
     def update_heatmap(self, bounds):
         self._controls.update_heatmap(bounds)
 
-    def clear(self):
-        self._controls.clear()
+    def clear_heatmap(self):
+        self._controls.clear_heatmap()
 
 
 class WidgetMapControls(QtGui.QWidget):
@@ -221,20 +224,23 @@ class WidgetMapControls(QtGui.QWidget):
         self._follow = False
         self._checkFollow.setChecked(self._follow)
 
+    def transform_coords(self, xyz):
+        return self._mapLink.transform_coords(xyz)
+
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
         self.__follow()
 
-    def transform_coords(self, xyz):
-        return self._mapLink.transform_coords(xyz)
+    def clear_locations(self):
+        self._follow = True
+        self._checkFollow.setChecked(self._follow)
+        self._mapLink.clear_locations()
 
     def update_heatmap(self, bounds):
         self._mapLink.update_heatmap(bounds)
 
-    def clear(self):
-        self._follow = True
-        self._checkFollow.setChecked(self._follow)
-        self._mapLink.clear()
+    def clear_heatmap(self):
+        self._mapLink.clear_heatmap()
 
 
 class MapLink(QtCore.QObject):
@@ -285,8 +291,16 @@ class MapLink(QtCore.QObject):
             js = 'addLocations({}, {});'.format(location[0], location[1])
             self.__exec_js(js)
 
+    def clear_locations(self):
+        js = 'clearLocations();'
+        self.__exec_js(js)
+
     def update_heatmap(self, bounds):
         js = 'setHeatmap({}, {}, {}, {});'.format(*bounds)
+        self.__exec_js(js)
+
+    def clear_heatmap(self):
+        js = 'clearHeatmap();'
         self.__exec_js(js)
 
     def show_locations(self, show):
@@ -303,10 +317,6 @@ class MapLink(QtCore.QObject):
 
     def follow(self):
         js = 'follow();'
-        self.__exec_js(js)
-
-    def clear(self):
-        js = 'clear();'
         self.__exec_js(js)
 
 

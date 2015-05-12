@@ -85,7 +85,6 @@ class WidgetScans(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._model.set_filtered([])
         self._tableScans.setEnabled(False)
         self._buttonRange.setEnabled(False)
 
