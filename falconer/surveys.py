@@ -30,45 +30,79 @@ from falconer import ui
 from falconer.utils_qt import TableSelectionMenu
 
 
-class WidgetSignals(QtGui.QWidget):
+class WidgetSurveys(QtGui.QWidget):
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
-        ui.loadUi(self, 'signals.ui')
+        self._signal = SignalSurveys()
 
-        self._model = ModelSignals()
+        ui.loadUi(self, 'surveys.ui')
+
+        self._model = ModelSurveys(self)
         proxyModel = QtGui.QSortFilterProxyModel(self)
         proxyModel.setDynamicSortFilter(True)
         proxyModel.setSourceModel(self._model)
 
-        self._tableSignals.setModel(proxyModel)
-        self._tableSignals.resizeColumnsToContents()
-        self._contextMenu = TableSelectionMenu(self._tableSignals,
+        self._tableSurveys.setModel(proxyModel)
+        self._tableSurveys.resizeColumnsToContents()
+        self._contextMenu = TableSelectionMenu(self._tableSurveys,
                                                self._model)
 
-        header = self._tableSignals.horizontalHeader()
+        header = self._tableSurveys.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
 
         self.__set_width()
 
     def __set_width(self):
         margins = self.layout().contentsMargins()
-        width = self._tableSignals.verticalHeader().width()
-        width += self._tableSignals.horizontalHeader().length()
-        width += self._tableSignals.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
-        width += self._tableSignals.frameWidth() * 2
+        width = self._tableSurveys.verticalHeader().width()
+        width += self._tableSurveys.horizontalHeader().length()
+        width += self._tableSurveys.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
+        width += self._tableSurveys.frameWidth() * 2
         width += margins.left() + margins.right()
         width += self.layout().spacing()
         self.setMaximumWidth(width)
 
-    def connect(self, slot):
-        self._model.connect(slot)
+    @QtCore.Slot(str)
+    def on__comboSurveys_activated(self, survey):
+        if survey == 'All':
+            self._model.set_filtered([])
+        else:
+            surveys = self._model.get()
+            surveys.remove(survey.encode("utf-8"))
+            self._model.set_filtered(surveys)
 
-    def set(self, frequencies):
-        self._model.set(frequencies)
-        self._tableSignals.resizeColumnsToContents()
+    def on_filter(self):
+        surveys = self._model.get()
+        filtered = self._model.get_filtered()
+        if len(filtered) == 0:
+            self._comboSurveys.setCurrentIndex(0)
+        elif len(filtered) == 1:
+            selected = set(surveys) - set(filtered)
+            index = surveys.index(list(selected)[0])
+            self._comboSurveys.setCurrentIndex(index + 1)
+        else:
+            self._comboSurveys.setCurrentIndex(-1)
+
+        self._signal.filter.emit()
+
+    @QtCore.Slot()
+    def connect(self, slot):
+        self._signal.filter.connect(slot)
+
+    def set(self, surveys):
+        self._model.set(surveys)
+        self._tableSurveys.resizeColumnsToContents()
         self.__set_width()
-        self._tableSignals.setEnabled(True)
+
+        for i in range(self._comboSurveys.count()):
+            self._comboSurveys.removeItem(i)
+
+        self._comboSurveys.addItem('All')
+        self._comboSurveys.addItems(surveys)
+
+        self._tableSurveys.setEnabled(True)
+        self._comboSurveys.setEnabled(True)
 
     def get(self):
         return self._model.get()
@@ -78,38 +112,39 @@ class WidgetSignals(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._tableSignals.setEnabled(False)
+        self._tableSurveys.setEnabled(False)
+        self._comboSurveys.setEnabled(False)
 
 
-class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Freq', 'Seen']
+class ModelSurveys(QtCore.QAbstractTableModel):
+    HEADER = [None, 'Name']
 
-    def __init__(self):
+    def __init__(self, parent):
         QtCore.QAbstractTableModel.__init__(self)
 
-        self._signal = SignalSignals()
-        self._signals = []
+        self._signal = SignalSurveys()
+        self._signal.filter.connect(parent.on_filter)
+        self._surveys = []
         self._filtered = []
 
     def rowCount(self, _parent):
-        return len(self._signals)
+        return len(self._surveys)
 
     def columnCount(self, _parent):
         return len(self.HEADER)
 
     def headerData(self, col, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return self.HEADER[col]
+        if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
+            return self.HEADER[col]
         return None
 
     def data(self, index, role):
-        value = self._signals[index.row()][index.column()]
+        value = self._surveys[index.row()][index.column()]
         data = None
 
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
-                data = '{:7.3f}'.format(value / 1e6)
+                    data = value
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
@@ -120,13 +155,13 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
     def setData(self, index, value, role):
         if role == QtCore.Qt.CheckStateRole:
-            self._signals[index.row()][index.column()] = value
-            frequency = self._signals[index.row()][1]
+            self._surveys[index.row()][index.column()] = value
+            timeStamp = self._surveys[index.row()][1]
             checked = value == QtCore.Qt.Checked
             if checked:
-                self._filtered.remove(frequency)
+                self._filtered.remove(timeStamp)
             else:
-                self._filtered.append(frequency)
+                self._filtered.append(timeStamp)
 
             self._signal.filter.emit()
             return True
@@ -144,27 +179,19 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def connect(self, slot):
         self._signal.filter.connect(slot)
 
-    def set(self, signals):
+    def set(self, surveys):
         self.beginResetModel()
-        del self._signals[:]
-        for frequency, count in signals:
+        del self._surveys[:]
+        for name in surveys:
             checked = QtCore.Qt.Checked
-            if frequency in self._filtered:
+            if name in self._filtered:
                 checked = QtCore.Qt.Unchecked
-            self._signals.append([checked, frequency, count])
+            self._surveys.append([checked, name])
         self.endResetModel()
 
     def get(self):
-        frequencies = []
-        for checked, signal, _detects in self._signals:
-            if checked == QtCore.Qt.Checked:
-                frequencies.append(signal)
-
-        return frequencies
-
-    def get_filters(self):
-        timeStamps = [timeStamp for _check, timeStamp, _freq in self._signals]
-        return timeStamps
+        surveys = [survey for _check, survey in self._surveys]
+        return surveys
 
     def get_filtered(self):
         return self._filtered
@@ -172,18 +199,18 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def set_filtered(self, filtered):
         self.beginResetModel()
         self._filtered = filtered
-        for i in range(len(self._signals)):
-            signal = self._signals[i]
-            if signal[1] in filtered:
-                signal[0] = QtCore.Qt.Unchecked
+        for i in range(len(self._surveys)):
+            survey = self._surveys[i]
+            if survey[1] in filtered:
+                survey[0] = QtCore.Qt.Unchecked
             else:
-                signal[0] = QtCore.Qt.Checked
+                survey[0] = QtCore.Qt.Checked
 
         self.endResetModel()
         self._signal.filter.emit()
 
 
-class SignalSignals(QtCore.QObject):
+class SignalSurveys(QtCore.QObject):
     filter = QtCore.Signal()
 
 

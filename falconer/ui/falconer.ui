@@ -21,6 +21,7 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="WidgetMap" name="_widgetMap" native="true"/>
+      <widget class="WidgetSurveys" name="_widgetSurveys" native="true"/>
       <widget class="WidgetScans" name="_widgetScans" native="true"/>
       <widget class="WidgetSignals" name="_widgetSignals" native="true"/>
      </widget>
@@ -201,6 +202,12 @@
    <class>WidgetScans</class>
    <extends>QWidget</extends>
    <header>widgetscans.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WidgetSurveys</class>
+   <extends>QWidget</extends>
+   <header>widgetsurveys.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

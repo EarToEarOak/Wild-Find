@@ -38,6 +38,7 @@ from falconer.scans import WidgetScans
 from falconer.server import Server
 from falconer.settings import Settings
 from falconer.signals import WidgetSignals
+from falconer.surveys import WidgetSurveys
 
 
 class Falconer(QtGui.QMainWindow):
@@ -47,6 +48,7 @@ class Falconer(QtGui.QMainWindow):
         self._mapLoaded = False
 
         self.customWidgets = {'WidgetMap': WidgetMap,
+                              'WidgetSurveys': WidgetSurveys,
                               'WidgetScans': WidgetScans,
                               'WidgetSignals': WidgetSignals}
 
@@ -59,6 +61,7 @@ class Falconer(QtGui.QMainWindow):
                                   self._menuBar,
                                   self.__on_open_history)
 
+        self._widgetSurveys.connect(self.__on_survey_filter)
         self._widgetScans.connect(self.__on_scan_filter)
         self._widgetSignals.connect(self.__on_signal_filter)
         self._widgetMap.connect(self.__on_signal_map_loaded,
@@ -170,6 +173,12 @@ class Falconer(QtGui.QMainWindow):
         self.__open(fileName)
 
     @QtCore.Slot()
+    def __on_survey_filter(self):
+        self.__set_scans()
+        self.__set_signals()
+        self.__set_map()
+
+    @QtCore.Slot()
     def __on_scan_filter(self):
         self.__set_signals()
         self.__set_map()
@@ -218,8 +227,16 @@ class Falconer(QtGui.QMainWindow):
         return True
 
     def __open(self, fileName):
-        self._database.open(fileName)
         self.__clear_scans()
+
+        error = self._database.open(fileName)
+        if error is not None:
+            QtGui.QMessageBox.critical(self,
+                                       'Open failed',
+                                       error)
+            return
+
+        self.__set_surveys()
         self.__set_scans()
         self.__set_signals()
         self.__set_map()
@@ -227,30 +244,42 @@ class Falconer(QtGui.QMainWindow):
         name = os.path.basename(fileName)
         self.setWindowTitle('Falconer - {}'.format(name))
 
+    def __set_surveys(self):
+        surveys = self._database.get_surveys()
+        self._widgetSurveys.set(surveys)
+
     def __set_scans(self):
-        scans = self._database.get_scans()
+        filteredSurveys = self._widgetSurveys.get_filtered()
+        scans = self._database.get_scans(filteredSurveys)
         self._widgetScans.set(scans)
 
     def __set_signals(self):
-        filtered = self._widgetScans.get_filtered()
-        signals = self._database.get_signals(filtered)
+        filteredSurveys = self._widgetSurveys.get_filtered()
+        filteredScans = self._widgetScans.get_filtered()
+        signals = self._database.get_signals(filteredSurveys,
+                                             filteredSurveys,
+                                             filteredScans)
         self._widgetSignals.set(signals)
 
     def __set_map(self):
         self._widgetMap.show_busy(True)
 
+        filteredSurveys = self._widgetSurveys.get_filtered()
         filteredScans = self._widgetScans.get_filtered()
         filteredSignals = self._widgetSignals.get_filtered()
-        locations = self._database.get_locations(filteredScans,
+        locations = self._database.get_locations(filteredSurveys,
+                                                 filteredScans,
                                                  filteredSignals)
         self._widgetMap.set_locations(locations)
 
-        telemetry = self._database.get_telemetry(filteredScans,
+        telemetry = self._database.get_telemetry(filteredSurveys,
+                                                 filteredScans,
                                                  filteredSignals)
         telemetry = self._widgetMap.transform_coords(telemetry)
         self._heatMap.set(telemetry)
 
     def __clear_scans(self):
+        self._widgetSurveys.clear()
         self._widgetScans.clear()
         self._widgetSignals.clear()
         self._widgetMap.clear_locations()

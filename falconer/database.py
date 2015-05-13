@@ -39,12 +39,27 @@ class Database():
         self._conn = sqlite3.connect(fileName)
         self._conn.row_factory = name_factory
 
-        create_database(self._conn)
+        return create_database(self._conn)
 
-    def __filter(self, filteredScans, filteredSignals=None):
+    def __filter(self, cursor, filteredSurveys, filteredScans=None, filteredSignals=None):
         condition = ' '
+        condSurveys = ''
+        condScans = ''
+        condSignals = ''
 
-        if len(filteredScans):
+        if len(filteredSurveys):
+            cmd = 'select TimeStamp from Scans where Survey not in ('
+            cmd += str(filteredSurveys).strip('[]')
+            cmd += ')'
+            cursor.execute(cmd)
+            rows = cursor.fetchall()
+            timeStamps = [row['TimeStamp'] for row in rows]
+
+            condSurveys = ' TimeStamp in ('
+            condSurveys += str(timeStamps).strip('[]')
+            condSurveys += ') '
+
+        if filteredScans is not None and len(filteredScans):
             condScans = ' TimeStamp not in ('
             condScans += str(filteredScans).strip('[]')
             condScans += ') '
@@ -54,18 +69,23 @@ class Database():
             condSignals += str(filteredSignals).strip('[]')
             condSignals += ') '
 
-        if len(filteredScans) and filteredSignals is not None and len(filteredSignals):
-            condition = ' where ' + condScans + 'and' + condSignals
-        elif len(filteredScans):
-            condition = ' where ' + condScans
-        elif filteredSignals is not None and len(filteredSignals):
-            condition = ' where ' + condSignals
-            condition = ' where ' + condSignals
+        if len(condSurveys) or len(condScans) or len(condSignals):
+            condition = ' where '
+            if len(condSurveys):
+                condition += condSurveys
+            if len(condScans):
+                if len(condSurveys):
+                    condition += 'and'
+                condition += condScans
+            if len(condSignals):
+                if len(condSurveys) or len(condScans):
+                    condition += 'and'
+                condition += condSignals
 
         return condition
 
     def open(self, fileName):
-        self.__connect(fileName)
+        return self.__connect(fileName)
 
     def close(self):
         if self._conn is not None:
@@ -81,44 +101,67 @@ class Database():
     def get_filename(self):
         return self._fileName
 
-    def get_scans(self):
+    def get_surveys(self):
+        cursor = self._conn.cursor()
+        cmd = 'select * from Scans group by Survey'
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        surveys = [row['Survey'].encode("utf-8") for row in rows]
+
+        return surveys
+
+    def get_scans(self, filteredSurveys):
         cursor = self._conn.cursor()
         cmd = 'select * from Scans'
+        cmd += self.__filter(cursor,
+                             filteredSurveys)
+
         cursor.execute(cmd)
         rows = cursor.fetchall()
         scans = [[row['TimeStamp'], row['Freq']] for row in rows]
 
         return scans
 
-    def get_signals(self, filteredScans):
+    def get_signals(self, filteredSurveys, filteredSignals, filteredScans):
+        cursor = self._conn.cursor()
+
         cmd = 'select Freq, count(Freq) from Signals'
-        cmd += self.__filter(filteredScans)
+        cmd += self.__filter(cursor,
+                             filteredSurveys,
+                             filteredScans,
+                             filteredSignals)
         cmd += 'group by Freq'
 
-        cursor = self._conn.cursor()
         cursor.execute(cmd)
         rows = cursor.fetchall()
         signals = [[row['Freq'], row['count(Freq)']] for row in rows]
 
         return signals
 
-    def get_locations(self, filteredScans, filteredSignals):
+    def get_locations(self, filteredSurveys, filteredScans, filteredSignals):
+        cursor = self._conn.cursor()
         cmd = 'select Lon, Lat from Signals'
-        cmd += self.__filter(filteredScans, filteredSignals)
+        cmd += self.__filter(cursor,
+                             filteredSurveys,
+                             filteredScans,
+                             filteredSignals)
         cmd += 'group by Lon, Lat'
 
-        cursor = self._conn.cursor()
         cursor.execute(cmd)
         rows = cursor.fetchall()
         signals = [[row['Lon'], row['Lat']] for row in rows]
 
         return signals
 
-    def get_telemetry(self, filteredScans, filteredSignals):
-        cmd = 'select Lon, Lat, Level from Signals'
-        cmd += self.__filter(filteredScans, filteredSignals)
-
+    def get_telemetry(self, filteredSurveys, filteredScans, filteredSignals):
         cursor = self._conn.cursor()
+
+        cmd = 'select Lon, Lat, Level from Signals'
+        cmd += self.__filter(cursor,
+                             filteredSurveys,
+                             filteredScans,
+                             filteredSignals)
+
         cursor.execute(cmd)
         rows = cursor.fetchall()
         telemetry = [[row['Lon'], row['Lat'], row['Level']] for row in rows]
