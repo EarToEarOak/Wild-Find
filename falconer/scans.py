@@ -93,7 +93,7 @@ class WidgetScans(QtGui.QWidget):
 
 
 class ModelScans(QtCore.QAbstractTableModel):
-    HEADER = ['', 'Time', 'Frequency\n(MHz)']
+    HEADER = ['', 'Time', 'Freq']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)

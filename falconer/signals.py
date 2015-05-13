@@ -82,7 +82,7 @@ class WidgetSignals(QtGui.QWidget):
 
 
 class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = ['', 'Frequency\n(MHz)', 'Detections']
+    HEADER = ['', 'Freq', 'Seen']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
