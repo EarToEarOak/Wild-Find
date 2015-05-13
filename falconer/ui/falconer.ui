@@ -54,6 +54,8 @@
     <addaction name="actionOpen"/>
     <addaction name="_menuRecent"/>
     <addaction name="separator"/>
+    <addaction name="actionExportPdf"/>
+    <addaction name="separator"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
@@ -168,6 +170,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionExportPdf">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export to PDF...</string>
+   </property>
+   <property name="toolTip">
+    <string>Export to a PDF</string>
    </property>
   </action>
  </widget>

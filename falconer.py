@@ -113,6 +113,16 @@ class Falconer(QtGui.QMainWindow):
         self.__set_controls()
 
     @QtCore.Slot()
+    def on_actionExportPdf_triggered(self):
+        printer = QtGui.QPrinter()
+        self._printer.setDocName(self.windowTitle())
+        printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
+        dialog = QtGui.QPrintPreviewDialog(printer, self)
+        dialog.paintRequested.connect(self.__on__print)
+        if dialog.exec_():
+            self._printer = dialog.printer()
+
+    @QtCore.Slot()
     def on_actionPrint_triggered(self):
         self._printer.setDocName(self.windowTitle())
         dialog = QtGui.QPrintPreviewDialog(self._printer, self)
@@ -192,6 +202,7 @@ class Falconer(QtGui.QMainWindow):
             enabled = False
         self.actionClose.setEnabled(enabled)
         self.actionPrint.setEnabled(enabled)
+        self.actionExportPdf.setEnabled(enabled)
 
     def __file_warn(self):
         if self._database.isConnected():

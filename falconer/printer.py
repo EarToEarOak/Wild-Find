@@ -79,9 +79,9 @@ def print_report(printer, fileName, widgetScans, widgetSignals, widgetMap):
     height = pageRect.height() - cursor.position()
     width = pageRect.width()
     if width <= height:
-        mapImage = mapImage.scaledToWidth(width * 0.95)
+        mapImage = mapImage.scaledToWidth(width * 0.8)
     else:
-        mapImage = mapImage.scaledToHeight(height * 0.95)
+        mapImage = mapImage.scaledToHeight(height * 0.8)
     insert_block(cursor, align=QtCore.Qt.AlignHCenter)
     cursor.insertImage(mapImage)
 
