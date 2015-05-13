@@ -70,6 +70,9 @@ class WidgetSignals(QtGui.QWidget):
         self.__set_width()
         self._tableSignals.setEnabled(True)
 
+    def get(self):
+        return self._model.get()
+
     def get_filtered(self):
         return self._model.get_filtered()
 
@@ -150,6 +153,14 @@ class ModelSignals(QtCore.QAbstractTableModel):
                 checked = QtCore.Qt.Unchecked
             self._signals.append([checked, frequency, count])
         self.endResetModel()
+
+    def get(self):
+        frequencies = []
+        for checked, signal, _detects in self._signals:
+            if checked == QtCore.Qt.Checked:
+                frequencies.append(signal)
+
+        return frequencies
 
     def get_filters(self):
         timeStamps = [timeStamp for _check, timeStamp, _freq in self._signals]

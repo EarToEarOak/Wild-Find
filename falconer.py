@@ -33,6 +33,7 @@ from falconer.database import Database
 from falconer.heatmap import HeatMap
 from falconer.map import WidgetMap
 from falconer.preferences import DialogPreferences
+from falconer.printer import print_report
 from falconer.scans import WidgetScans
 from falconer.server import Server
 from falconer.settings import Settings
@@ -115,7 +116,7 @@ class Falconer(QtGui.QMainWindow):
     def on_actionPrint_triggered(self):
         self._printer.setDocName(self.windowTitle())
         dialog = QtGui.QPrintPreviewDialog(self._printer, self)
-        dialog.paintRequested.connect(self._widgetMap.get_map().print_)
+        dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._printer = dialog.printer()
 
@@ -166,6 +167,14 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_filter(self):
         self.__set_map()
+
+    @QtCore.Slot(QtGui.QPrinter)
+    def __on__print(self, printer):
+        print_report(printer,
+                     self._database.get_filename(),
+                     self._widgetScans,
+                     self._widgetSignals,
+                     self._widgetMap)
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):

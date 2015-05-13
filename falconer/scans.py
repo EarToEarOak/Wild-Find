@@ -63,7 +63,7 @@ class WidgetScans(QtGui.QWidget):
 
     @QtCore.Slot(bool)
     def on__buttonRange_clicked(self, _clicked):
-        timeStamps = self._model.get_filters()
+        timeStamps = self._model.get()
         dialog = DialogScansRange(self, timeStamps)
         if dialog.exec_():
             filtered = dialog.get_filtered()
@@ -79,6 +79,9 @@ class WidgetScans(QtGui.QWidget):
 
         self._tableScans.setEnabled(True)
         self._buttonRange.setEnabled(True)
+
+    def get(self):
+        return self._model.get()
 
     def get_filtered(self):
         return self._model.get_filtered()
@@ -161,7 +164,7 @@ class ModelScans(QtCore.QAbstractTableModel):
             self._scans.append([checked, timeStamp, count])
         self.endResetModel()
 
-    def get_filters(self):
+    def get(self):
         timeStamps = [timeStamp for _check, timeStamp, _freq in self._scans]
         return timeStamps
 

@@ -46,7 +46,7 @@ class WidgetMap(QtGui.QWidget):
         self._url = QtCore.QUrl(url)
         self._retries = RETRIES
 
-        self._webMap = QtWebKit.QWebView()
+        self._webMap = QtWebKit.QWebView(self)
         self._webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
         page = self._webMap.page()
@@ -143,6 +143,18 @@ class WidgetMap(QtGui.QWidget):
 
     def clear_heatmap(self):
         self._controls.clear_heatmap()
+
+    def get_map(self):
+        page = self._webMap.page()
+        frame = page.mainFrame()
+
+        size = page.viewportSize()
+        image = QtGui.QImage(size, QtGui.QImage.Format_ARGB32)
+        painter = QtGui.QPainter(image)
+        frame.render(painter, QtWebKit.QWebFrame.ContentsLayer)
+        painter.end()
+
+        return image
 
 
 class WidgetMapControls(QtGui.QWidget):

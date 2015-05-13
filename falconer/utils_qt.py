@@ -54,7 +54,7 @@ class TableSelectionMenu(object):
 
     @QtCore.Slot()
     def on_none(self):
-        self._model.set_filtered(self._model.get_filters())
+        self._model.set_filtered(self._model.get())
 
     @QtCore.Slot()
     def on_invert(self):

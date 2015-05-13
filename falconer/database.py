@@ -23,6 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
 import sqlite3
 
 from common.database import create_database, name_factory
@@ -33,6 +34,7 @@ class Database():
         self._conn = None
 
     def __connect(self, fileName):
+        self._fileName = os.path.basename(fileName)
         self._conn = sqlite3.connect(fileName)
         self._conn.row_factory = name_factory
 
@@ -74,6 +76,9 @@ class Database():
             return False
 
         return True
+
+    def get_filename(self):
+        return self._fileName
 
     def get_scans(self):
         cursor = self._conn.cursor()
