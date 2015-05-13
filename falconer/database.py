@@ -31,6 +31,7 @@ from common.database import create_database, name_factory
 
 class Database():
     def __init__(self):
+        self._fileName = None
         self._conn = None
 
     def __connect(self, fileName):

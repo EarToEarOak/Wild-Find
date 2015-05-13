@@ -23,29 +23,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import serial
+import sys
 
 
-class Comm(object):
-    BITS = [serial.FIVEBITS, serial.SIXBITS, serial.SEVENBITS,
-            serial.EIGHTBITS]
-    PARITIES = [serial.PARITY_NONE, serial.PARITY_EVEN, serial.PARITY_ODD,
-                serial.PARITY_MARK, serial.PARITY_SPACE]
-    STOPS = [serial.STOPBITS_ONE, serial.STOPBITS_ONE_POINT_FIVE,
-             serial.STOPBITS_TWO]
+class Utils(object):
+    # Print error and exit
+    @staticmethod
+    def error(error, fatal=True):
+        if fatal:
+            sys.exit(error)
 
-    def __init__(self):
-        self.port = None
-        self.baud = 115200
-        self.bits = serial.EIGHTBITS
-        self.parity = serial.PARITY_NONE
-        self.stops = serial.STOPBITS_ONE
-        self.soft = False
+        sys.stderr.write(error + '\n')
 
-    def get_bauds(self):
-        return serial.Serial.BAUDRATES
+    # Return ranges based on tolerance
+    @staticmethod
+    def calc_tolerances(values, tolerance):
+        valuesMin = [value * (100 - tolerance) / 100. for value in values]
+        valuesMax = [value * (100 + tolerance) / 100. for value in values]
+        return zip(valuesMax, valuesMin)
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

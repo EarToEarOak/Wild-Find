@@ -79,5 +79,5 @@ class Collar(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

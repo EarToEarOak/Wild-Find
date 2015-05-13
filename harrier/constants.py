@@ -22,19 +22,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os
-import sys
 
+# Sampling time per location (seconds)
+SAMPLE_TIME = 4
+# Sample rate (Hertz)
+SAMPLE_RATE = 2.4e6
 
-def get_program_path():
-    return os.path.dirname(os.path.realpath(sys.argv[0]))
-
-
-def add_program_path(*paths):
-    cwd = get_program_path()
-    return os.path.join(cwd, *paths)
+# Retry GPS delay (seconds)
+GPS_RETRY = 5
+# Maximum age for a valid location (seconds)
+GPS_AGE = 5
 
 
 if __name__ == '__main__':
-    print 'Please run falconer.py'
+    print 'Please run harrier.py'
     exit(1)

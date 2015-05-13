@@ -26,7 +26,7 @@
 from matplotlib.mlab import psd
 import numpy
 
-from peregrine.utils import Utils
+from harrier.utils import Utils
 
 
 # Search for possible signals
@@ -85,5 +85,5 @@ class Scan(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

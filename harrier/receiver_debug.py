@@ -36,11 +36,11 @@ import numpy
 from scipy.io import wavfile
 
 import matplotlib.pyplot as plt
-from peregrine.constants import SAMPLE_TIME, SAMPLE_RATE
-from peregrine.detect import DetectDebug, Detect
-from peregrine.scan import Scan
-from peregrine.timing import Timing
-from peregrine.utils import Utils
+from harrier.constants import SAMPLE_TIME, SAMPLE_RATE
+from harrier.detect import DetectDebug, Detect
+from harrier.scan import Scan
+from harrier.timing import Timing
+from harrier.utils import Utils
 
 
 matplotlib.use('TkAgg')

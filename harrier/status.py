@@ -27,7 +27,7 @@ from collections import OrderedDict
 import sys
 import time
 
-from peregrine import events
+from harrier import events
 
 
 class Status(object):
@@ -105,5 +105,5 @@ class Status(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

@@ -25,9 +25,9 @@
 
 import numpy
 
-from peregrine import collar
-from peregrine.constants import SAMPLE_TIME
-from peregrine.utils import Utils
+from harrier import collar
+from harrier.constants import SAMPLE_TIME
+from harrier.utils import Utils
 
 
 class Detect(object):
@@ -356,5 +356,5 @@ class DetectDebug(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

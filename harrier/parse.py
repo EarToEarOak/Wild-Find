@@ -26,7 +26,7 @@
 from collections import OrderedDict
 import json
 
-from peregrine import events
+from harrier import events
 
 
 class Parse(object):
@@ -300,5 +300,5 @@ class ValueException(Exception):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

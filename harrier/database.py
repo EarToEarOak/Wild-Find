@@ -32,7 +32,7 @@ import threading
 import time
 
 from common.database import create_database, name_factory
-from peregrine import events
+from harrier import events
 
 
 ADD_SIGNAL, GET_SIGNALS_LAST, GET_SIGNALS, \
@@ -248,5 +248,5 @@ class Database(threading.Thread):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

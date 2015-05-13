@@ -26,7 +26,7 @@
 import ConfigParser
 import sys
 
-from peregrine.comm import Comm
+from harrier.comm import Comm
 
 
 class Settings(object):
@@ -108,5 +108,5 @@ class Settings(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

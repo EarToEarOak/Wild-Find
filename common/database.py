@@ -23,7 +23,7 @@
 
 import sqlite3
 
-from peregrine.constants import LOG_SIZE
+from common.constants import LOG_SIZE
 
 
 VERSION = 1

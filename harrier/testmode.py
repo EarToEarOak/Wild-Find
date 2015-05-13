@@ -28,9 +28,9 @@ import signal
 import sys
 import time
 
-from peregrine import events
-from peregrine.collar import MOD_DESC
-from peregrine.receive import Receive
+from harrier import events
+from harrier.collar import MOD_DESC
+from harrier.receive import Receive
 
 
 class TestMode(object):
@@ -104,5 +104,5 @@ class TestMode(object):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

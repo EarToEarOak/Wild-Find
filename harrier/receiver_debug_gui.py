@@ -28,7 +28,7 @@ import os
 
 import wx
 
-from peregrine import receiver_debug
+from harrier import receiver_debug
 
 
 def parse_arguments():

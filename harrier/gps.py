@@ -29,7 +29,7 @@ import threading
 import serial
 from serial.serialutil import SerialException
 
-from peregrine import events
+from harrier import events
 
 
 TIMEOUT = 2
@@ -182,5 +182,5 @@ class Gps(threading.Thread):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

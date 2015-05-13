@@ -28,10 +28,10 @@ import time
 
 import rtlsdr
 
-from peregrine import events
-from peregrine.constants import SAMPLE_RATE, SAMPLE_TIME
-from peregrine.detect import Detect
-from peregrine.scan import Scan
+from harrier import events
+from harrier.constants import SAMPLE_RATE, SAMPLE_TIME
+from harrier.detect import Detect
+from harrier.scan import Scan
 
 
 class Receive(threading.Thread):
@@ -101,5 +101,5 @@ class Receive(threading.Thread):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

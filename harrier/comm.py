@@ -23,20 +23,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Sampling time per location (seconds)
-SAMPLE_TIME = 4
-# Sample rate (Hertz)
-SAMPLE_RATE = 2.4e6
+import serial
 
-# Retry GPS delay (seconds)
-GPS_RETRY = 5
-# Maximum age for a valid location (seconds)
-GPS_AGE = 5
 
-# Log size (lines)
-LOG_SIZE = 50
+class Comm(object):
+    BITS = [serial.FIVEBITS, serial.SIXBITS, serial.SEVENBITS,
+            serial.EIGHTBITS]
+    PARITIES = [serial.PARITY_NONE, serial.PARITY_EVEN, serial.PARITY_ODD,
+                serial.PARITY_MARK, serial.PARITY_SPACE]
+    STOPS = [serial.STOPBITS_ONE, serial.STOPBITS_ONE_POINT_FIVE,
+             serial.STOPBITS_TWO]
+
+    def __init__(self):
+        self.port = None
+        self.baud = 115200
+        self.bits = serial.EIGHTBITS
+        self.parity = serial.PARITY_NONE
+        self.stops = serial.STOPBITS_ONE
+        self.soft = False
+
+    def get_bauds(self):
+        return serial.Serial.BAUDRATES
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)

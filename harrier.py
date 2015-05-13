@@ -31,15 +31,15 @@ import socket
 import sys
 import time
 
-from peregrine import events
-from peregrine.constants import GPS_AGE, GPS_RETRY, SAMPLE_RATE
-from peregrine.database import Database
-from peregrine.gps import Gps
-from peregrine.receive import Receive
-from peregrine.server import Server
-from peregrine.settings import Settings
-from peregrine.status import Status
-from peregrine.testmode import TestMode
+from harrier import events
+from harrier.constants import GPS_AGE, GPS_RETRY, SAMPLE_RATE
+from harrier.database import Database
+from harrier.gps import Gps
+from harrier.receive import Receive
+from harrier.server import Server
+from harrier.settings import Settings
+from harrier.status import Status
+from harrier.testmode import TestMode
 
 
 class Peregrine(object):

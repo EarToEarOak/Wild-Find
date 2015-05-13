@@ -27,8 +27,8 @@ import select
 import socket
 import threading
 
-from peregrine import events
-from peregrine.parse import Parse
+from harrier import events
+from harrier.parse import Parse
 
 
 VERSION = 1
@@ -133,5 +133,5 @@ class Server(threading.Thread):
 
 
 if __name__ == '__main__':
-    print 'Please run peregrine.py'
+    print 'Please run harrier.py'
     exit(1)
