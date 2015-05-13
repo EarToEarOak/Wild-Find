@@ -97,7 +97,7 @@ class Server(threading.Thread):
                         if self._client is not None:
                             self._client.close()
 
-                        client.sendall('\r\nPeregrine\r\n')
+                        client.sendall('\r\nHarrier\r\n')
                         self._client = client
                         result = self._parse.result('Version', VERSION)
                         self.send(result)

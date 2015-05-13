@@ -42,9 +42,9 @@ from harrier.status import Status
 from harrier.testmode import TestMode
 
 
-class Peregrine(object):
+class Harrier(object):
     def __init__(self):
-        print 'Peregrine\n'
+        print 'Harrier\n'
 
         hostname = socket.gethostname()
         print 'Host name: {}'.format(hostname)
@@ -95,11 +95,11 @@ class Peregrine(object):
         parser.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
                             type=float, required=True)
         parser.add_argument("-c", "--conf", help="Configuration file",
-                            default=os.path.expanduser("~/peregrine.conf"))
+                            default=os.path.expanduser("~/harrier.conf"))
         parser.add_argument("-t", "--test", help="Test mode",
                             action="store_true")
         parser.add_argument("file", help='Database path', nargs='?',
-                            default=os.path.expanduser("~/peregrine.db"))
+                            default=os.path.expanduser("~/harrier.db"))
 
         args = parser.parse_args()
 
@@ -207,4 +207,4 @@ class Peregrine(object):
 
 
 if __name__ == '__main__':
-    Peregrine()
+    Harrier()
