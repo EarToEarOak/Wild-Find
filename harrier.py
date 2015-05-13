@@ -52,10 +52,13 @@ class Harrier(object):
         queue = Queue.Queue()
 
         settings = Settings(self.__arguments())
+        self._settings = settings
 
         if settings.test:
             TestMode(settings)
             return
+
+        print 'Survey: {}'.format(settings.survey)
 
         self._gps = None
         self._database = Database(settings.db, queue)
@@ -92,6 +95,8 @@ class Harrier(object):
                                          formatter_class=
                                          argparse.ArgumentDefaultsHelpFormatter)
 
+        parser.add_argument('-s', '--survey', help='Survey name',
+                            type=str, required=True)
         parser.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
                             type=float, required=True)
         parser.add_argument("-c", "--conf", help="Configuration file",
@@ -140,7 +145,8 @@ class Harrier(object):
                     collar.lat = location[1]
                     self._database.append_signal(timeStamp,
                                                  collar,
-                                                 settings.freq)
+                                                 settings.freq,
+                                                 self._settings.survey)
             else:
                 self._status.set_signals(0)
 

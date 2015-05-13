@@ -36,6 +36,7 @@ class Settings(object):
 
         self.delay = None
 
+        self.survey = args.survey
         self.freq = args.frequency
         self.test = args.test
 

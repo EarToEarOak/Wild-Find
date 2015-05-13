@@ -72,10 +72,11 @@ class Database(threading.Thread):
             timeStamp = int(kwargs['timeStamp'])
             signal = kwargs['signal']
             frequency = kwargs['frequency']
+            survey = kwargs['survey']
 
-            cmd = 'insert into Scans values(?, ?)'
+            cmd = 'insert into Scans values(?, ?, ?)'
             try:
-                self._conn.execute(cmd, (timeStamp, frequency))
+                self._conn.execute(cmd, (timeStamp, frequency, survey))
             except sqlite3.IntegrityError:
                 pass
 
@@ -187,8 +188,11 @@ class Database(threading.Thread):
 
         self._conn.close()
 
-    def append_signal(self, timeStamp, signal, frequency):
-        event = events.Event(ADD_SIGNAL, signal=signal, frequency=frequency,
+    def append_signal(self, timeStamp, signal, frequency, survey):
+        event = events.Event(ADD_SIGNAL,
+                             survey=survey,
+                             signal=signal,
+                             frequency=frequency,
                              timeStamp=timeStamp)
         self._queue.put(event)
 
