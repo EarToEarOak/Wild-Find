@@ -99,6 +99,9 @@ def __upgrade_1_to_2(cursor):
     cmd = 'alter table Scans add column Survey text'
     cursor.execute(cmd)
 
+    cmd = 'update Scans set Survey="Unspecified" where Survey is null'
+    cursor.execute(cmd)
+
     cmd = 'update Info set Value = ? where Key = "DbVersion"'
     cursor.execute(cmd, (VERSION, ))
 
