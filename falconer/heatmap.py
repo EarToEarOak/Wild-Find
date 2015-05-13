@@ -132,7 +132,7 @@ class ThreadPlot(QtCore.QThread):
             warnings.simplefilter("ignore")
             zi = mlab.griddata(x, y, z, xi=xi, yi=yi)
         axes.pcolormesh(xi, yi, zi, cmap=self._settings.heatmapColour)
-        plt.axis([west, east, south, north])
+        plt.axis([west, east, south, north], interp='linear')
 
         self.__save(figure)
 
