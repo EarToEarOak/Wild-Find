@@ -183,6 +183,7 @@ function setHeatmap(north, south, east, west) {
 
 function clearHeatmap() {
 	layerHeatmap.setSource(null)
+	showBusy(false);
 }
 
 function showBusy(show) {
