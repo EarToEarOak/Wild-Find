@@ -250,6 +250,7 @@ class Falconer(QtGui.QMainWindow):
             QtGui.QMessageBox.critical(self,
                                        'Open failed',
                                        error)
+            self.__clear_scans()
             return
 
         self.__set_surveys()
