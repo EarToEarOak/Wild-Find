@@ -118,6 +118,9 @@ class WidgetMap(QtGui.QWidget):
     def on_colour(self):
         self._signal.colour.emit()
 
+    def resizeEvent(self, event):
+        self._controls.follow()
+
     def connect(self, loaded, colour):
         self._signal.loaded.connect(loaded)
         self._signal.colour.connect(colour)
@@ -191,7 +194,7 @@ class WidgetMapControls(QtGui.QWidget):
     @QtCore.Slot(bool)
     def on__checkLocations_clicked(self, checked):
         self._mapLink.show_locations(checked)
-        self.__follow()
+        self.follow()
 
     @QtCore.Slot(bool)
     def on__checkTrack_clicked(self, checked):
@@ -217,9 +220,9 @@ class WidgetMapControls(QtGui.QWidget):
     @QtCore.Slot(bool)
     def on__checkFollow_clicked(self, checked):
         self._follow = checked
-        self.__follow()
+        self.follow()
 
-    def __follow(self):
+    def follow(self):
         if self._follow:
             self._mapLink.follow()
 
@@ -251,7 +254,7 @@ class WidgetMapControls(QtGui.QWidget):
 
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
-        self.__follow()
+        self.follow()
 
     def clear_locations(self):
         self._follow = True
