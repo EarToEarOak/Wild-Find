@@ -44,7 +44,8 @@ def __create_tables(connection):
     cmd = ('create table if not exists '
            'Scans ('
            '    TimeStamp integer primary key,'
-           '    Freq real)')
+           '    Freq real,'
+           '    Survey text)')
     connection.execute(cmd)
 
     # Signals table
