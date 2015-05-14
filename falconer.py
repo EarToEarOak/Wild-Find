@@ -31,6 +31,7 @@ from PySide import QtGui, QtCore
 from falconer import ui
 from falconer.database import Database
 from falconer.heatmap import HeatMap
+from falconer.log import DialogLog
 from falconer.map import WidgetMap
 from falconer.preferences import DialogPreferences
 from falconer.printer import print_report
@@ -149,6 +150,11 @@ class Falconer(QtGui.QMainWindow):
         dlg = DialogPreferences(self)
         dlg.show()
 
+    @QtCore.Slot()
+    def on_actionLog_triggered(self):
+        dlg = DialogLog(self, self._database.get_logs())
+        dlg.show()
+
     @QtCore.Slot(object)
     def __on_signal_map_plotted(self, bounds):
         self._widgetMap.update_heatmap(bounds)
@@ -212,15 +218,16 @@ class Falconer(QtGui.QMainWindow):
             self.actionOpen.setEnabled(True)
             self._menuRecent.setEnabled(True)
 
+        enabled = False
         if self._database.isConnected():
             enabled = True
-        else:
-            enabled = False
 
         self.actionExportPdf.setEnabled(enabled)
         self.actionExportImage.setEnabled(enabled)
         self.actionPrint.setEnabled(enabled)
         self.actionClose.setEnabled(enabled)
+
+        self.actionLog.setEnabled(enabled)
 
     def __file_warn(self):
         if self._database.isConnected():

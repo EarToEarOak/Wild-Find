@@ -168,6 +168,16 @@ class Database():
 
         return telemetry
 
+    def get_logs(self):
+        cursor = self._conn.cursor()
+
+        cmd = 'select * from Log'
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+        logs = [[row['TimeStamp'], row['Message']] for row in rows]
+
+        return logs
+
 
 if __name__ == '__main__':
     print 'Please run falconer.py'

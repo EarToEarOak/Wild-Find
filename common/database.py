@@ -26,29 +26,30 @@ import sqlite3
 from common.constants import LOG_SIZE
 
 
-VERSION = 2
+VERSION = 3
 
 
-def __create_tables(connection):
-    # Info table
+def __create_table_info(cursor):
     cmd = ('create table if not exists '
            'Info ('
            '    Key text primary key,'
            '    Value integer)')
-    connection.execute(cmd)
+    cursor.execute(cmd)
 
     cmd = 'insert into info VALUES ("DbVersion", ?)'
-    connection.execute(cmd, (VERSION,))
+    cursor.execute(cmd, (VERSION,))
 
-    # Scans table
+
+def __create_table_scans(cursor):
     cmd = ('create table if not exists '
            'Scans ('
            '    TimeStamp integer primary key,'
            '    Freq real,'
            '    Survey text)')
-    connection.execute(cmd)
+    cursor.execute(cmd)
 
-    # Signals table
+
+def __create_table_signals(cursor):
     cmd = ('create table if not exists '
            'Signals ('
            '    Id integer primary key autoincrement,'
@@ -61,15 +62,23 @@ def __create_tables(connection):
            '    Lat real,'
            '    foreign key (TimeStamp) REFERENCES Scans (TimeStamp)'
            '        on delete cascade)')
-    connection.execute(cmd)
+    cursor.execute(cmd)
 
-    # Log table
+
+def __create_table_log(cursor):
     cmd = ('create table if not exists '
            'Log ('
            '    Id integer primary key autoincrement,'
-           '    TimeStamp text,'
+           '    TimeStamp integer,'
            '    Message )')
-    connection.execute(cmd)
+    cursor.execute(cmd)
+
+
+def __create_tables(cursor):
+    __create_table_info(cursor)
+    __create_table_scans(cursor)
+    __create_table_signals(cursor)
+    __create_table_log(cursor)
 
     # Log pruning trigger
     cmd = ('create trigger if not exists LogPrune insert on Log when '
@@ -79,9 +88,7 @@ def __create_tables(connection):
            '      (select Log.Id from Log order by'
            '          Id desc limit {});'
            'end;').format(LOG_SIZE, LOG_SIZE - 1)
-    connection.execute(cmd)
-
-    return None
+    cursor.execute(cmd)
 
 
 def __upgrade(cursor):
@@ -93,7 +100,11 @@ def __upgrade(cursor):
         return None
 
     if version == 1:
-        return __upgrade_1_to_2(cursor)
+        __upgrade_1_to_2(cursor)
+        __upgrade_2_to_3(cursor)
+
+    if version == 2:
+        return __upgrade_2_to_3(cursor)
 
 
 def __upgrade_1_to_2(cursor):
@@ -104,7 +115,20 @@ def __upgrade_1_to_2(cursor):
     cursor.execute(cmd)
 
     cmd = 'update Info set Value = ? where Key = "DbVersion"'
-    cursor.execute(cmd, (VERSION, ))
+    cursor.execute(cmd, (2,))
+
+
+def __upgrade_2_to_3(cursor):
+    cmd = 'alter table Log rename to Temp'
+    cursor.execute(cmd)
+    __create_table_log(cursor)
+
+    cmd = ('insert into Log (Id, TimeStamp, Message) '
+           'select Id, TimeStamp, Message from Temp')
+    cursor.execute(cmd)
+
+    cmd = 'update Info set Value = ? where Key = "DbVersion"'
+    cursor.execute(cmd, (3,))
 
 
 def create_database(connection):
@@ -126,7 +150,7 @@ def create_database(connection):
             if len(table):
                 __upgrade(cursor)
             else:
-                __create_tables(connection)
+                __create_tables(cursor)
         except sqlite3.IntegrityError as error:
             err = 'Database error: {}'.format(error.message)
         except sqlite3.OperationalError as error:
