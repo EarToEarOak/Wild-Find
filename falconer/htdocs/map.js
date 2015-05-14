@@ -93,10 +93,13 @@ function init() {
 		source : new ol.source.OSM()
 	}));
 
+	controls = [new ol.control.ScaleLine()];
+
 	map = new ol.Map({
 		target : 'map',
 		view : view,
-		layers : layers
+		layers : layers,
+		controls: controls
 	});
 
 	map.addLayer(layerHeatmap)
