@@ -189,14 +189,13 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.set_layer(index)
 
     @QtCore.Slot(bool)
-    def on__checkFollow_clicked(self, checked):
-        self._follow = checked
-        self.__follow()
-
-    @QtCore.Slot(bool)
     def on__checkLocations_clicked(self, checked):
         self._mapLink.show_locations(checked)
         self.__follow()
+
+    @QtCore.Slot(bool)
+    def on__checkTrack_clicked(self, checked):
+        self._mapLink.show_track(checked)
 
     @QtCore.Slot(bool)
     def on__checkHeatmap_clicked(self, checked):
@@ -214,6 +213,11 @@ class WidgetMapControls(QtGui.QWidget):
         self._settings.heatmapColour = colour
 
         self._signal.colour.emit()
+
+    @QtCore.Slot(bool)
+    def on__checkFollow_clicked(self, checked):
+        self._follow = checked
+        self.__follow()
 
     def __follow(self):
         if self._follow:
@@ -323,6 +327,10 @@ class MapLink(QtCore.QObject):
 
     def show_locations(self, show):
         js = 'showLocations({});'.format('{}'.format(show).lower())
+        self.__exec_js(js)
+
+    def show_track(self, show):
+        js = 'showTrack({});'.format('{}'.format(show).lower())
         self.__exec_js(js)
 
     def show_heatmap(self, show):
