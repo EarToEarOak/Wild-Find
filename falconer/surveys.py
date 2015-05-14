@@ -144,7 +144,7 @@ class ModelSurveys(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
-                    data = value
+                data = value
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
