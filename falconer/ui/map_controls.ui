@@ -68,6 +68,19 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="_checkTrack">
+     <property name="toolTip">
+      <string>Show track</string>
+     </property>
+     <property name="text">
+      <string>Track</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QCheckBox" name="_checkHeatmap">
      <property name="toolTip">
       <string>Show heat map</string>
@@ -82,6 +95,12 @@
    </item>
    <item>
     <widget class="QSlider" name="_sliderOpacity">
+     <property name="minimumSize">
+      <size>
+       <width>75</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="toolTip">
       <string>Heat map opacity</string>
      </property>

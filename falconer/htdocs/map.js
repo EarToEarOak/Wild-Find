@@ -25,13 +25,15 @@
 
 layers = [];
 
+locations = new ol.source.Vector();
+track = new ol.source.Vector();
+
 view = new ol.View({
 	projection : 'EPSG:900913',
 	center : [ 0, 0 ],
 	zoom : 4
 });
 
-locations = new ol.source.Vector();
 layerLocations = new ol.layer.Vector({
 	source : locations,
 	style : new ol.style.Style({
@@ -45,6 +47,16 @@ layerLocations = new ol.layer.Vector({
 			fill : new ol.style.Fill({
 				color : 'ff6000'
 			})
+		})
+	})
+});
+
+layerTrack = new ol.layer.Vector({
+	source : track,
+	style : new ol.style.Style({
+		stroke : new ol.style.Stroke({
+			color : 'dd6300',
+			width : 3
 		})
 	})
 });
@@ -88,6 +100,7 @@ function init() {
 	});
 
 	map.addLayer(layerHeatmap)
+	map.addLayer(layerTrack)
 	map.addLayer(layerLocations)
 
 	setListeners(true);
@@ -148,16 +161,28 @@ function setLayer(index) {
 function addLocations(lon, lat) {
 	point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
+	coord = ol.proj.transform([ lon, lat ], 'EPSG:4326', 'EPSG:900913');
 
 	feature = new ol.Feature({
 		geometry : point
 	});
-
 	locations.addFeature(feature);
+
+	line = track.getFeatures();
+	if (line.length == 0) {
+		feature = new ol.Feature({
+			geometry : new ol.geom.LineString([], 'XY')
+		});
+		track.addFeature(feature);
+		feature.getGeometry().appendCoordinate(coord);
+	} else {
+		line[0].getGeometry().appendCoordinate(coord);
+	}
 }
 
 function clearLocations() {
 	locations.clear();
+	track.clear();
 }
 
 function setHeatmap(north, south, east, west) {
@@ -196,6 +221,10 @@ function showBusy(show) {
 
 function showLocations(show) {
 	layerLocations.setVisible(show);
+}
+
+function showTrack(show) {
+	layerTrack.setVisible(show);
 }
 
 function showHeatmap(show) {
