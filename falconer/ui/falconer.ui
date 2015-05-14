@@ -56,6 +56,7 @@
     <addaction name="_menuRecent"/>
     <addaction name="separator"/>
     <addaction name="actionExportPdf"/>
+    <addaction name="actionExportImage"/>
     <addaction name="separator"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
@@ -182,6 +183,17 @@
    </property>
    <property name="toolTip">
     <string>Export to a PDF</string>
+   </property>
+  </action>
+  <action name="actionExportImage">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export to image...</string>
+   </property>
+   <property name="toolTip">
+    <string>Export an image</string>
    </property>
   </action>
  </widget>

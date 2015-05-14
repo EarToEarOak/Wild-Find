@@ -84,13 +84,12 @@ class Falconer(QtGui.QMainWindow):
         if not self.__file_warn():
             return
 
-        dialog = QtGui.QFileDialog(self)
-        dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-        dialog.setNameFilter('Database (*.db)')
-        dialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
-        dialog.setConfirmOverwrite(True)
-        if dialog.exec_():
-            fileName = dialog.selectedFiles()[0]
+        dialog = QtGui.QFileDialog
+        fileName, _ = dialog.getSaveFileName(self,
+                                             'New file',
+                                             filter='Database (*.db)')
+
+        if fileName:
             if os.path.exists(fileName):
                 os.remove(fileName)
             self.__open(fileName)
@@ -100,12 +99,10 @@ class Falconer(QtGui.QMainWindow):
         if not self.__file_warn():
             return
 
-        dialog = QtGui.QFileDialog(self)
-        dialog.setFileMode(QtGui.QFileDialog.AnyFile)
-        dialog.setNameFilter('Database (*.db)')
-        dialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
-        if dialog.exec_():
-            fileName = dialog.selectedFiles()[0]
+        dialog = QtGui.QFileDialog
+        fileName, _ = dialog.getOpenFileName(self,
+                                             filter='Database (*.db)')
+        if fileName:
             self._settings.add_history(fileName)
             self.__open(fileName)
 
@@ -124,6 +121,16 @@ class Falconer(QtGui.QMainWindow):
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._printer = dialog.printer()
+
+    @QtCore.Slot()
+    def on_actionExportImage_triggered(self):
+        dialog = QtGui.QFileDialog
+        fileName, _ = dialog.getSaveFileName(self,
+                                             'Export image',
+                                             filter='PNG (*.png)')
+        if fileName:
+            mapImage = self._widgetMap.get_map()
+            mapImage.save(fileName)
 
     @QtCore.Slot()
     def on_actionPrint_triggered(self):
@@ -209,9 +216,11 @@ class Falconer(QtGui.QMainWindow):
             enabled = True
         else:
             enabled = False
-        self.actionClose.setEnabled(enabled)
-        self.actionPrint.setEnabled(enabled)
+
         self.actionExportPdf.setEnabled(enabled)
+        self.actionExportImage.setEnabled(enabled)
+        self.actionPrint.setEnabled(enabled)
+        self.actionClose.setEnabled(enabled)
 
     def __file_warn(self):
         if self._database.isConnected():
