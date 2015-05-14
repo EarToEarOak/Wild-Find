@@ -26,7 +26,7 @@
 from PySide import QtGui, QtCore
 
 
-def print_report(printer, fileName, widgetScans, widgetSignals, widgetMap):
+def print_report(printer, fileName, widgetSurveys, widgetScans, widgetSignals, widgetMap):
     sizeTitle = 12
     sizeSubtitle = 10
     sizeText = 8
@@ -37,6 +37,7 @@ def print_report(printer, fileName, widgetScans, widgetSignals, widgetMap):
     document.setPageSize(QtCore.QSizeF(printer.pageRect().size()))
     cursor = QtGui.QTextCursor(document)
 
+    surveys = widgetSurveys.get()
     scans = widgetScans.get()
     signals = widgetSignals.get()
     mapImage = widgetMap.get_map()
@@ -47,14 +48,23 @@ def print_report(printer, fileName, widgetScans, widgetSignals, widgetMap):
 
     insert_block(cursor)
     __set_text_size(cursor, sizeSubtitle)
-    cursor.insertText('File name:')
+    cursor.insertText('File name')
     insert_block(cursor, indent=1)
     __set_text_size(cursor, sizeText)
     cursor.insertText(fileName + '\n\n')
 
     insert_block(cursor)
     __set_text_size(cursor, sizeSubtitle)
-    cursor.insertText('Time range:')
+    cursor.insertText('Surveys')
+    insert_block(cursor, indent=1)
+    __set_text_size(cursor, sizeText)
+    for survey in surveys:
+        cursor.insertText('{}  '.format(survey))
+    cursor.insertText('\n\n')
+
+    insert_block(cursor)
+    __set_text_size(cursor, sizeSubtitle)
+    cursor.insertText('Time range')
     insert_block(cursor, indent=1)
     __set_text_size(cursor, sizeText)
     timeMin = min(scans)
@@ -68,7 +78,7 @@ def print_report(printer, fileName, widgetScans, widgetSignals, widgetMap):
 
     insert_block(cursor)
     __set_text_size(cursor, sizeSubtitle)
-    cursor.insertText('Signals (MHz):')
+    cursor.insertText('Signals (MHz)')
     insert_block(cursor, indent=1)
     __set_text_size(cursor, sizeText)
     for signal in signals:

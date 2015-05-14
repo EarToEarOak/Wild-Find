@@ -191,11 +191,11 @@ class Falconer(QtGui.QMainWindow):
     def __on__print(self, printer):
         print_report(printer,
                      self._database.get_filename(),
+                     self._widgetSurveys,
                      self._widgetScans,
                      self._widgetSignals,
                      self._widgetMap)
 
-    @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, _event):
         self._settings.close()
         self._server.close()
