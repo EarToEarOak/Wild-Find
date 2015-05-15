@@ -22,6 +22,12 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="dragMode">
+      <enum>QGraphicsView::ScrollHandDrag</enum>
+     </property>
+     <property name="transformationAnchor">
+      <enum>QGraphicsView::NoAnchor</enum>
+     </property>
     </widget>
    </item>
    <item>

@@ -33,7 +33,6 @@ import numpy
 
 from falconer import ui
 from falconer.utils_qt import TableSelectionMenu
-import matplotlib.pyplot as plt
 
 
 class WidgetSignals(QtGui.QWidget):
@@ -205,21 +204,43 @@ class DialogHistogram(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
 
         self._signals = signals
+        self._scale = 1.
 
         ui.loadUi(self, 'signals_hist.ui')
         self.setWindowFlags(QtCore.Qt.Tool)
 
-        self._graphicsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self._graphicsView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self._graphicsView.viewport().installEventFilter(self)
 
     @QtCore.Slot()
     def on__buttonBox_rejected(self):
         self.reject()
 
     def resizeEvent(self, _event):
+        self.__plot()
+
+    def eventFilter(self, obj, event):
+        if event.type() is QtCore.QEvent.Wheel:
+            delta = event.delta()
+            scale = self._scale + delta / 1000.
+            if scale < 1:
+                scale = 1.
+            elif scale > 5:
+                scale = 5.
+
+            self._scale = scale
+            self.__plot(event.pos())
+            return True
+
+        return QtGui.QDialog.eventFilter(self, obj, event)
+
+    def __plot(self, mousePos=None):
         figure, axes = plt.subplots()
         dpi = figure.get_dpi()
-        size = self._graphicsView.size()
+        viewSize = self._graphicsView.size()
+        scrollSize = self._graphicsView.style().pixelMetric(QtGui.QStyle.PM_ScrollBarExtent)
+        size = QtCore.QSize(viewSize.width() * self._scale - scrollSize,
+                            viewSize.height() * self._scale - scrollSize)
+
         figure.set_size_inches(size.width() / float(dpi),
                                size.height() / float(dpi))
         figure.patch.set_facecolor('w')
@@ -240,11 +261,11 @@ class DialogHistogram(QtGui.QDialog):
             bar = bars[i]
             freq = x[i]
             height = bar.get_height()
-            text = axes.text(bar.get_x(),
-                             height + bar.get_width() / 2.,
+            text = axes.text(bar.get_x() + width / 2.,
+                             height,
                              '{:.3f}'.format(freq),
                              rotation=45,
-                             va='bottom', size='x-small')
+                             ha='center', va='bottom', size='smaller')
             if matplotlib.__version__ >= '1.3':
                 effect = patheffects.withStroke(linewidth=2,
                                                 foreground="w",
@@ -266,6 +287,10 @@ class DialogHistogram(QtGui.QDialog):
         scene.addPixmap(pixmap)
         scene.setSceneRect(image.rect())
         self._graphicsView.setScene(scene)
+
+        if mousePos is not None:
+            self._graphicsView.centerOn(mousePos.x()*self._scale,
+                                        mousePos.y()*self._scale)
 
         plt.close()
 
