@@ -25,9 +25,11 @@
 
 
 from PySide import QtGui, QtCore
+from matplotlib import patheffects
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import ScalarFormatter
+import numpy
 
 from falconer import ui
 from falconer.utils_qt import TableSelectionMenu
@@ -221,6 +223,7 @@ class DialogHistogram(QtGui.QDialog):
         figure.set_size_inches(size.width() / float(dpi),
                                size.height() / float(dpi))
         figure.patch.set_facecolor('w')
+        plt.title('Signals')
         plt.xlabel('Frequency (MHz)')
         plt.ylabel('Detections')
         plt.grid(True)
@@ -230,9 +233,23 @@ class DialogHistogram(QtGui.QDialog):
         axes.yaxis.set_major_formatter(formatter)
 
         _, x, y = zip(*self._signals)
-        x = [freq/1e6 for freq in x]
-        width = (max(x) - min(x)) / (len(self._signals) * 4)
-        axes.bar(x, y, width=width, color='b')
+        x = [freq / 1e6 for freq in x]
+        width = min(numpy.diff(x))
+        bars = axes.bar(x, y, width=width, color='blue')
+        for i in range(len(y)):
+            bar = bars[i]
+            freq = x[i]
+            height = bar.get_height()
+            text = axes.text(bar.get_x(),
+                             height + bar.get_width() / 2.,
+                             '{:.3f}'.format(freq),
+                             rotation=45,
+                             va='bottom', size='x-small')
+            if matplotlib.__version__ >= '1.3':
+                effect = patheffects.withStroke(linewidth=2,
+                                                foreground="w",
+                                                alpha=0.75)
+                text.set_path_effects([effect])
 
         canvas = FigureCanvasAgg(figure)
         canvas.draw()
