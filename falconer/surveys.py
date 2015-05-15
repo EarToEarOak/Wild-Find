@@ -75,10 +75,10 @@ class WidgetSurveys(QtGui.QWidget):
     def on_filter(self):
         surveys = self._model.get()
         filtered = self._model.get_filtered()
+        selected = set(surveys) - set(filtered)
         if len(filtered) == 0:
             self._comboSurveys.setCurrentIndex(0)
-        elif len(filtered) == 1:
-            selected = set(surveys) - set(filtered)
+        elif len(selected) == 1:
             index = surveys.index(list(selected)[0])
             self._comboSurveys.setCurrentIndex(index + 1)
         else:
