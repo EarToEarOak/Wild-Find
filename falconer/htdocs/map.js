@@ -93,7 +93,8 @@ function init() {
 		source : new ol.source.OSM()
 	}));
 
-	controls = [new ol.control.ScaleLine()];
+	controls = ol.control.defaults();
+	controls.extend([new ol.control.ScaleLine()]);
 
 	map = new ol.Map({
 		target : 'map',
