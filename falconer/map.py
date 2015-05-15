@@ -118,7 +118,7 @@ class WidgetMap(QtGui.QWidget):
     def on_colour(self):
         self._signal.colour.emit()
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, _event):
         self._controls.follow()
 
     def connect(self, loaded, colour):

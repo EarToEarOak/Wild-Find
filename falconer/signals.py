@@ -25,9 +25,13 @@
 
 
 from PySide import QtGui, QtCore
+import matplotlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.ticker import ScalarFormatter
 
 from falconer import ui
 from falconer.utils_qt import TableSelectionMenu
+import matplotlib.pyplot as plt
 
 
 class WidgetSignals(QtGui.QWidget):
@@ -61,14 +65,21 @@ class WidgetSignals(QtGui.QWidget):
         width += self.layout().spacing()
         self.setMaximumWidth(width)
 
+    @QtCore.Slot(bool)
+    def on__buttonHistogram_clicked(self, _clicked):
+        dlg = DialogHistogram(self, self._model.get_all())
+        dlg.exec_()
+
     def connect(self, slot):
         self._model.connect(slot)
 
-    def set(self, frequencies):
-        self._model.set(frequencies)
+    def set(self, signals):
+        self._model.set(signals)
         self._tableSignals.resizeColumnsToContents()
         self.__set_width()
+
         self._tableSignals.setEnabled(True)
+        self._buttonHistogram.setEnabled(True)
 
     def get(self):
         return self._model.get()
@@ -79,6 +90,7 @@ class WidgetSignals(QtGui.QWidget):
     def clear(self):
         self._model.set([])
         self._tableSignals.setEnabled(False)
+        self._buttonHistogram.setEnabled(False)
 
 
 class ModelSignals(QtCore.QAbstractTableModel):
@@ -162,6 +174,9 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
         return frequencies
 
+    def get_all(self):
+        return self._signals
+
     def get_filters(self):
         timeStamps = [timeStamp for _check, timeStamp, _freq in self._signals]
         return timeStamps
@@ -181,6 +196,61 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
         self.endResetModel()
         self._signal.filter.emit()
+
+
+class DialogHistogram(QtGui.QDialog):
+    def __init__(self, parent, signals):
+        QtGui.QDialog.__init__(self, parent)
+
+        self._signals = signals
+
+        ui.loadUi(self, 'signals_hist.ui')
+        self.setWindowFlags(QtCore.Qt.Tool)
+
+        self._graphicsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self._graphicsView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
+    @QtCore.Slot()
+    def on__buttonBox_rejected(self):
+        self.reject()
+
+    def resizeEvent(self, _event):
+        figure, axes = plt.subplots()
+        dpi = figure.get_dpi()
+        size = self._graphicsView.size()
+        figure.set_size_inches(size.width() / float(dpi),
+                               size.height() / float(dpi))
+        figure.patch.set_facecolor('w')
+        plt.xlabel('Frequency (MHz)')
+        plt.ylabel('Detections')
+        plt.grid(True)
+
+        formatter = ScalarFormatter(useOffset=False)
+        axes.xaxis.set_major_formatter(formatter)
+        axes.yaxis.set_major_formatter(formatter)
+
+        _, x, y = zip(*self._signals)
+        x = [freq/1e6 for freq in x]
+        width = (max(x) - min(x)) / (len(self._signals) * 4)
+        axes.bar(x, y, width=width, color='b')
+
+        canvas = FigureCanvasAgg(figure)
+        canvas.draw()
+        renderer = canvas.get_renderer()
+        if matplotlib.__version__ >= '1.2':
+            rgba = renderer.buffer_rgba()
+        else:
+            rgba = renderer.buffer_rgba(0, 0)
+
+        image = QtGui.QImage(rgba, size.width(), size.height(),
+                             QtGui.QImage.Format_ARGB32)
+        pixmap = QtGui.QPixmap.fromImage(image)
+        scene = QtGui.QGraphicsScene(self)
+        scene.addPixmap(pixmap)
+        scene.setSceneRect(image.rect())
+        self._graphicsView.setScene(scene)
+
+        plt.close()
 
 
 class SignalSignals(QtCore.QObject):
