@@ -140,16 +140,16 @@ class Database():
 
     def get_locations(self, filteredSurveys, filteredScans, filteredSignals):
         cursor = self._conn.cursor()
-        cmd = 'select Lon, Lat from Signals'
+        cmd = 'select Id, Freq, Lon, Lat from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
                              filteredSignals)
-        cmd += 'group by Lon, Lat'
+        cmd += 'order by Id'
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Lon'], row['Lat']] for row in rows]
+        signals = [[row['Freq'], row['Lon'], row['Lat']] for row in rows]
 
         return signals
 

@@ -43,11 +43,11 @@ class WidgetSignals(QtGui.QWidget):
         ui.loadUi(self, 'signals.ui')
 
         self._model = ModelSignals()
-        proxyModel = QtGui.QSortFilterProxyModel(self)
-        proxyModel.setDynamicSortFilter(True)
-        proxyModel.setSourceModel(self._model)
+        self._proxyModel = QtGui.QSortFilterProxyModel(self)
+        self._proxyModel.setDynamicSortFilter(True)
+        self._proxyModel.setSourceModel(self._model)
 
-        self._tableSignals.setModel(proxyModel)
+        self._tableSignals.setModel(self._proxyModel)
         self._tableSignals.resizeColumnsToContents()
         self._contextMenu = TableSelectionMenu(self._tableSignals,
                                                self._model)
@@ -75,6 +75,18 @@ class WidgetSignals(QtGui.QWidget):
     def connect(self, slot):
         self._model.connect(slot)
 
+    def select(self, frequencies):
+        freqs = ['{:.3f}'.format(f/1e6) for f in frequencies]
+
+        self._tableSignals.clearSelection()
+        for i in range(self._model.rowCount()):
+            index = self._model.index(i, 1)
+            if index.data() in freqs:
+                mapped = self._proxyModel.mapFromSource(index)
+                self._tableSignals.selectRow(mapped.row())
+#
+        self._tableSignals.setFocus()
+
     def set(self, signals):
         self._model.set(signals)
         self._tableSignals.resizeColumnsToContents()
@@ -85,6 +97,12 @@ class WidgetSignals(QtGui.QWidget):
 
     def get(self):
         return self._model.get()
+
+    def get_filters(self):
+        return self._model.get_filters()
+
+    def set_filtered(self, filtered):
+        self._model.set_filtered(filtered)
 
     def get_filtered(self):
         return self._model.get_filtered()
@@ -105,10 +123,10 @@ class ModelSignals(QtCore.QAbstractTableModel):
         self._signals = []
         self._filtered = []
 
-    def rowCount(self, _parent):
+    def rowCount(self, _parent=None):
         return len(self._signals)
 
-    def columnCount(self, _parent):
+    def columnCount(self, _parent=None):
         return len(self.HEADER)
 
     def headerData(self, col, orientation, role):
@@ -148,7 +166,7 @@ class ModelSignals(QtCore.QAbstractTableModel):
         return False
 
     def flags(self, index):
-        flags = (QtCore.Qt.ItemIsEnabled)
+        flags = (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
         if index.column() == 0:
             flags |= (QtCore.Qt.ItemIsEditable |
                       QtCore.Qt.ItemIsUserCheckable)

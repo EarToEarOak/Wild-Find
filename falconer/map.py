@@ -106,7 +106,7 @@ class WidgetMap(QtGui.QWidget):
     def on_interaction(self,):
         self._controls.cancel_track()
 
-    @QtCore.Slot(str)
+    @QtCore.Slot(list)
     def on_layer_names(self, layers):
         self._controls.update_layers(json.loads(layers))
 
@@ -118,12 +118,18 @@ class WidgetMap(QtGui.QWidget):
     def on_colour(self):
         self._signal.colour.emit()
 
+    @QtCore.Slot(list)
+    def on_selected(self, selected):
+        sels = [float(f) for f in json.loads(selected)]
+        self._signal.selected.emit(sels)
+
     def resizeEvent(self, _event):
         self._controls.follow()
 
-    def connect(self, loaded, colour):
+    def connect(self, loaded, colour, selected):
         self._signal.loaded.connect(loaded)
         self._signal.colour.connect(colour)
+        self._signal.selected.connect(selected)
 
     def set_settings(self, settings):
         self._controls.set_settings(settings)
@@ -184,7 +190,8 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.connect(parent.on_interaction,
                               parent.on_layer_names,
                               parent.on_map_loaded,
-                              parent.on_colour)
+                              parent.on_colour,
+                              parent.on_selected)
         frame.addToJavaScriptWindowObject('mapLink', self._mapLink)
 
     @QtCore.Slot(int)
@@ -287,11 +294,16 @@ class MapLink(QtCore.QObject):
         self._signal.layers.emit(names)
         self._signal.loaded.emit()
 
-    def connect(self, interaction, layer, loaded, colour):
+    @QtCore.Slot(str)
+    def on_selected(self, frequencies):
+        self._signal.selected.emit(frequencies)
+
+    def connect(self, interaction, layer, loaded, colour, selected):
         self._signal.interaction.connect(interaction)
         self._signal.layers.connect(layer)
         self._signal.loaded.connect(loaded)
         self._signal.colour.connect(colour)
+        self._signal.selected.connect(selected)
 
     def transform_coords(self, coords):
         transformed = []
@@ -313,7 +325,7 @@ class MapLink(QtCore.QObject):
 
     def set_locations(self, locations):
         for location in locations:
-            js = 'addLocations({}, {});'.format(location[0], location[1])
+            js = 'addLocation(\'{:.99g}\', {}, {});'.format(*location)
             self.__exec_js(js)
 
     def clear_locations(self):
@@ -355,9 +367,10 @@ class MapLink(QtCore.QObject):
 
 class SignalMap(QtCore.QObject):
     interaction = QtCore.Signal()
-    layers = QtCore.Signal(str)
+    layers = QtCore.Signal(list)
     loaded = QtCore.Signal()
     colour = QtCore.Signal()
+    selected = QtCore.Signal(list)
 
 
 if __name__ == '__main__':

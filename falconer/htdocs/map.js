@@ -34,21 +34,23 @@ view = new ol.View({
 	zoom : 4
 });
 
-layerLocations = new ol.layer.Vector({
-	source : locations,
-	style : new ol.style.Style({
-		image : new ol.style.Circle({
-			stroke : new ol.style.Stroke({
-				color : 'black',
-				opacity : 0.2,
-				width : 0.5
-			}),
-			radius : 5,
-			fill : new ol.style.Fill({
-				color : 'ff6000'
-			})
+styleLocation = new ol.style.Style({
+	image : new ol.style.Circle({
+		stroke : new ol.style.Stroke({
+			color : 'black',
+			opacity : 0.2,
+			width : 0.5
+		}),
+		radius : 5,
+		fill : new ol.style.Fill({
+			color : 'ff6000'
 		})
 	})
+});
+
+layerLocations = new ol.layer.Vector({
+	source : locations,
+	style : styleLocation
 });
 
 layerTrack = new ol.layer.Vector({
@@ -65,8 +67,17 @@ layerHeatmap = new ol.layer.Image({
 	opacity : 0.6
 })
 
-function init() {
+dragBox = new ol.interaction.DragBox({
+	condition : ol.events.condition.shiftKeyOnly,
+	layers : [ layerLocations ],
+	style : new ol.style.Style({
+		stroke : new ol.style.Stroke({
+			color : '0066FF'
+		})
+	})
+});
 
+function init() {
 	layers.push(new ol.layer.Tile({
 		name : 'MapQuest Satellite',
 		source : new ol.source.MapQuest({
@@ -93,19 +104,23 @@ function init() {
 		source : new ol.source.OSM()
 	}));
 
+	controlScale = new ol.control.ScaleLine();
 	controls = ol.control.defaults();
-	controls.extend([new ol.control.ScaleLine()]);
+	controls.extend([ controlScale ]);
 
 	map = new ol.Map({
 		target : 'map',
 		view : view,
 		layers : layers,
-		controls: controls
+		controls : controls
 	});
 
 	map.addLayer(layerHeatmap)
 	map.addLayer(layerTrack)
 	map.addLayer(layerLocations)
+
+	map.addInteraction(dragBox);
+	dragBox.on('boxend', selectLocations);
 
 	setListeners(true);
 
@@ -162,12 +177,14 @@ function setLayer(index) {
 	layers[index].setVisible(true);
 }
 
-function addLocations(lon, lat) {
+function addLocation(freq, lon, lat) {
 	point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
 	coord = ol.proj.transform([ lon, lat ], 'EPSG:4326', 'EPSG:900913');
 
+	console.log(freq);
 	feature = new ol.Feature({
+		name : freq,
 		geometry : point
 	});
 	locations.addFeature(feature);
@@ -179,9 +196,25 @@ function addLocations(lon, lat) {
 		});
 		track.addFeature(feature);
 		feature.getGeometry().appendCoordinate(coord);
-	} else {
+	} else
 		line[0].getGeometry().appendCoordinate(coord);
-	}
+}
+
+function selectLocations() {
+	frequencies = []
+
+	extent = dragBox.getGeometry().getExtent();
+	source = layerLocations.getSource();
+
+	source.forEachFeature(function(feature) {
+		coords = feature.getGeometry().getCoordinates();
+		if (ol.extent.containsCoordinate(extent, coords))
+			frequencies.push(feature.get('name'))
+		else
+			feature.setStyle(styleLocation);
+	});
+
+	mapLink.on_selected(JSON.stringify(frequencies));
 }
 
 function clearLocations() {

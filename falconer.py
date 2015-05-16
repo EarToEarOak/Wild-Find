@@ -68,7 +68,8 @@ class Falconer(QtGui.QMainWindow):
         self._widgetScans.connect(self.__on_scan_filter)
         self._widgetSignals.connect(self.__on_signal_filter)
         self._widgetMap.connect(self.__on_signal_map_loaded,
-                                self.__on_signal_map_colour)
+                                self.__on_signal_map_colour,
+                                self.__on_signal_map_selected)
         self._widgetMap.set_settings(self._settings)
 
         self._heatMap = HeatMap(self, self._settings,
@@ -214,6 +215,11 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_map_colour(self):
         self.__set_map()
+
+    @QtCore.Slot(list)
+    def __on_signal_map_selected(self, frequencies):
+        freqs = set(frequencies)
+        self._widgetSignals.select(list(freqs))
 
     @QtCore.Slot(str)
     def __on_open_history(self, fileName):
