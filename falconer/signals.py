@@ -212,6 +212,8 @@ class DialogHistogram(QtGui.QDialog):
 
         self._graphicsView.viewport().installEventFilter(self)
 
+        self.activateWindow()
+
     @QtCore.Slot()
     def on__buttonBox_rejected(self):
         self.reject()
@@ -220,6 +222,7 @@ class DialogHistogram(QtGui.QDialog):
         self.__plot()
 
     def eventFilter(self, obj, event):
+        scaleOld = self._scale
         if event.type() is QtCore.QEvent.Wheel:
             delta = event.delta()
             scale = self._scale + delta / 1000.
@@ -228,8 +231,9 @@ class DialogHistogram(QtGui.QDialog):
             elif scale > 5:
                 scale = 5.
 
-            self._scale = scale
-            self.__plot(event.pos())
+            if scale != scaleOld:
+                self._scale = scale
+                self.__plot(event.pos())
             return True
 
         return QtGui.QDialog.eventFilter(self, obj, event)
@@ -290,8 +294,8 @@ class DialogHistogram(QtGui.QDialog):
         self._graphicsView.setScene(scene)
 
         if mousePos is not None:
-            self._graphicsView.centerOn(mousePos.x()*self._scale,
-                                        mousePos.y()*self._scale)
+            self._graphicsView.centerOn(mousePos.x() * self._scale,
+                                        mousePos.y() * self._scale)
 
         plt.close()
 
