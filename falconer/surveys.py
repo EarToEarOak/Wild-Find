@@ -112,6 +112,7 @@ class WidgetSurveys(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
+        self._model.set_filtered([])
         self._tableSurveys.setEnabled(False)
         self._comboSurveys.setEnabled(False)
 
@@ -207,7 +208,9 @@ class ModelSurveys(QtCore.QAbstractTableModel):
                 survey[0] = QtCore.Qt.Checked
 
         self.endResetModel()
-        self._signal.filter.emit()
+
+        if len(filtered):
+            self._signal.filter.emit()
 
 
 class SignalSurveys(QtCore.QObject):
