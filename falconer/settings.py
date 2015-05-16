@@ -33,6 +33,8 @@ class Settings(object):
         self._parent = parent
         self._history = FileHistory(menuBar, historyCallback)
 
+        self.dirFile = '.'
+        self.dirExport = '.'
         self.heatmapColour = 'jet'
 
         self.__load()
@@ -62,7 +64,12 @@ class Settings(object):
 
     def __load(self):
         settings = self.__open()
-        self.heatmapColour = settings.value('heatmapColour', 'jet')
+
+        self.dirExport = settings.value('dirExport', self.dirExport)
+        self.dirFile = settings.value('dirFile', self.dirFile)
+        self.heatmapColour = settings.value('heatmapColour',
+                                            self.heatmapColour)
+
         settings.beginGroup('MainWindow')
         size = settings.value('size')
         if size is not None:
@@ -77,6 +84,8 @@ class Settings(object):
     def __save(self):
         settings = self.__open()
 
+        settings.setValue('dirFile', self.dirFile)
+        settings.setValue('dirExport', self.dirExport)
         settings.setValue('heatmapColour', self.heatmapColour)
 
         settings.beginGroup('MainWindow')

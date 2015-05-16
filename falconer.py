@@ -88,9 +88,11 @@ class Falconer(QtGui.QMainWindow):
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'New file',
+                                             dir=self._settings.dirFile,
                                              filter='Wild Find file (*.wfh)')
 
         if fileName:
+            self._settings.dirFile, _ = os.path.split(fileName)
             if os.path.exists(fileName):
                 os.remove(fileName)
             self.__open(fileName)
@@ -102,8 +104,10 @@ class Falconer(QtGui.QMainWindow):
 
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getOpenFileName(self,
+                                             dir=self._settings.dirFile,
                                              filter='Wild Find file (*.wfh)')
         if fileName:
+            self._settings.dirFile, _ = os.path.split(fileName)
             self._settings.add_history(fileName)
             self.__open(fileName)
 
@@ -128,8 +132,10 @@ class Falconer(QtGui.QMainWindow):
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'Export image',
+                                             dir=self._settings.dirExport,
                                              filter='PNG (*.png)')
         if fileName:
+            self._settings.dirExport, _ = os.path.split(fileName)
             mapImage = self._widgetMap.get_map()
             mapImage.save(fileName)
 
