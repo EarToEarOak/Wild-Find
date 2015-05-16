@@ -70,6 +70,11 @@ class TableSelectionMenu(object):
         self._model.set_filtered(filtered)
 
 
+def remove_context_help(dialog):
+    flags = dialog.windowFlags()
+    dialog.setWindowFlags(flags & (~QtCore.Qt.WindowContextHelpButtonHint))
+
+
 if __name__ == '__main__':
     print 'Please run falconer.py'
     exit(1)

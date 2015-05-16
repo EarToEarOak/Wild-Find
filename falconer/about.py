@@ -23,38 +23,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
-from PySide import QtGui, QtCore
+from PySide import QtGui
 
 from falconer import ui
 from falconer.utils_qt import remove_context_help
 
 
-class DialogPreferences(QtGui.QDialog):
-    def __init__(self, parent, settings):
+class DialogAbout(QtGui.QDialog):
+    def __init__(self, parent):
         QtGui.QDialog.__init__(self, parent)
 
         remove_context_help(self)
 
-        self._settings = settings
-
-        ui.loadUi(self, 'preferences.ui')
-
-        styles = QtGui.QStyleFactory.keys()
-        style = QtGui.QApplication.style().objectName()
-        self._comboStyles.addItems(styles)
-        index = ([name.lower() for name in styles]).index(style)
-        self._comboStyles.setCurrentIndex(index)
-
-    @QtCore.Slot(str)
-    def on__comboStyles_activated(self, styleName):
-        style = QtGui.QStyleFactory.create(styleName)
-        QtGui.QApplication.setStyle(style)
-
-    @QtCore.Slot()
-    def on__buttonBox_accepted(self):
-        self._settings.style = self._comboStyles.currentText()
-        self.accept()
+        ui.loadUi(self, 'about.ui')
 
 
 if __name__ == '__main__':

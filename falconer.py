@@ -29,6 +29,7 @@ import sys
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.about import DialogAbout
 from falconer.database import Database
 from falconer.heatmap import HeatMap
 from falconer.log import DialogLog
@@ -40,6 +41,7 @@ from falconer.server import Server
 from falconer.settings import Settings
 from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
+from falconer.utils_qt import remove_context_help
 
 
 class Falconer(QtGui.QMainWindow):
@@ -78,7 +80,27 @@ class Falconer(QtGui.QMainWindow):
         self._printer = QtGui.QPrinter()
         self._printer.setCreator('Falconer')
 
+        self.__setup_icons()
+
         self.statusBar().showMessage('Ready')
+
+    def __setup_icons(self):
+        style = self.style()
+
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogSaveButton)
+        self.actionNew.setIcon(icon)
+
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogOpenButton)
+        self.actionOpen.setIcon(icon)
+
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogCloseButton)
+        self.actionClose.setIcon(icon)
+
+        icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxQuestion)
+        self.actionHelp.setIcon(icon)
+
+        icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxInformation)
+        self.actionAbout.setIcon(icon)
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
@@ -123,6 +145,7 @@ class Falconer(QtGui.QMainWindow):
         self._printer.setDocName(self.windowTitle())
         printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
         dialog = QtGui.QPrintPreviewDialog(printer, self)
+        remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._printer = dialog.printer()
@@ -151,6 +174,7 @@ class Falconer(QtGui.QMainWindow):
     def on_actionPrint_triggered(self):
         self._printer.setDocName(self.windowTitle())
         dialog = QtGui.QPrintPreviewDialog(self._printer, self)
+        remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._printer = dialog.printer()
@@ -161,12 +185,17 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionPreferences_triggered(self):
-        dlg = DialogPreferences(self)
+        dlg = DialogPreferences(self, self._settings)
         dlg.show()
 
     @QtCore.Slot()
     def on_actionLog_triggered(self):
         dlg = DialogLog(self, self._database.get_logs())
+        dlg.show()
+
+    @QtCore.Slot()
+    def on_actionAbout_triggered(self):
+        dlg = DialogAbout(self)
         dlg.show()
 
     @QtCore.Slot(object)
@@ -320,7 +349,8 @@ class Falconer(QtGui.QMainWindow):
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
-    QtGui.QApplication.setStyle(QtGui.QStyleFactory.create('Cleanlooks'))
+    settings = Settings()
+    QtGui.QApplication.setStyle(settings.style)
     mainWindow = Falconer()
     mainWindow.show()
     sys.exit(app.exec_())

@@ -26,11 +26,14 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.utils_qt import remove_context_help
 
 
 class DialogLog(QtGui.QDialog):
     def __init__(self, parent, logs):
         QtGui.QDialog.__init__(self, parent)
+
+        remove_context_help(self)
 
         ui.loadUi(self, 'log.ui')
 

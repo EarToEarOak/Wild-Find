@@ -27,7 +27,7 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
-from falconer.utils_qt import TableSelectionMenu
+from falconer.utils_qt import TableSelectionMenu, remove_context_help
 
 
 class WidgetScans(QtGui.QWidget):
@@ -189,6 +189,8 @@ class DialogScansRange(QtGui.QDialog):
     def __init__(self, parent, timeStamps):
         QtGui.QDialog.__init__(self, parent)
         self._timeStamps = timeStamps
+
+        remove_context_help(self)
 
         ui.loadUi(self, 'scans_range.ui')
 

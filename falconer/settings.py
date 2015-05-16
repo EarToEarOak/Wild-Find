@@ -29,10 +29,15 @@ from falconer.history import FileHistory
 
 
 class Settings(object):
-    def __init__(self, parent, menuBar, historyCallback):
+    def __init__(self, parent=None, menuBar=None, historyCallback=None):
         self._parent = parent
-        self._history = FileHistory(menuBar, historyCallback)
 
+        if menuBar is None or historyCallback is None:
+            self._history = None
+        else:
+            self._history = FileHistory(menuBar, historyCallback)
+
+        self.style = 'Cleanlooks'
         self.dirFile = '.'
         self.dirExport = '.'
         self.heatmapColour = 'jet'
@@ -65,35 +70,41 @@ class Settings(object):
     def __load(self):
         settings = self.__open()
 
+        self.style = settings.value('style', self.style)
         self.dirExport = settings.value('dirExport', self.dirExport)
         self.dirFile = settings.value('dirFile', self.dirFile)
         self.heatmapColour = settings.value('heatmapColour',
                                             self.heatmapColour)
 
-        settings.beginGroup('MainWindow')
-        size = settings.value('size')
-        if size is not None:
-            self._parent.resize(size)
-        splitter = settings.value('splitter')
-        if splitter is not None:
-            self._parent.splitter.restoreState(splitter)
-        settings.endGroup()
+        if self._parent is not None:
+            settings.beginGroup('MainWindow')
+            size = settings.value('size')
+            if size is not None:
+                self._parent.resize(size)
+            splitter = settings.value('splitter')
+            if splitter is not None:
+                self._parent.splitter.restoreState(splitter)
+            settings.endGroup()
 
-        self.__load_history()
+        if self._history is not None:
+            self.__load_history()
 
     def __save(self):
         settings = self.__open()
 
+        settings.setValue('style', self.style)
         settings.setValue('dirFile', self.dirFile)
         settings.setValue('dirExport', self.dirExport)
         settings.setValue('heatmapColour', self.heatmapColour)
 
-        settings.beginGroup('MainWindow')
-        settings.setValue('size', self._parent.size())
-        settings.setValue('splitter', self._parent.splitter.saveState())
-        settings.endGroup()
+        if self._parent is not None:
+            settings.beginGroup('MainWindow')
+            settings.setValue('size', self._parent.size())
+            settings.setValue('splitter', self._parent.splitter.saveState())
+            settings.endGroup()
 
-        self.__save_history()
+        if self._history is not None:
+            self.__save_history()
 
     def add_history(self, fileName):
         self._history.add(fileName)
