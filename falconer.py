@@ -88,7 +88,7 @@ class Falconer(QtGui.QMainWindow):
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'New file',
-                                             filter='Database (*.db)')
+                                             filter='Wild Find file (*.wfh)')
 
         if fileName:
             if os.path.exists(fileName):
@@ -102,7 +102,7 @@ class Falconer(QtGui.QMainWindow):
 
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getOpenFileName(self,
-                                             filter='Database (*.db)')
+                                             filter='Wild Find file (*.wfh)')
         if fileName:
             self._settings.add_history(fileName)
             self.__open(fileName)

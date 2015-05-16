@@ -104,7 +104,7 @@ class Harrier(object):
         parser.add_argument("-t", "--test", help="Test mode",
                             action="store_true")
         parser.add_argument("file", help='Database path', nargs='?',
-                            default=os.path.expanduser("~/harrier.db"))
+                            default=os.path.expanduser("~/harrier.wfh"))
 
         args = parser.parse_args()
 
