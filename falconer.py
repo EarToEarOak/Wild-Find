@@ -129,11 +129,19 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionExportImage_triggered(self):
+        filters = ('Windows Bitmap (*.bmp);;'
+                   'JPEG (*.jpg);;'
+                   'Portable Network Graphics (*.png);;'
+                   'Portable Pixmap (.ppm);;'
+                   'Tagged Image File Format (*.tiff);;'
+                   'X11 Bitmap (*.xbm);;'
+                   'X11 Pixmap (.xpm)')
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'Export image',
                                              dir=self._settings.dirExport,
-                                             filter='PNG (*.png)')
+                                             filter=filters,
+                                             selectedFilter='Portable Network Graphics (*.png)')
         if fileName:
             self._settings.dirExport, _ = os.path.split(fileName)
             mapImage = self._widgetMap.get_map()
