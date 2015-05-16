@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 #
-# Project Peregrine
+# Wild Find
 #
 #
 # Copyright 2014 - 2015 Al Brown
@@ -91,7 +91,7 @@ class Harrier(object):
 
     def __arguments(self):
         parser = argparse.ArgumentParser(description=
-                                         'Project Peregrine Receiver',
+                                         'Harrier Receiver',
                                          formatter_class=
                                          argparse.ArgumentDefaultsHelpFormatter)
 

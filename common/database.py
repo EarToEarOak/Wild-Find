@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #
-# Project Peregrine
+# Wild Find
 #
 #
 # Copyright 2014 - 2015 Al Brown
