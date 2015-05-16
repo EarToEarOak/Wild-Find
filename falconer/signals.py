@@ -33,6 +33,7 @@ import numpy
 
 from falconer import ui
 from falconer.utils_qt import TableSelectionMenu
+import matplotlib.pyplot as plt
 
 
 class WidgetSignals(QtGui.QWidget):
