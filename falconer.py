@@ -85,6 +85,8 @@ class Falconer(QtGui.QMainWindow):
 
         self.__setup_icons()
 
+        self.setAcceptDrops(True)
+
         self._statusbar.showMessage('Ready')
 
     def __setup_icons(self):
@@ -107,9 +109,6 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
-        if not self.__file_warn():
-            return
-
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'New file',
@@ -124,9 +123,6 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionOpen_triggered(self):
-        if not self.__file_warn():
-            return
-
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getOpenFileName(self,
                                              dir=self._settings.dirFile,
@@ -229,16 +225,8 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot(str)
     def __on_open_history(self, fileName):
-        if not os.path.exists(fileName):
-            message = 'File does not exist'
-            QtGui.QMessageBox.question(self, 'Warning', message)
-            return
-
-        if not self.__file_warn():
-            return
-
-        self._settings.add_history(fileName)
-        self.__open(fileName)
+        if self.__open(fileName):
+            self._settings.add_history(fileName)
 
     @QtCore.Slot()
     def __on_survey_filter(self):
@@ -267,6 +255,24 @@ class Falconer(QtGui.QMainWindow):
                      self._widgetScans,
                      self._widgetSignals,
                      self._widgetMap)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if len(urls):
+                fileName = urls[0].path()
+                _, ext = os.path.splitext(fileName)
+                if ext == '.wfh':
+                    event.accept()
+                    return
+
+        event.ignore()
+
+    def dropEvent(self, event):
+        urls = event.mimeData().urls()
+        if len(urls):
+            filename = urls[0].path().lstrip('/')
+            self.__open(filename)
 
     def closeEvent(self, _event):
         self._fullScreen = True
@@ -318,6 +324,14 @@ class Falconer(QtGui.QMainWindow):
         return True
 
     def __open(self, fileName):
+        if not os.path.exists(fileName):
+            message = 'File not found'
+            QtGui.QMessageBox.warning(self, 'Warning', message)
+            return
+
+        if not self.__file_warn():
+            return False
+
         self.__clear_scans()
 
         error = self._database.open(fileName)
@@ -326,7 +340,7 @@ class Falconer(QtGui.QMainWindow):
                                        'Open failed',
                                        error)
             self.__clear_scans()
-            return
+            return False
 
         self.__set_surveys()
         self.__set_scans()
@@ -335,6 +349,8 @@ class Falconer(QtGui.QMainWindow):
         self.__set_controls()
         name = os.path.basename(fileName)
         self.setWindowTitle('Falconer - {}'.format(name))
+
+        return True
 
     def __set_surveys(self):
         surveys = self._database.get_surveys()

@@ -48,6 +48,7 @@ class WidgetMap(QtGui.QWidget):
 
         self._webMap = QtWebKit.QWebView(self)
         self._webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+        self._webMap.setAcceptDrops(False)
 
         page = self._webMap.page()
         manager = page.networkAccessManager()
