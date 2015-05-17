@@ -251,13 +251,30 @@ class DialogHistogram(QtGui.QDialog):
 
         self._signals = signals
         self._scale = 1.
+        self._dragStart = None
 
         ui.loadUi(self, 'signals_hist.ui')
         self.setWindowFlags(QtCore.Qt.Tool)
 
         self._graphicsView.viewport().installEventFilter(self)
 
+        size = self._buttonIn.size()
+        size.setHeight(size.height() / 1.5)
+        size.setWidth(size.height())
+        self._buttonIn.setMaximumSize(size)
+        self._buttonOut.setMaximumSize(size)
+
         self.activateWindow()
+
+    @QtCore.Slot(bool)
+    def on__buttonIn_clicked(self, _clicked):
+        pos = self.__get_centre()
+        self.__zoom(pos, 120)
+
+    @QtCore.Slot(bool)
+    def on__buttonOut_clicked(self, _clicked):
+        pos = self.__get_centre()
+        self.__zoom(pos, -120)
 
     @QtCore.Slot()
     def on__buttonBox_rejected(self):
@@ -267,21 +284,28 @@ class DialogHistogram(QtGui.QDialog):
         self.__plot()
 
     def eventFilter(self, obj, event):
-        scaleOld = self._scale
         if event.type() is QtCore.QEvent.Wheel:
             delta = event.delta()
-            scale = self._scale + delta / 1000.
-            if scale < 1:
-                scale = 1.
-            elif scale > 5:
-                scale = 5.
-
-            if scale != scaleOld:
-                self._scale = scale
-                self.__plot(event.pos())
+            self.__zoom(event.pos(), delta)
             return True
 
         return QtGui.QDialog.eventFilter(self, obj, event)
+
+    def __get_centre(self):
+        rect = self._graphicsView.rect()
+        return rect.center()
+
+    def __zoom(self, pos, delta):
+        scaleOld = self._scale
+        scale = self._scale + delta / 1000.
+        if scale < 1:
+            scale = 1.
+        elif scale > 5:
+            scale = 5.
+
+        if scale != scaleOld:
+            self._scale = scale
+            self.__plot(pos)
 
     def __plot(self, mousePos=None):
         figure, axes = plt.subplots()
