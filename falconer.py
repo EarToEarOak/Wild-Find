@@ -203,7 +203,8 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot(object)
     def __on_signal_map_plotted(self, bounds):
-        self._widgetMap.update_heatmap(bounds)
+        if self._database.isConnected():
+            self._widgetMap.update_heatmap(bounds)
 
     @QtCore.Slot()
     def ___on_signal_map_cleared(self):
