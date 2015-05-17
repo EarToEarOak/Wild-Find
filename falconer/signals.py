@@ -63,6 +63,12 @@ class WidgetSignals(QtGui.QWidget):
 
         self.__set_width()
 
+        palette = self.palette()
+        colour = palette.color(QtGui.QPalette.Active, QtGui.QPalette.Highlight)
+        palette.setColor(QtGui.QPalette.Inactive, QtGui.QPalette.Highlight,
+                         colour)
+        self.setPalette(palette)
+
     def __set_width(self):
         margins = self.layout().contentsMargins()
         width = self._tableSignals.verticalHeader().width()
@@ -111,8 +117,6 @@ class WidgetSignals(QtGui.QWidget):
             if index.data() in freqs:
                 mapped = self._proxyModel.mapFromSource(index)
                 self._tableSignals.selectRow(mapped.row())
-
-        self._tableSignals.setFocus()
 
     def set(self, signals):
         self._model.set(signals)

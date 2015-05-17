@@ -34,17 +34,17 @@ class TableSelectionMenu(object):
         table.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
 
         actionAll = QtGui.QAction(table)
-        actionAll.setText('Select all')
+        actionAll.setText('Filter none')
         actionAll.triggered.connect(self.on_all)
         table.addAction(actionAll)
 
         actionNone = QtGui.QAction(table)
-        actionNone.setText('Select none')
+        actionNone.setText('Filter all')
         actionNone.triggered.connect(self.on_none)
         table.addAction(actionNone)
 
         actionInvert = QtGui.QAction(table)
-        actionInvert.setText('Invert selection')
+        actionInvert.setText('Invert filters')
         actionInvert.triggered.connect(self.on_invert)
         table.addAction(actionInvert)
 

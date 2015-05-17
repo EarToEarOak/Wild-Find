@@ -37,6 +37,9 @@
      <property name="enabled">
       <bool>false</bool>
      </property>
+     <property name="autoScroll">
+      <bool>false</bool>
+     </property>
      <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
