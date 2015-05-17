@@ -230,9 +230,6 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def get_filtered(self):
         return self._filtered
 
-    def get_filtered(self):
-        return self._filtered
-
     def set_filtered(self, filtered):
         self.beginResetModel()
         self._filtered = filtered
