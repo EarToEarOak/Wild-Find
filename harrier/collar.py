@@ -55,9 +55,9 @@ class Collar(object):
         self.width = width
 
     def get_description(self, baseband=0):
-        desc = ('Freq: {:.3f}MHz Type: {}\n'
+        desc = ('Freq: {:.4f}MHz Type: {}\n'
                 'Count: {} Rate: {:.2f}PPM\n'
-                'Level: {:.3f} Width: {:.1f}ms')
+                'Level: {:.4f} Width: {:.1f}ms')
         desc = desc.format((self.freq + baseband) / 1e6,
                            MOD_DESC[self.mod],
                            self.count, self.rate,

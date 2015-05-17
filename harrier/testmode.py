@@ -65,7 +65,7 @@ class TestMode(object):
                 if len(collars):
                     for collar in collars:
                         collar.freq += settings.freq * 1e6
-                        summary = '\t{:7.3f}MHz {:2} {:4.1f}PPM, {:4.1f}dB'
+                        summary = '\t{:8.4f}MHz {:2} {:4.1f}PPM, {:4.1f}dB'
                         print summary.format(collar.freq / 1e6,
                                              MOD_DESC[collar.mod],
                                              collar.rate,

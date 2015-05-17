@@ -164,7 +164,7 @@ def callback_egdes(edge, signalNum, pulse, frequencies,
         title += ' (Pulses Found - {})'.format(pulse.mod)
     plt.title(title)
     plt.grid()
-    label = '{:.3f}MHz'.format((frequencies[signalNum]) / 1e6)
+    label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
     plt.plot(x, edge, label=label)
     plt.axhline(threshPos, color='g', label='+ve')
     plt.axhline(threshNeg, color='r', label='-ve')
@@ -359,7 +359,7 @@ def main(argList=None):
         print '\tSignals to demodulate: {}'.format(len(frequencies))
         if args.verbose:
             for freq in frequencies:
-                print '\t\t{:.3f}MHz'.format((baseband + freq) / 1e6)
+                print '\t\t{:.4f}MHz'.format((baseband + freq) / 1e6)
 
         # Detect
         detect = Detect(fs, samples, frequencies, timing, debug)

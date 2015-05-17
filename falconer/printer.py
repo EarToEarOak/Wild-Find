@@ -82,7 +82,7 @@ def print_report(printer, fileName, widgetSurveys, widgetScans, widgetSignals, w
     insert_block(cursor, indent=1)
     __set_text_size(cursor, sizeText)
     for signal in signals:
-        cursor.insertText('{:.3f}  '.format(signal / 1e6))
+        cursor.insertText('{:.4f}  '.format(signal / 1e6))
     cursor.insertText('\n\n')
 
     pageRect = printer.pageRect()

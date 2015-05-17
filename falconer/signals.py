@@ -76,7 +76,7 @@ class WidgetSignals(QtGui.QWidget):
         self._model.connect(slot)
 
     def select(self, frequencies):
-        freqs = ['{:.3f}'.format(f/1e6) for f in frequencies]
+        freqs = ['{:.4f}'.format(f/1e6) for f in frequencies]
 
         self._tableSignals.clearSelection()
         for i in range(self._model.rowCount()):
@@ -142,7 +142,7 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
-                data = '{:7.3f}'.format(value / 1e6)
+                data = '{:8.4f}'.format(value / 1e6)
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
@@ -289,7 +289,7 @@ class DialogHistogram(QtGui.QDialog):
             height = bar.get_height()
             text = axes.text(bar.get_x() + width / 2.,
                              height,
-                             '{:.3f}'.format(freq),
+                             '{:.4f}'.format(freq),
                              rotation=45,
                              ha='center', va='bottom', size='smaller')
             if matplotlib.__version__ >= '1.3':
