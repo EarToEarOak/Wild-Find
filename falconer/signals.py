@@ -42,6 +42,8 @@ class WidgetSignals(QtGui.QWidget):
 
         ui.loadUi(self, 'signals.ui')
 
+        self._signal = SignalSignals()
+
         self._model = ModelSignals()
         self._proxyModel = QtGui.QSortFilterProxyModel(self)
         self._proxyModel.setDynamicSortFilter(True)
@@ -49,6 +51,10 @@ class WidgetSignals(QtGui.QWidget):
 
         self._tableSignals.setModel(self._proxyModel)
         self._tableSignals.resizeColumnsToContents()
+
+        selection = self._tableSignals.selectionModel()
+        selection.selectionChanged.connect(self.__on_signal_select)
+
         self._contextMenu = TableSelectionMenu(self._tableSignals,
                                                self._model)
 
@@ -67,16 +73,37 @@ class WidgetSignals(QtGui.QWidget):
         width += self.layout().spacing()
         self.setMaximumWidth(width)
 
+    @QtCore.Slot(QtGui.QItemSelection, QtGui.QItemSelection)
+    def __on_signal_select(self, selected, deselected):
+        selection = []
+
+        selected = selected.indexes()
+        deslected = deselected.indexes()
+        self.__append_selection(selection, selected, True)
+        self.__append_selection(selection, deslected, False)
+
+        self._signal.select.emit(selection)
+
     @QtCore.Slot(bool)
     def on__buttonHistogram_clicked(self, _clicked):
         dlg = DialogHistogram(self, self._model.get_all())
         dlg.exec_()
 
-    def connect(self, slot):
-        self._model.connect(slot)
+    def __append_selection(self, selection, select, selected):
+        signals = self._model.get()
+        for index in select:
+            data = index.data()
+            if data is not None and index.column() == 1:
+                mapped = self._proxyModel.mapToSource(index)
+                freq = signals[mapped.row()]
+                selection.append((freq, selected))
+
+    def connect(self, on_filter, on_selected):
+        self._model.connect(on_filter)
+        self._signal.select.connect(on_selected)
 
     def select(self, frequencies):
-        freqs = ['{:.4f}'.format(f/1e6) for f in frequencies]
+        freqs = ['{:.4f}'.format(f / 1e6) for f in frequencies]
 
         self._tableSignals.clearSelection()
         for i in range(self._model.rowCount()):
@@ -84,7 +111,7 @@ class WidgetSignals(QtGui.QWidget):
             if index.data() in freqs:
                 mapped = self._proxyModel.mapFromSource(index)
                 self._tableSignals.selectRow(mapped.row())
-#
+
         self._tableSignals.setFocus()
 
     def set(self, signals):
@@ -167,15 +194,17 @@ class ModelSignals(QtCore.QAbstractTableModel):
         return False
 
     def flags(self, index):
-        flags = (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        flags = QtCore.Qt.ItemIsEnabled
         if index.column() == 0:
             flags |= (QtCore.Qt.ItemIsEditable |
                       QtCore.Qt.ItemIsUserCheckable)
+        elif index.column() == 1:
+            flags |= QtCore.Qt.ItemIsSelectable
 
         return flags
 
-    def connect(self, slot):
-        self._signal.filter.connect(slot)
+    def connect(self, on_filter):
+        self._signal.filter.connect(on_filter)
 
     def set(self, signals):
         self.beginResetModel()
@@ -323,6 +352,7 @@ class DialogHistogram(QtGui.QDialog):
 
 class SignalSignals(QtCore.QObject):
     filter = QtCore.Signal()
+    select = QtCore.Signal(list)
 
 
 if __name__ == '__main__':

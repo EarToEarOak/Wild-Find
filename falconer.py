@@ -67,7 +67,8 @@ class Falconer(QtGui.QMainWindow):
 
         self._widgetSurveys.connect(self.__on_survey_filter)
         self._widgetScans.connect(self.__on_scan_filter)
-        self._widgetSignals.connect(self.__on_signal_filter)
+        self._widgetSignals.connect(self.__on_signal_filter,
+                                    self.__on_signal_select)
         self._widgetMap.connect(self.__on_signal_map_loaded,
                                 self.__on_signal_map_colour,
                                 self.__on_signal_map_selected)
@@ -253,6 +254,10 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_filter(self):
         self.__set_map()
+
+    @QtCore.Slot(list)
+    def __on_signal_select(self, frequencies):
+        self._widgetMap.select_locations(frequencies)
 
     @QtCore.Slot(QtGui.QPrinter)
     def __on__print(self, printer):

@@ -48,6 +48,20 @@ styleLocation = new ol.style.Style({
 	})
 });
 
+styleLocationSelect = new ol.style.Style({
+	image : new ol.style.Circle({
+		stroke : new ol.style.Stroke({
+			color : 'black',
+			opacity : 0.2,
+			width : 2
+		}),
+		radius : 5,
+		fill : new ol.style.Fill({
+			color : 'ffa066'
+		})
+	})
+});
+
 layerLocations = new ol.layer.Vector({
 	source : locations,
 	style : styleLocation
@@ -72,7 +86,7 @@ dragBox = new ol.interaction.DragBox({
 	layers : [ layerLocations ],
 	style : new ol.style.Style({
 		stroke : new ol.style.Stroke({
-			color : '0066FF'
+			color : '003d99'
 		})
 	})
 });
@@ -182,7 +196,6 @@ function addLocation(freq, lon, lat) {
 	point.transform('EPSG:4326', 'EPSG:900913');
 	coord = ol.proj.transform([ lon, lat ], 'EPSG:4326', 'EPSG:900913');
 
-	console.log(freq);
 	feature = new ol.Feature({
 		name : freq,
 		geometry : point
@@ -208,13 +221,28 @@ function selectLocations() {
 
 	source.forEachFeature(function(feature) {
 		coords = feature.getGeometry().getCoordinates();
-		if (ol.extent.containsCoordinate(extent, coords))
+		if (ol.extent.containsCoordinate(extent, coords)) {
 			frequencies.push(feature.get('name'))
-		else
+			feature.setStyle(styleLocationSelect);
+		} else
 			feature.setStyle(styleLocation);
 	});
 
 	mapLink.on_selected(JSON.stringify(frequencies));
+}
+
+function selectLocation(freq, selected) {
+	source = layerLocations.getSource();
+	source.forEachFeature(function(feature) {
+		if (feature.get('name') == freq)
+			if (selected) {
+				feature.setStyle(styleLocationSelect);
+				feature.getStyle().setZIndex(99);
+			} else {
+				feature.setStyle(styleLocation);
+				feature.getStyle().setZIndex(0);
+			}
+	});
 }
 
 function clearLocations() {

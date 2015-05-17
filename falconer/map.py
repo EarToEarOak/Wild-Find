@@ -144,6 +144,9 @@ class WidgetMap(QtGui.QWidget):
         self.clear_locations()
         self._controls.set_locations(locations)
 
+    def select_locations(self, frequencies):
+        self._controls.select_locations(frequencies)
+
     def clear_locations(self):
         self._controls.clear_locations()
 
@@ -263,6 +266,9 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.set_locations(locations)
         self.follow()
 
+    def select_locations(self, frequencies):
+        self._mapLink.select_locations(frequencies)
+
     def clear_locations(self):
         self._follow = True
         self._checkFollow.setChecked(self._follow)
@@ -284,6 +290,9 @@ class MapLink(QtCore.QObject):
 
     def __exec_js(self, js):
         return self._frame.evaluateJavaScript(js)
+
+    def __bool_to_js(self, value):
+        return '{}'.format(value).lower()
 
     @QtCore.Slot()
     def on_interaction(self):
@@ -328,6 +337,14 @@ class MapLink(QtCore.QObject):
             js = 'addLocation(\'{:.99g}\', {}, {});'.format(*location)
             self.__exec_js(js)
 
+    def select_locations(self, signals):
+        for signal in signals:
+            freq = signal[0]
+            selected = self.__bool_to_js(signal[1])
+            js = 'selectLocation(\'{:.99g}\', {})'.format(signal[0],
+                                                          selected)
+            self.__exec_js(js)
+
     def clear_locations(self):
         js = 'clearLocations();'
         self.__exec_js(js)
@@ -341,15 +358,15 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def show_locations(self, show):
-        js = 'showLocations({});'.format('{}'.format(show).lower())
+        js = 'showLocations({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
 
     def show_track(self, show):
-        js = 'showTrack({});'.format('{}'.format(show).lower())
+        js = 'showTrack({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
 
     def show_heatmap(self, show):
-        js = 'showHeatmap({});'.format('{}'.format(show).lower())
+        js = 'showHeatmap({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
 
     def set_opacity(self, opacity):
@@ -361,7 +378,7 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def show_busy(self, show):
-        js = 'showBusy({});'.format('{}'.format(show).lower())
+        js = 'showBusy({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
 
 
