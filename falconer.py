@@ -49,6 +49,7 @@ class Falconer(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
 
         self._mapLoaded = False
+        self._fullScreen = False
 
         self.customWidgets = {'WidgetMap': WidgetMap,
                               'WidgetSurveys': WidgetSurveys,
@@ -61,7 +62,7 @@ class Falconer(QtGui.QMainWindow):
         self.splitter.setCollapsible(2, True)
 
         self._settings = Settings(self,
-                                  self._menuBar,
+                                  self._menubar,
                                   self.__on_open_history)
 
         self._widgetSurveys.connect(self.__on_survey_filter)
@@ -83,7 +84,7 @@ class Falconer(QtGui.QMainWindow):
 
         self.__setup_icons()
 
-        self.statusBar().showMessage('Ready')
+        self._statusbar.showMessage('Ready')
 
     def __setup_icons(self):
         style = self.style()
@@ -195,6 +196,10 @@ class Falconer(QtGui.QMainWindow):
         dlg.show()
 
     @QtCore.Slot()
+    def on_actionFullscreen_triggered(self):
+        self.__fullscreen()
+
+    @QtCore.Slot()
     def on_actionAbout_triggered(self):
         dlg = DialogAbout(self)
         dlg.show()
@@ -259,8 +264,24 @@ class Falconer(QtGui.QMainWindow):
                      self._widgetMap)
 
     def closeEvent(self, _event):
+        self._fullScreen = True
+        self.__fullscreen()
         self._settings.close()
         self._server.close()
+
+    def __fullscreen(self):
+        self._statusbar.setVisible(self._fullScreen)
+        self._toolbarControls.setVisible(self._fullScreen)
+
+        self._widgetSurveys.setVisible(self._fullScreen)
+        self._widgetScans.setVisible(self._fullScreen)
+        self._widgetSignals.setVisible(self._fullScreen)
+
+        self._fullScreen = not self._fullScreen
+        if self._fullScreen:
+            self.showFullScreen()
+        else:
+            self.showNormal()
 
     def __set_controls(self):
         if self._mapLoaded:
