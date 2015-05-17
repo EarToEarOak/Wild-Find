@@ -209,8 +209,7 @@ class ModelSurveys(QtCore.QAbstractTableModel):
 
         self.endResetModel()
 
-        if len(filtered):
-            self._signal.filter.emit()
+        self._signal.filter.emit()
 
 
 class SignalSurveys(QtCore.QObject):

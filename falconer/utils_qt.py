@@ -58,7 +58,7 @@ class TableSelectionMenu(object):
 
     @QtCore.Slot()
     def on_invert(self):
-        filters = self._model.get_filters()
+        filters = self._model.get()
         filtered = self._model.get_filtered()
 
         for value in filters:

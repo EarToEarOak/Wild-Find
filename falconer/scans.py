@@ -184,8 +184,7 @@ class ModelScans(QtCore.QAbstractTableModel):
 
         self.endResetModel()
 
-        if len(filtered):
-            self._signal.filter.emit()
+        self._signal.filter.emit()
 
 
 class DialogScansRange(QtGui.QDialog):

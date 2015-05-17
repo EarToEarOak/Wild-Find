@@ -111,6 +111,9 @@ class Database():
         return surveys
 
     def get_scans(self, filteredSurveys):
+        if self._conn is None:
+            return []
+
         cursor = self._conn.cursor()
         cmd = 'select * from Scans'
         cmd += self.__filter(cursor,
@@ -123,6 +126,9 @@ class Database():
         return scans
 
     def get_signals(self, filteredSurveys, filteredSignals, filteredScans):
+        if self._conn is None:
+            return []
+
         cursor = self._conn.cursor()
 
         cmd = 'select Freq, count(Freq) from Signals'
@@ -139,6 +145,9 @@ class Database():
         return signals
 
     def get_locations(self, filteredSurveys, filteredScans, filteredSignals):
+        if self._conn is None:
+            return []
+
         cursor = self._conn.cursor()
         cmd = 'select Id, Freq, Lon, Lat from Signals'
         cmd += self.__filter(cursor,
@@ -154,6 +163,9 @@ class Database():
         return signals
 
     def get_telemetry(self, filteredSurveys, filteredScans, filteredSignals):
+        if self._conn is None:
+            return []
+
         cursor = self._conn.cursor()
 
         cmd = 'select Lon, Lat, Level from Signals'

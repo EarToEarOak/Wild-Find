@@ -221,19 +221,14 @@ class ModelSignals(QtCore.QAbstractTableModel):
         self.endResetModel()
 
     def get(self):
-        frequencies = []
-        for checked, signal, _detects in self._signals:
-            if checked == QtCore.Qt.Checked:
-                frequencies.append(signal)
-
+        frequencies = [frequency for _check, frequency, _freq in self._signals]
         return frequencies
 
     def get_all(self):
         return self._signals
 
-    def get_filters(self):
-        timeStamps = [timeStamp for _check, timeStamp, _freq in self._signals]
-        return timeStamps
+    def get_filtered(self):
+        return self._filtered
 
     def get_filtered(self):
         return self._filtered
@@ -250,8 +245,7 @@ class ModelSignals(QtCore.QAbstractTableModel):
 
         self.endResetModel()
 
-        if len(filtered):
-            self._signal.filter.emit()
+        self._signal.filter.emit()
 
 
 class DialogHistogram(QtGui.QDialog):

@@ -342,7 +342,7 @@ class MapLink(QtCore.QObject):
         for signal in signals:
             freq = signal[0]
             selected = self.__bool_to_js(signal[1])
-            js = 'selectLocation(\'{:.99g}\', {})'.format(signal[0],
+            js = 'selectLocation(\'{:.99g}\', {})'.format(freq,
                                                           selected)
             self.__exec_js(js)
 
