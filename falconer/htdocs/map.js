@@ -103,6 +103,13 @@ var controlPos = new ol.control.MousePosition({
 	undefinedHTML : '&nbsp;'
 });
 
+var overlaySignals = new ol.Overlay({
+	autoPan : true,
+	autoPanAnimation : {
+		duration : 250
+	}
+});
+
 function init() {
 	layers.push(new ol.layer.Tile({
 		name : 'MapQuest Satellite',
@@ -137,9 +144,9 @@ function init() {
 		target : 'map',
 		view : view,
 		layers : layers,
-		controls : controls
+		controls : controls,
+		overlays : [ overlaySignals ]
 	});
-
 
 	map.addLayer(layerHeatmap);
 	map.addLayer(layerTrack);
@@ -147,6 +154,7 @@ function init() {
 
 	map.setView(view);
 
+	map.on('singleclick', _popup);
 	map.addInteraction(dragBox);
 	dragBox.on('boxend', selectLocations);
 
@@ -181,6 +189,48 @@ function _sendLayerNames() {
 		names.push(layers[i].get('name'));
 
 	mapLink.on_layer_names(JSON.stringify(names));
+}
+
+function _popup(event) {
+	var features = [];
+
+	map.forEachFeatureAtPixel(event.pixel, function(feature, layer) {
+		if (layer == layerLocations)
+			features.push(feature);
+	});
+
+	var element = document.getElementById('popup');
+	overlaySignals.setElement(element);
+
+	if (features.length === 0)
+		overlaySignals.setPosition(undefined);
+	else {
+		var coordsFeature = features[0].getGeometry().getCoordinates();
+		coordsFeature = ol.proj.transform(coordsFeature, 'EPSG:900913',
+				'EPSG:4326');
+		var location = ol.coordinate.toStringXY(coordsFeature, 5);
+
+		var frequencies = [];
+		for (var i = 0; i < features.length; i++)
+			frequencies.push(features[i].get('name'));
+		var freqList = frequencies.filter(function(item, pos, self) {
+			return self.indexOf(item) == pos;
+		});
+		freqList.sort();
+
+		var info = '<h4>Location</h4>';
+		info += location;
+		info += '<h4>Signals</h4>';
+		for (var i = 0; i < freqList.length; i++) {
+			var freq = freqList[i] / 1000000;
+			info += freq.toFixed(4);
+			info += '<br/>';
+		}
+		element.innerHTML = info;
+
+		var coords = event.coordinate;
+		overlaySignals.setPosition(coords);
+	}
 }
 
 function getLayer() {

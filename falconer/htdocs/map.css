@@ -14,7 +14,7 @@
 	z-index: 9999;
 	right: 10px;
 	top: 10px;
-    width: auto;
+	width: auto;
 }
 
 .ol-mouse-position {
@@ -24,4 +24,16 @@
 	top: auto;
 	bottom: 10px;
 	width: 100%;
+}
+
+#popup {
+	font-size: 10px;
+	background: white;
+	border-radius: 5px;
+	padding: 5px;
+}
+
+#popup>h4 {
+	margin-top: 5px;
+	margin-bottom: 2px;
 }
