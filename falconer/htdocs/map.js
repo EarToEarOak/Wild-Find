@@ -143,28 +143,28 @@ function init() {
 	map.addInteraction(dragBox);
 	dragBox.on('boxend', selectLocations);
 
-	setListeners(true);
+	_setListeners(true);
 
 	setLayer(layers.length - 1);
-	sendLayerNames();
+	_sendLayerNames();
 	showBusy(false);
 }
 
-function setListeners(enable) {
+function _setListeners(enable) {
 	if (enable) {
-		map.on('pointerdrag', onInteraction);
-		view.on('change:resolution', onInteraction);
+		map.on('pointerdrag', _onInteraction);
+		view.on('change:resolution', _onInteraction);
 	} else {
-		map.un('pointerdrag', onInteraction);
-		view.un('change:resolution', onInteraction);
+		map.un('pointerdrag', _onInteraction);
+		view.un('change:resolution', _onInteraction);
 	}
 }
 
-function onInteraction() {
+function _onInteraction() {
 	mapLink.on_interaction();
 }
 
-function sendLayerNames() {
+function _sendLayerNames() {
 	if (typeof mapLink === "undefined")
 		return;
 
@@ -174,13 +174,6 @@ function sendLayerNames() {
 		names.push(layers[i].get('name'));
 
 	mapLink.on_layer_names(JSON.stringify(names));
-}
-
-function transformCoord(lon, lat) {
-	point = new ol.geom.Point([ lon, lat ]);
-	point.transform('EPSG:4326', 'EPSG:900913');
-
-	return point.getCoordinates();
 }
 
 function getLayer() {
@@ -196,6 +189,35 @@ function setLayer(index) {
 		layers[i].setVisible(false);
 
 	layers[index].setVisible(true);
+}
+
+function setUnits(units){
+	controlScale.setUnits(units);
+}
+
+function setHeatmap(north, south, east, west) {
+	extent = [ west, south, east, north ]
+
+	loadFunction = function(image, src) {
+		element = image.getImage();
+		element.src = src;
+		element.onload = function() {
+			showBusy(false);
+		};
+	}
+
+	url = '/heatmap.png?a=' + Math.random() * 1000000;
+	source = new ol.source.ImageStatic({
+		url : url,
+		imageExtent : extent,
+		imageLoadFunction : loadFunction
+	});
+
+	layerHeatmap.setSource(source)
+}
+
+function setHeatmapOpacity(opacity) {
+	layerHeatmap.setOpacity(opacity);
 }
 
 function addLocation(freq, lon, lat) {
@@ -257,26 +279,6 @@ function clearLocations() {
 	track.clear();
 }
 
-function setHeatmap(north, south, east, west) {
-	extent = [ west, south, east, north ]
-
-	loadFunction = function(image, src) {
-		element = image.getImage();
-		element.src = src;
-		element.onload = function() {
-			showBusy(false);
-		};
-	}
-
-	url = '/heatmap.png?a=' + Math.random() * 1000000;
-	source = new ol.source.ImageStatic({
-		url : url,
-		imageExtent : extent,
-		imageLoadFunction : loadFunction
-	});
-
-	layerHeatmap.setSource(source)
-}
 
 function clearHeatmap() {
 	layerHeatmap.setSource(null)
@@ -303,17 +305,16 @@ function showHeatmap(show) {
 	layerHeatmap.setVisible(show);
 }
 
-function setOpacity(opacity) {
-	layerHeatmap.setOpacity(opacity);
-}
-
-function setUnits(units){
-	controlScale.setUnits(units);
-}
-
 function follow() {
-	setListeners(false);
+	_setListeners(false);
 	extent = locations.getExtent();
 	view.fitExtent(extent, map.getSize());
-	setListeners(true);
+	_setListeners(true);
+}
+
+function transformCoord(lon, lat) {
+	point = new ol.geom.Point([ lon, lat ]);
+	point.transform('EPSG:4326', 'EPSG:900913');
+
+	return point.getCoordinates();
 }

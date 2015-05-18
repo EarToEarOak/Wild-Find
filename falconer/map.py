@@ -164,8 +164,8 @@ class WidgetMap(QtGui.QWidget):
     def clear_locations(self):
         self._controls.clear_locations()
 
-    def update_heatmap(self, bounds):
-        self._controls.update_heatmap(bounds)
+    def set_heatmap(self, bounds):
+        self._controls.set_heatmap(bounds)
 
     def clear_heatmap(self):
         self._controls.clear_heatmap()
@@ -230,7 +230,7 @@ class WidgetMapControls(QtGui.QWidget):
 
     @QtCore.Slot(int)
     def on__sliderOpacity_valueChanged(self, opacity):
-        self._mapLink.set_opacity(opacity)
+        self._mapLink.set_heatmap_opacity(opacity)
 
     @QtCore.Slot(int)
     def on__comboColour_activated(self, index):
@@ -291,8 +291,8 @@ class WidgetMapControls(QtGui.QWidget):
         self._checkFollow.setChecked(self._follow)
         self._mapLink.clear_locations()
 
-    def update_heatmap(self, bounds):
-        self._mapLink.update_heatmap(bounds)
+    def set_heatmap(self, bounds):
+        self._mapLink.set_heatmap(bounds)
 
     def clear_heatmap(self):
         self._mapLink.clear_heatmap()
@@ -331,32 +331,31 @@ class MapLink(QtCore.QObject):
         self._signal.colour.connect(colour)
         self._signal.selected.connect(selected)
 
-    def transform_coords(self, coords):
-        transformed = []
-        for coord in coords:
-            js = 'transformCoord({}, {});'.format(coord[0], coord[1])
-            trans = self.__exec_js(js)
-            trans.extend([coord[2]])
-            transformed.append(trans)
-
-        return transformed
 
     def get_layer(self):
         js = 'getLayer();'
         return self.__exec_js(js)
 
-    def set_units(self, units):
-        js = 'setUnits(\'{}\');'.format(units.lower())
-        self.__exec_js(js)
-
     def set_layer(self, layer):
         js = 'setLayer({});'.format(layer)
+        self.__exec_js(js)
+
+    def set_units(self, units):
+        js = 'setUnits(\'{}\');'.format(units.lower())
         self.__exec_js(js)
 
     def set_locations(self, locations):
         for location in locations:
             js = 'addLocation(\'{:.99g}\', {}, {});'.format(*location)
             self.__exec_js(js)
+
+    def set_heatmap_opacity(self, opacity):
+        js = 'setHeatmapOpacity({});'.format(opacity / 100.)
+        self.__exec_js(js)
+
+    def set_heatmap(self, bounds):
+        js = 'setHeatmap({}, {}, {}, {});'.format(*bounds)
+        self.__exec_js(js)
 
     def select_locations(self, signals):
         for signal in signals:
@@ -370,13 +369,10 @@ class MapLink(QtCore.QObject):
         js = 'clearLocations();'
         self.__exec_js(js)
 
-    def update_heatmap(self, bounds):
-        js = 'setHeatmap({}, {}, {}, {});'.format(*bounds)
-        self.__exec_js(js)
-
     def clear_heatmap(self):
         js = 'clearHeatmap();'
         self.__exec_js(js)
+
 
     def show_locations(self, show):
         js = 'showLocations({});'.format(self.__bool_to_js(show))
@@ -390,17 +386,24 @@ class MapLink(QtCore.QObject):
         js = 'showHeatmap({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
 
-    def set_opacity(self, opacity):
-        js = 'setOpacity({});'.format(opacity / 100.)
+    def show_busy(self, show):
+        js = 'showBusy({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
+
 
     def follow(self):
         js = 'follow();'
         self.__exec_js(js)
 
-    def show_busy(self, show):
-        js = 'showBusy({});'.format(self.__bool_to_js(show))
-        self.__exec_js(js)
+    def transform_coords(self, coords):
+        transformed = []
+        for coord in coords:
+            js = 'transformCoord({}, {});'.format(coord[0], coord[1])
+            trans = self.__exec_js(js)
+            trans.extend([coord[2]])
+            transformed.append(trans)
+
+        return transformed
 
 
 class SignalMap(QtCore.QObject):
