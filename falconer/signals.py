@@ -57,7 +57,7 @@ class WidgetSignals(QtGui.QWidget):
 
         self._contextMenu = TableSelectionMenu(self._tableSignals,
                                                self._model,
-                                               True)
+                                               self.hasSelection)
 
         header = self._tableSignals.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
@@ -124,6 +124,9 @@ class WidgetSignals(QtGui.QWidget):
 
         if scroll is not None:
             self._tableSignals.scrollTo(mapped)
+
+    def hasSelection(self):
+        return self._tableSignals.selectionModel().hasSelection()
 
     def set(self, signals):
         self._model.set(signals)
