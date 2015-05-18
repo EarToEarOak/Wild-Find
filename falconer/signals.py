@@ -56,7 +56,8 @@ class WidgetSignals(QtGui.QWidget):
         selection.selectionChanged.connect(self.__on_signal_select)
 
         self._contextMenu = TableSelectionMenu(self._tableSignals,
-                                               self._model)
+                                               self._model,
+                                               self.hasSelection)
 
         header = self._tableSignals.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
@@ -124,6 +125,9 @@ class WidgetSignals(QtGui.QWidget):
         if scroll is not None:
             self._tableSignals.scrollTo(mapped)
 
+    def hasSelection(self):
+        return self._tableSignals.selectionModel().hasSelection()
+
     def set(self, signals):
         self._model.set(signals)
         self._tableSignals.resizeColumnsToContents()
@@ -138,9 +142,6 @@ class WidgetSignals(QtGui.QWidget):
     def get_filters(self):
         return self._model.get_filters()
 
-    def set_filtered(self, filtered):
-        self._model.set_filtered(filtered)
-
     def get_filtered(self):
         return self._model.get_filtered()
 
@@ -152,9 +153,8 @@ class WidgetSignals(QtGui.QWidget):
 
 
 class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Freq', 'Rate', 'Seen']
-    HEADER_TIPS = ['Filter', 'Signal Frequency (MHz)',
-                   'Pulse rate (PPM)', 'Total detections']
+    HEADER = [None, 'Freq', 'Seen']
+    HEADER_TIPS = ['Included', 'Signal frequency (MHz)', 'Total detections']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
@@ -185,8 +185,6 @@ class ModelSignals(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
                 data = '{:8.4f}'.format(value / 1e6)
-            elif index.column() == 2:
-                data = '{:5.1f}'.format(value)
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
@@ -226,16 +224,16 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def set(self, signals):
         self.beginResetModel()
         del self._signals[:]
-        for frequency, rate, count in signals:
+        for frequency, count in signals:
             checked = QtCore.Qt.Checked
             if frequency in self._filtered:
                 checked = QtCore.Qt.Unchecked
-            self._signals.append([checked, frequency, rate, count])
+            self._signals.append([checked, frequency, count])
         self.endResetModel()
 
     def get(self):
         frequencies = [frequency for _check, frequency,
-                       _rate, _freq in self._signals]
+                       _freq in self._signals]
         return frequencies
 
     def get_all(self):

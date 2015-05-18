@@ -27,26 +27,56 @@ from PySide import QtCore, QtGui
 
 
 class TableSelectionMenu(object):
-    def __init__(self, table, model):
+    def __init__(self, table, model, hasSelection=None):
         self._table = table
         self._model = model
+        self._hasSelection = hasSelection
 
-        table.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        table.customContextMenuRequested.connect(self.__contextMenu)
 
-        actionAll = QtGui.QAction(table)
-        actionAll.setText('Filter none')
-        actionAll.triggered.connect(self.on_all)
-        table.addAction(actionAll)
+    @QtCore.Slot(QtCore.QPoint)
+    def __contextMenu(self, pos):
+        style = self._table.style()
+        filters = len(self._model.get())
+        filtered = len(self._model.get_filtered())
 
-        actionNone = QtGui.QAction(table)
-        actionNone.setText('Filter all')
-        actionNone.triggered.connect(self.on_none)
-        table.addAction(actionNone)
+        self._menu = QtGui.QMenu()
 
-        actionInvert = QtGui.QAction(table)
+        actionNone = QtGui.QAction(self._table)
+        actionNone.setText('Filter none')
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogYesButton)
+        actionNone.setIcon(icon)
+        actionNone.triggered.connect(self.on_all)
+        self._menu.addAction(actionNone)
+        if not filtered:
+            actionNone.setEnabled(False)
+
+        actionAll = QtGui.QAction(self._table)
+        actionAll.setText('Filter all')
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogNoButton)
+        actionAll.setIcon(icon)
+        actionAll.triggered.connect(self.on_none)
+        self._menu.addAction(actionAll)
+        if filters == filtered:
+            actionAll.setEnabled(False)
+
+        actionInvert = QtGui.QAction(self._table)
         actionInvert.setText('Invert filters')
         actionInvert.triggered.connect(self.on_invert)
-        table.addAction(actionInvert)
+        self._menu.addAction(actionInvert)
+
+        if self._hasSelection is not None:
+            self._menu.addSeparator()
+            actionSelClear = QtGui.QAction(self._table)
+            actionSelClear.setText('Clear selection')
+            icon = style.standardIcon(QtGui.QStyle.SP_DialogResetButton)
+            actionSelClear.setIcon(icon)
+            actionSelClear.triggered.connect(self.on_selection_clear)
+            self._menu.addAction(actionSelClear)
+            actionSelClear.setEnabled(self._hasSelection())
+
+        self._menu.exec_(self._table.mapToGlobal(pos))
 
     @QtCore.Slot()
     def on_all(self):
@@ -68,6 +98,10 @@ class TableSelectionMenu(object):
                 filtered.append(value)
 
         self._model.set_filtered(filtered)
+
+    @QtCore.Slot()
+    def on_selection_clear(self):
+        self._table.clearSelection()
 
 
 def remove_context_help(dialog):

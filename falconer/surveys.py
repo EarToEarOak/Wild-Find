@@ -119,7 +119,7 @@ class WidgetSurveys(QtGui.QWidget):
 
 class ModelSurveys(QtCore.QAbstractTableModel):
     HEADER = [None, 'Name']
-    HEADER_TIPS = ['Filter', 'Survey Name']
+    HEADER_TIPS = ['Included', 'Survey name']
 
     def __init__(self, parent):
         QtCore.QAbstractTableModel.__init__(self)
