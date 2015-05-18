@@ -139,9 +139,6 @@ class WidgetSignals(QtGui.QWidget):
     def get_filters(self):
         return self._model.get_filters()
 
-    def set_filtered(self, filtered):
-        self._model.set_filtered(filtered)
-
     def get_filtered(self):
         return self._model.get_filtered()
 
@@ -153,9 +150,8 @@ class WidgetSignals(QtGui.QWidget):
 
 
 class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Freq', 'Rate', 'Seen']
-    HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
-                   'Pulse rate (PPM)', 'Total detections']
+    HEADER = [None, 'Freq', 'Seen']
+    HEADER_TIPS = ['Included', 'Signal frequency (MHz)', 'Total detections']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
@@ -186,8 +182,6 @@ class ModelSignals(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if index.column() == 1:
                 data = '{:8.4f}'.format(value / 1e6)
-            elif index.column() == 2:
-                data = '{:5.1f}'.format(value)
             elif index.column() != 0:
                 data = value
         elif role == QtCore.Qt.CheckStateRole:
@@ -227,16 +221,16 @@ class ModelSignals(QtCore.QAbstractTableModel):
     def set(self, signals):
         self.beginResetModel()
         del self._signals[:]
-        for frequency, rate, count in signals:
+        for frequency, count in signals:
             checked = QtCore.Qt.Checked
             if frequency in self._filtered:
                 checked = QtCore.Qt.Unchecked
-            self._signals.append([checked, frequency, rate, count])
+            self._signals.append([checked, frequency, count])
         self.endResetModel()
 
     def get(self):
         frequencies = [frequency for _check, frequency,
-                       _rate, _freq in self._signals]
+                       _freq in self._signals]
         return frequencies
 
     def get_all(self):
