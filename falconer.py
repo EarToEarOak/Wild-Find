@@ -23,6 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import argparse
 import os
 import sys
 
@@ -45,8 +46,9 @@ from falconer.utils_qt import remove_context_help
 
 
 class Falconer(QtGui.QMainWindow):
-    def __init__(self):
+    def __init__(self, args):
         QtGui.QMainWindow.__init__(self)
+        self._args = args
 
         self._mapLoaded = False
         self._fullScreen = False
@@ -207,6 +209,11 @@ class Falconer(QtGui.QMainWindow):
         self._mapLoaded = True
         self._widgetMap.set_units(self._settings.units)
         self.__set_controls()
+
+        fileName = self._args.file
+        if fileName is not None:
+            self._args.file = None
+            self.__open(fileName)
 
     @QtCore.Slot(object)
     def __on_signal_map_plotted(self, bounds):
@@ -399,10 +406,21 @@ class Falconer(QtGui.QMainWindow):
         self.setWindowTitle('Falconer')
 
 
+def __arguments():
+    parser = argparse.ArgumentParser(description='Falconer')
+    parser.add_argument("file", help='Database path', nargs='?', default=None)
+
+    args, unknown = parser.parse_known_args()
+
+    return args, unknown
+
+
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    args, argsApp = __arguments()
+
+    app = QtGui.QApplication(argsApp)
     settings = Settings()
     QtGui.QApplication.setStyle(settings.style)
-    mainWindow = Falconer()
+    mainWindow = Falconer(args)
     mainWindow.show()
     sys.exit(app.exec_())

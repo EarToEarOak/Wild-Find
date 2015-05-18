@@ -90,8 +90,7 @@ class Harrier(object):
         self.__close()
 
     def __arguments(self):
-        parser = argparse.ArgumentParser(description=
-                                         'Harrier Receiver',
+        parser = argparse.ArgumentParser(description='Harrier',
                                          formatter_class=
                                          argparse.ArgumentDefaultsHelpFormatter)
 
@@ -103,7 +102,7 @@ class Harrier(object):
                             default=os.path.expanduser("~/harrier.conf"))
         parser.add_argument("-t", "--test", help="Test mode",
                             action="store_true")
-        parser.add_argument("file", help='Database path', nargs='?',
+        parser.add_argument("file", help='File', nargs='?',
                             default=os.path.expanduser("~/harrier.wfh"))
 
         args = parser.parse_args()
