@@ -27,26 +27,48 @@ from PySide import QtCore, QtGui
 
 
 class TableSelectionMenu(object):
-    def __init__(self, table, model):
+    def __init__(self, table, model, addSelection=False):
         self._table = table
         self._model = model
 
-        table.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        style = table.style()
+
+        self._menu = QtGui.QMenu()
 
         actionAll = QtGui.QAction(table)
         actionAll.setText('Filter none')
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogYesButton)
+        actionAll.setIcon(icon)
         actionAll.triggered.connect(self.on_all)
-        table.addAction(actionAll)
+        self._menu.addAction(actionAll)
 
         actionNone = QtGui.QAction(table)
         actionNone.setText('Filter all')
+        icon = style.standardIcon(QtGui.QStyle.SP_DialogNoButton)
+        actionNone.setIcon(icon)
         actionNone.triggered.connect(self.on_none)
-        table.addAction(actionNone)
+        self._menu.addAction(actionNone)
 
         actionInvert = QtGui.QAction(table)
         actionInvert.setText('Invert filters')
         actionInvert.triggered.connect(self.on_invert)
-        table.addAction(actionInvert)
+        self._menu.addAction(actionInvert)
+
+        if addSelection:
+            self._menu.addSeparator()
+            actionSelClear = QtGui.QAction(table)
+            actionSelClear.setText('Clear selection')
+            icon = style.standardIcon(QtGui.QStyle.SP_DialogResetButton)
+            actionSelClear.setIcon(icon)
+            actionSelClear.triggered.connect(self.on_selection_clear)
+            self._menu.addAction(actionSelClear)
+
+        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        table.customContextMenuRequested.connect(self.__contextMenu)
+
+    @QtCore.Slot(QtCore.QPoint)
+    def __contextMenu(self, pos):
+        self._menu.exec_(self._table.mapToGlobal(pos))
 
     @QtCore.Slot()
     def on_all(self):
@@ -68,6 +90,10 @@ class TableSelectionMenu(object):
                 filtered.append(value)
 
         self._model.set_filtered(filtered)
+
+    @QtCore.Slot()
+    def on_selection_clear(self):
+        self._table.clearSelection()
 
 
 def remove_context_help(dialog):

@@ -56,7 +56,8 @@ class WidgetSignals(QtGui.QWidget):
         selection.selectionChanged.connect(self.__on_signal_select)
 
         self._contextMenu = TableSelectionMenu(self._tableSignals,
-                                               self._model)
+                                               self._model,
+                                               True)
 
         header = self._tableSignals.horizontalHeader()
         header.setResizeMode(QtGui.QHeaderView.Fixed)
@@ -153,7 +154,7 @@ class WidgetSignals(QtGui.QWidget):
 
 class ModelSignals(QtCore.QAbstractTableModel):
     HEADER = [None, 'Freq', 'Rate', 'Seen']
-    HEADER_TIPS = ['Filter', 'Signal Frequency (MHz)',
+    HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
                    'Pulse rate (PPM)', 'Total detections']
 
     def __init__(self):
