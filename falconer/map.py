@@ -46,9 +46,13 @@ class WidgetMap(QtGui.QWidget):
         self._url = QtCore.QUrl(url)
         self._retries = RETRIES
 
+        self._labelLoad = QtGui.QLabel('Loading...')
+
         self._webMap = QtWebKit.QWebView(self)
         self._webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self._webMap.setAcceptDrops(False)
+        self._webMap.setVisible(False)
+        self._webMap.loadFinished.connect(self.__on_load_finished)
 
         page = self._webMap.page()
         manager = page.networkAccessManager()
@@ -75,6 +79,7 @@ class WidgetMap(QtGui.QWidget):
 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
+        splitter.addWidget(self._labelLoad)
         splitter.addWidget(self._webMap)
         splitter.addWidget(self._inspector)
 
@@ -85,6 +90,11 @@ class WidgetMap(QtGui.QWidget):
         self.setLayout(layoutV)
 
         self._webMap.load(self._url)
+
+    @QtCore.Slot(bool)
+    def __on_load_finished(self, _loaded):
+        self._labelLoad.setVisible(False)
+        self._webMap.setVisible(True)
 
     @QtCore.Slot(QtNetwork.QNetworkReply)
     def __loaded(self, reply):
