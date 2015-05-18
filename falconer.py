@@ -185,12 +185,13 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def on_actionPreferences_triggered(self):
         dlg = DialogPreferences(self, self._settings)
-        dlg.show()
+        if dlg.exec_():
+            self._widgetMap.set_units(self._settings.units)
 
     @QtCore.Slot()
     def on_actionLog_triggered(self):
         dlg = DialogLog(self, self._database.get_logs())
-        dlg.show()
+        dlg.exec_()
 
     @QtCore.Slot()
     def on_actionFullscreen_triggered(self):
@@ -199,7 +200,13 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def on_actionAbout_triggered(self):
         dlg = DialogAbout(self)
-        dlg.show()
+        dlg.exec_()
+
+    @QtCore.Slot()
+    def __on_signal_map_loaded(self):
+        self._mapLoaded = True
+        self._widgetMap.set_units(self._settings.units)
+        self.__set_controls()
 
     @QtCore.Slot(object)
     def __on_signal_map_plotted(self, bounds):
@@ -209,11 +216,6 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def ___on_signal_map_cleared(self):
         self._widgetMap.clear_heatmap()
-
-    @QtCore.Slot()
-    def __on_signal_map_loaded(self):
-        self._mapLoaded = True
-        self.__set_controls()
 
     @QtCore.Slot()
     def __on_signal_map_colour(self):
@@ -299,6 +301,7 @@ class Falconer(QtGui.QMainWindow):
         if self._mapLoaded:
             self.actionOpen.setEnabled(True)
             self._menuRecent.setEnabled(True)
+            self.actionPreferences.setEnabled(True)
 
         enabled = False
         if self._database.isConnected():

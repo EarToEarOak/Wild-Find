@@ -304,7 +304,11 @@ function showHeatmap(show) {
 }
 
 function setOpacity(opacity) {
-	layerHeatmap.setOpacity(opacity)
+	layerHeatmap.setOpacity(opacity);
+}
+
+function setUnits(units){
+	controlScale.setUnits(units);
 }
 
 function follow() {

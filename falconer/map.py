@@ -151,6 +151,9 @@ class WidgetMap(QtGui.QWidget):
     def show_busy(self, show):
         self._controls.show_busy(show)
 
+    def set_units(self, units):
+        self._controls.set_units(units)
+
     def set_locations(self, locations):
         self.clear_locations()
         self._controls.set_locations(locations)
@@ -273,6 +276,9 @@ class WidgetMapControls(QtGui.QWidget):
     def transform_coords(self, xyz):
         return self._mapLink.transform_coords(xyz)
 
+    def set_units(self, units):
+        self._mapLink.set_units(units)
+
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
         self.follow()
@@ -338,6 +344,10 @@ class MapLink(QtCore.QObject):
     def get_layer(self):
         js = 'getLayer();'
         return self.__exec_js(js)
+
+    def set_units(self, units):
+        js = 'setUnits(\'{}\');'.format(units.lower())
+        self.__exec_js(js)
 
     def set_layer(self, layer):
         js = 'setLayer({});'.format(layer)

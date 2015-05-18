@@ -46,6 +46,11 @@ class DialogPreferences(QtGui.QDialog):
         index = ([name.lower() for name in styles]).index(style)
         self._comboStyles.setCurrentIndex(index)
 
+        units = ['Metric', 'Imperial', 'Nautical']
+        self._comboUnits.addItems(units)
+        index = ([unit.lower() for unit in units]).index(self._settings.units.lower())
+        self._comboUnits.setCurrentIndex(index)
+
     @QtCore.Slot(str)
     def on__comboStyles_activated(self, styleName):
         style = QtGui.QStyleFactory.create(styleName)
@@ -54,6 +59,7 @@ class DialogPreferences(QtGui.QDialog):
     @QtCore.Slot()
     def on__buttonBox_accepted(self):
         self._settings.style = self._comboStyles.currentText()
+        self._settings.units = self._comboUnits.currentText()
         self.accept()
 
 
