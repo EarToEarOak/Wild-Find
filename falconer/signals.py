@@ -111,12 +111,18 @@ class WidgetSignals(QtGui.QWidget):
     def select(self, frequencies):
         freqs = ['{:.4f}'.format(f / 1e6) for f in frequencies]
 
+        scroll = None
         self._tableSignals.clearSelection()
         for i in range(self._model.rowCount()):
             index = self._model.index(i, 1)
             if index.data() in freqs:
                 mapped = self._proxyModel.mapFromSource(index)
                 self._tableSignals.selectRow(mapped.row())
+                if scroll is None:
+                    scroll = mapped
+
+        if scroll is not None:
+            self._tableSignals.scrollTo(mapped)
 
     def set(self, signals):
         self._model.set(signals)
