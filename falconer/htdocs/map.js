@@ -91,6 +91,14 @@ dragBox = new ol.interaction.DragBox({
 	})
 });
 
+controlScale = new ol.control.ScaleLine();
+
+controlPos =  new ol.control.MousePosition({
+	coordinateFormat: ol.coordinate.createStringXY(5),
+	projection: 'EPSG:4326',
+	undefinedHTML: '&nbsp;'
+});
+
 function init() {
 	layers.push(new ol.layer.Tile({
 		name : 'MapQuest Satellite',
@@ -118,9 +126,8 @@ function init() {
 		source : new ol.source.OSM()
 	}));
 
-	controlScale = new ol.control.ScaleLine();
 	controls = ol.control.defaults();
-	controls.extend([ controlScale ]);
+	controls.extend([ controlScale, controlPos ]);
 
 	map = new ol.Map({
 		target : 'map',

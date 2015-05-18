@@ -1,4 +1,5 @@
 #map, #busy {
+	font-family: sans-serif;
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -14,4 +15,13 @@
 	right: 10px;
 	top: 10px;
     width: auto;
+}
+
+.ol-mouse-position {
+	font-size: 14px;
+	color: #333333;
+	text-align: center;
+	top: auto;
+	bottom: 10px;
+	width: 100%;
 }
