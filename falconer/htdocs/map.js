@@ -23,18 +23,22 @@
 
  */
 
-layers = [];
+"use strict";
 
-locations = new ol.source.Vector();
-track = new ol.source.Vector();
+var layers = [];
 
-view = new ol.View({
+var locations = new ol.source.Vector();
+var track = new ol.source.Vector();
+
+var view = new ol.View({
 	projection : 'EPSG:900913',
 	center : [ 0, 0 ],
 	zoom : 4
 });
 
-styleLocation = new ol.style.Style({
+var map;
+
+var styleLocation = new ol.style.Style({
 	image : new ol.style.Circle({
 		stroke : new ol.style.Stroke({
 			color : 'black',
@@ -48,7 +52,7 @@ styleLocation = new ol.style.Style({
 	})
 });
 
-styleLocationSelect = new ol.style.Style({
+var styleLocationSelect = new ol.style.Style({
 	image : new ol.style.Circle({
 		stroke : new ol.style.Stroke({
 			color : 'black',
@@ -62,12 +66,12 @@ styleLocationSelect = new ol.style.Style({
 	})
 });
 
-layerLocations = new ol.layer.Vector({
+var layerLocations = new ol.layer.Vector({
 	source : locations,
 	style : styleLocation
 });
 
-layerTrack = new ol.layer.Vector({
+var layerTrack = new ol.layer.Vector({
 	source : track,
 	style : new ol.style.Style({
 		stroke : new ol.style.Stroke({
@@ -77,11 +81,11 @@ layerTrack = new ol.layer.Vector({
 	})
 });
 
-layerHeatmap = new ol.layer.Image({
+var layerHeatmap = new ol.layer.Image({
 	opacity : 0.6
-})
+});
 
-dragBox = new ol.interaction.DragBox({
+var dragBox = new ol.interaction.DragBox({
 	condition : ol.events.condition.shiftKeyOnly,
 	layers : [ layerLocations ],
 	style : new ol.style.Style({
@@ -91,12 +95,12 @@ dragBox = new ol.interaction.DragBox({
 	})
 });
 
-controlScale = new ol.control.ScaleLine();
+var controlScale = new ol.control.ScaleLine();
 
-controlPos =  new ol.control.MousePosition({
-	coordinateFormat: ol.coordinate.createStringXY(5),
-	projection: 'EPSG:4326',
-	undefinedHTML: '&nbsp;'
+var controlPos = new ol.control.MousePosition({
+	coordinateFormat : ol.coordinate.createStringXY(5),
+	projection : 'EPSG:4326',
+	undefinedHTML : '&nbsp;'
 });
 
 function init() {
@@ -126,7 +130,7 @@ function init() {
 		source : new ol.source.OSM()
 	}));
 
-	controls = ol.control.defaults();
+	var controls = ol.control.defaults();
 	controls.extend([ controlScale, controlPos ]);
 
 	map = new ol.Map({
@@ -136,9 +140,12 @@ function init() {
 		controls : controls
 	});
 
-	map.addLayer(layerHeatmap)
-	map.addLayer(layerTrack)
-	map.addLayer(layerLocations)
+
+	map.addLayer(layerHeatmap);
+	map.addLayer(layerTrack);
+	map.addLayer(layerLocations);
+
+	map.setView(view);
 
 	map.addInteraction(dragBox);
 	dragBox.on('boxend', selectLocations);
@@ -168,7 +175,7 @@ function _sendLayerNames() {
 	if (typeof mapLink === "undefined")
 		return;
 
-	names = [];
+	var names = [];
 
 	for (var i = 0; i < layers.length; i++)
 		names.push(layers[i].get('name'));
@@ -191,29 +198,29 @@ function setLayer(index) {
 	layers[index].setVisible(true);
 }
 
-function setUnits(units){
+function setUnits(units) {
 	controlScale.setUnits(units);
 }
 
 function setHeatmap(north, south, east, west) {
-	extent = [ west, south, east, north ]
+	var extent = [ west, south, east, north ];
 
-	loadFunction = function(image, src) {
-		element = image.getImage();
+	var loadFunction = function(image, src) {
+		var element = image.getImage();
 		element.src = src;
 		element.onload = function() {
 			showBusy(false);
 		};
-	}
+	};
 
-	url = '/heatmap.png?a=' + Math.random() * 1000000;
-	source = new ol.source.ImageStatic({
+	var url = '/heatmap.png?a=' + Math.random() * 1000000;
+	var source = new ol.source.ImageStatic({
 		url : url,
 		imageExtent : extent,
 		imageLoadFunction : loadFunction
 	});
 
-	layerHeatmap.setSource(source)
+	layerHeatmap.setSource(source);
 }
 
 function setHeatmapOpacity(opacity) {
@@ -221,18 +228,19 @@ function setHeatmapOpacity(opacity) {
 }
 
 function addLocation(freq, lon, lat) {
-	point = new ol.geom.Point([ lon, lat ]);
+	var point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
-	coord = ol.proj.transform([ lon, lat ], 'EPSG:4326', 'EPSG:900913');
 
-	feature = new ol.Feature({
+	var coord = ol.proj.transform([ lon, lat ], 'EPSG:4326', 'EPSG:900913');
+
+	var feature = new ol.Feature({
 		name : freq,
 		geometry : point
 	});
 	locations.addFeature(feature);
 
-	line = track.getFeatures();
-	if (line.length == 0) {
+	var line = track.getFeatures();
+	if (line.length === 0) {
 		feature = new ol.Feature({
 			geometry : new ol.geom.LineString([], 'XY')
 		});
@@ -243,15 +251,15 @@ function addLocation(freq, lon, lat) {
 }
 
 function selectLocations() {
-	frequencies = []
+	var frequencies = [];
 
-	extent = dragBox.getGeometry().getExtent();
-	source = layerLocations.getSource();
+	var extent = dragBox.getGeometry().getExtent();
+	var source = layerLocations.getSource();
 
 	source.forEachFeature(function(feature) {
-		coords = feature.getGeometry().getCoordinates();
+		var coords = feature.getGeometry().getCoordinates();
 		if (ol.extent.containsCoordinate(extent, coords)) {
-			frequencies.push(feature.get('name'))
+			frequencies.push(feature.get('name'));
 			feature.setStyle(styleLocationSelect);
 		} else
 			feature.setStyle(styleLocation);
@@ -261,7 +269,8 @@ function selectLocations() {
 }
 
 function selectLocation(freq, selected) {
-	source = layerLocations.getSource();
+	var source = layerLocations.getSource();
+
 	source.forEachFeature(function(feature) {
 		if (feature.get('name') == freq)
 			if (selected) {
@@ -279,14 +288,13 @@ function clearLocations() {
 	track.clear();
 }
 
-
 function clearHeatmap() {
-	layerHeatmap.setSource(null)
+	layerHeatmap.setSource(null);
 	showBusy(false);
 }
 
 function showBusy(show) {
-	display = 'none';
+	var display = 'none';
 	if (show)
 		display = 'block';
 
@@ -306,14 +314,15 @@ function showHeatmap(show) {
 }
 
 function follow() {
+	var extent = locations.getExtent();
+
 	_setListeners(false);
-	extent = locations.getExtent();
 	view.fitExtent(extent, map.getSize());
 	_setListeners(true);
 }
 
 function transformCoord(lon, lat) {
-	point = new ol.geom.Point([ lon, lat ]);
+	var point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
 
 	return point.getCoordinates();
