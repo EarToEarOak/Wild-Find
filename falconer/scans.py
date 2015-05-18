@@ -95,6 +95,7 @@ class WidgetScans(QtGui.QWidget):
 
 class ModelScans(QtCore.QAbstractTableModel):
     HEADER = [None, 'Time', 'Freq']
+    HEADER_TIPS = ['Filter', 'Scan time', 'Scan frequency (MHz)']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
@@ -112,6 +113,9 @@ class ModelScans(QtCore.QAbstractTableModel):
     def headerData(self, col, orientation, role):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
             return self.HEADER[col]
+        elif role == QtCore.Qt.ToolTipRole:
+            return self.HEADER_TIPS[col]
+
         return None
 
     def data(self, index, role):

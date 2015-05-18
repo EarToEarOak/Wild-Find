@@ -119,6 +119,7 @@ class WidgetSurveys(QtGui.QWidget):
 
 class ModelSurveys(QtCore.QAbstractTableModel):
     HEADER = [None, 'Name']
+    HEADER_TIPS = ['Filter', 'Survey Name']
 
     def __init__(self, parent):
         QtCore.QAbstractTableModel.__init__(self)
@@ -137,6 +138,9 @@ class ModelSurveys(QtCore.QAbstractTableModel):
     def headerData(self, col, orientation, role):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
             return self.HEADER[col]
+        elif role == QtCore.Qt.ToolTipRole:
+            return self.HEADER_TIPS[col]
+
         return None
 
     def data(self, index, role):

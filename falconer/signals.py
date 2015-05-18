@@ -147,6 +147,8 @@ class WidgetSignals(QtGui.QWidget):
 
 class ModelSignals(QtCore.QAbstractTableModel):
     HEADER = [None, 'Freq', 'Rate', 'Seen']
+    HEADER_TIPS = ['Filter', 'Signal Frequency (MHz)',
+                   'Pulse rate (PPM)', 'Total detections']
 
     def __init__(self):
         QtCore.QAbstractTableModel.__init__(self)
@@ -165,6 +167,9 @@ class ModelSignals(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return self.HEADER[col]
+        elif role == QtCore.Qt.ToolTipRole:
+            return self.HEADER_TIPS[col]
+
         return None
 
     def data(self, index, role):
