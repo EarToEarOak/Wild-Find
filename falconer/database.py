@@ -131,16 +131,17 @@ class Database():
 
         cursor = self._conn.cursor()
 
-        cmd = 'select Freq, count(Freq) from Signals'
+        cmd = 'select Freq, Rate, count(Freq) from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
                              filteredSignals)
-        cmd += 'group by Freq'
+        cmd += 'group by Freq, Rate'
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Freq'], row['count(Freq)']] for row in rows]
+        signals = [[row['Freq'], row['Rate'], row['count(Freq)']]
+                   for row in rows]
 
         return signals
 
