@@ -59,9 +59,6 @@ class WidgetSignals(QtGui.QWidget):
                                                self._model,
                                                self.hasSelection)
 
-        header = self._tableSignals.horizontalHeader()
-        header.setResizeMode(QtGui.QHeaderView.Fixed)
-
         self.__set_width()
 
         palette = self.palette()
@@ -135,6 +132,12 @@ class WidgetSignals(QtGui.QWidget):
 
         self._tableSignals.setEnabled(True)
         self._buttonHistogram.setEnabled(True)
+
+    def set_font(self, font):
+        newFont = QtGui.QFont()
+        newFont.fromString(font)
+        self._tableSignals.setFont(newFont)
+        self._tableSignals.resizeColumnsToContents()
 
     def get(self):
         return self._model.get()

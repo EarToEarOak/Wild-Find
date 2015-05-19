@@ -43,6 +43,8 @@ class Settings(object):
 
         self.units = 'metric'
 
+        self.fontList = None
+
         self.heatmapColour = 'jet'
 
         self.__load()
@@ -77,6 +79,7 @@ class Settings(object):
         self.dirExport = settings.value('dirExport', self.dirExport)
         self.dirFile = settings.value('dirFile', self.dirFile)
         self.units = settings.value('units', self.units)
+        self.fontList = settings.value('fontList', self.fontList)
         self.heatmapColour = settings.value('heatmapColour',
                                             self.heatmapColour)
 
@@ -100,6 +103,7 @@ class Settings(object):
         settings.setValue('dirFile', self.dirFile)
         settings.setValue('dirExport', self.dirExport)
         settings.setValue('units', self.units)
+        settings.setValue('fontList', self.fontList)
         settings.setValue('heatmapColour', self.heatmapColour)
 
         if self._parent is not None:

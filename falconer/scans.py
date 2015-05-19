@@ -46,9 +46,6 @@ class WidgetScans(QtGui.QWidget):
         self._contextMenu = TableSelectionMenu(self._tableScans,
                                                self._model)
 
-        header = self._tableScans.horizontalHeader()
-        header.setResizeMode(QtGui.QHeaderView.Fixed)
-
         self.__set_width()
 
     def __set_width(self):
@@ -79,6 +76,12 @@ class WidgetScans(QtGui.QWidget):
 
         self._tableScans.setEnabled(True)
         self._buttonRange.setEnabled(True)
+
+    def set_font(self, font):
+        newFont = QtGui.QFont()
+        newFont.fromString(font)
+        self._tableScans.setFont(newFont)
+        self._tableScans.resizeColumnsToContents()
 
     def get(self):
         return self._model.get()

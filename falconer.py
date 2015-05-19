@@ -85,13 +85,14 @@ class Falconer(QtGui.QMainWindow):
         self._printer = QtGui.QPrinter()
         self._printer.setCreator('Falconer')
 
-        self.__setup_icons()
+        self.__set_icons()
+        self.__set_fonts()
 
         self.setAcceptDrops(True)
 
         self._statusbar.showMessage('Ready')
 
-    def __setup_icons(self):
+    def __set_icons(self):
         style = self.style()
 
         icon = style.standardIcon(QtGui.QStyle.SP_DialogSaveButton)
@@ -108,6 +109,14 @@ class Falconer(QtGui.QMainWindow):
 
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxInformation)
         self.actionAbout.setIcon(icon)
+
+    def __set_fonts(self):
+        if self._settings.fontList is None:
+            self._settings.fontList = self._widgetSurveys.get_font()
+
+        self._widgetSurveys.set_font(self._settings.fontList)
+        self._widgetScans.set_font(self._settings.fontList)
+        self._widgetSignals.set_font(self._settings.fontList)
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
@@ -189,6 +198,7 @@ class Falconer(QtGui.QMainWindow):
         dlg = DialogPreferences(self, self._settings)
         if dlg.exec_():
             self._widgetMap.set_units(self._settings.units)
+            self.__set_fonts()
 
     @QtCore.Slot()
     def on_actionLog_triggered(self):

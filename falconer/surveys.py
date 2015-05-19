@@ -48,9 +48,6 @@ class WidgetSurveys(QtGui.QWidget):
         self._contextMenu = TableSelectionMenu(self._tableSurveys,
                                                self._model)
 
-        header = self._tableSurveys.horizontalHeader()
-        header.setResizeMode(QtGui.QHeaderView.Fixed)
-
         self.__set_width()
 
     def __set_width(self):
@@ -104,11 +101,20 @@ class WidgetSurveys(QtGui.QWidget):
         self._tableSurveys.setEnabled(True)
         self._comboSurveys.setEnabled(True)
 
+    def set_font(self, font):
+        newFont = QtGui.QFont()
+        newFont.fromString(font)
+        self._tableSurveys.setFont(newFont)
+        self._tableSurveys.resizeColumnsToContents()
+
     def get(self):
-        return self._model.get()
+        return self._model
 
     def get_filtered(self):
         return self._model.get_filtered()
+
+    def get_font(self):
+        return self._tableSurveys.font().toString()
 
     def clear(self):
         self._model.set([])

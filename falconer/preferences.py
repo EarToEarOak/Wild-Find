@@ -48,19 +48,37 @@ class DialogPreferences(QtGui.QDialog):
 
         units = ['Metric', 'Imperial', 'Nautical']
         self._comboUnits.addItems(units)
-        index = ([unit.lower() for unit in units]).index(self._settings.units.lower())
+        index = ([unit.lower()
+                  for unit in units]).index(self._settings.units.lower())
         self._comboUnits.setCurrentIndex(index)
+
+        self._font = QtGui.QFont()
+        self._font.fromString(settings.fontList)
+        self._buttonFont.setText(self.__font_name())
 
     @QtCore.Slot(str)
     def on__comboStyles_activated(self, styleName):
         style = QtGui.QStyleFactory.create(styleName)
         QtGui.QApplication.setStyle(style)
 
+    @QtCore.Slot(bool)
+    def on__buttonFont_clicked(self, _clicked):
+        font, ok = QtGui.QFontDialog.getFont(self._font, self)
+        if ok:
+            self._font = font
+            self._buttonFont.setText(self.__font_name())
+
     @QtCore.Slot()
     def on__buttonBox_accepted(self):
         self._settings.style = self._comboStyles.currentText()
         self._settings.units = self._comboUnits.currentText()
+        self._settings.fontList = self._font.toString()
+
         self.accept()
+
+    def __font_name(self):
+        desc = self._font.toString().split(',')[0:2]
+        return '{} {}pt'.format(*desc)
 
 
 if __name__ == '__main__':
