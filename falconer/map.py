@@ -27,9 +27,10 @@
 import json
 
 from PySide import QtGui, QtWebKit, QtCore, QtNetwork
+from matplotlib import cm
 
 from falconer import server, ui
-from matplotlib import cm
+from falconer.utils import add_program_path
 
 
 RETRY_TIME = 2000
@@ -46,7 +47,14 @@ class WidgetMap(QtGui.QWidget):
         self._url = QtCore.QUrl(url)
         self._retries = RETRIES
 
-        self._labelLoad = QtGui.QLabel('Loading...')
+        self._labelLoad = QtGui.QLabel()
+        self._labelLoad.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                      QtGui.QSizePolicy.Expanding)
+        self._labelLoad.setAlignment(QtCore.Qt.AlignCenter)
+        anim = add_program_path('falconer/ui/loader.gif')
+        movie = QtGui.QMovie(anim)
+        self._labelLoad.setMovie(movie)
+        movie.start()
 
         self._webMap = QtWebKit.QWebView(self)
         self._webMap.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
