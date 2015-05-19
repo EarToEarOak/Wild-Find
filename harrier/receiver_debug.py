@@ -328,10 +328,11 @@ def main(argList=None):
     # Analyse capture
     blockNum = 0
     for samples in source:
-        if args.block > 0 and args.block != blockNum + 1:
+        blockNum += 1
+        if args.block > 0 and args.block != blockNum:
             continue
 
-        print 'Block {}'.format(blockNum + 1)
+        print 'Block {}'.format(blockNum)
 
         scan = Scan(fs, samples, timing)
         frequencies = scan.search()
@@ -368,7 +369,7 @@ def main(argList=None):
 
         # Plot results
         ax = plt.subplot(111)
-        plt.title('Block {}'.format(blockNum + 1))
+        plt.title('Block {}'.format(blockNum))
         plt.xlabel('Time (s)')
         plt.ylabel('Level')
         plt.grid()
@@ -393,7 +394,6 @@ def main(argList=None):
         _selector = RectangleSelector(ax, selection_time,
                                       drawtype='box', useblit=True)
         plt.show()
-        blockNum += 1
 
     print 'Done'
 
