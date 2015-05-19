@@ -25,6 +25,7 @@
 
 import argparse
 import os
+import socket
 import sys
 
 from PySide import QtGui, QtCore
@@ -79,7 +80,9 @@ class Falconer(QtGui.QMainWindow):
         self._heatMap = HeatMap(self, self._settings,
                                 self.__on_signal_map_plotted,
                                 self.__on_signal_map_cleared)
-        self._server = Server(self._heatMap.get_file())
+
+        self._server = None
+        self.__start_server()
         self._database = Database()
 
         self._printer = QtGui.QPrinter()
@@ -117,6 +120,13 @@ class Falconer(QtGui.QMainWindow):
         self._widgetSurveys.set_font(self._settings.fontList)
         self._widgetScans.set_font(self._settings.fontList)
         self._widgetSignals.set_font(self._settings.fontList)
+
+    def __start_server(self):
+        try:
+            self._server = Server(self._heatMap.get_file())
+        except socket.error:
+            self.close()
+            exit(1)
 
     @QtCore.Slot()
     def on_actionNew_triggered(self):
@@ -298,7 +308,8 @@ class Falconer(QtGui.QMainWindow):
         self._fullScreen = True
         self.__fullscreen()
         self._settings.close()
-        self._server.close()
+        if self._server is not None:
+            self._server.close()
 
     def __fullscreen(self):
         self._statusbar.setVisible(self._fullScreen)

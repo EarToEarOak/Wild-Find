@@ -48,7 +48,7 @@ class Server(object):
 
 
 class ThreadedServer(ThreadingMixIn, HTTPServer):
-    pass
+    allow_reuse_address = False
 
 
 class Handler(BaseHTTPRequestHandler):
