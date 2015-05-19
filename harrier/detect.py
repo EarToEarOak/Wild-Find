@@ -23,6 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import itertools
+import operator
+
 import numpy
 
 from harrier import collar
@@ -47,6 +50,10 @@ class Detect(object):
     TONES = [260]
     # Tolerance of AM tones (%)
     TONE_TOL = 10
+    # Tolerance of ghosts (Hz)
+    GHOST_RATE_TOL = 5
+    # Correlation of ghosts (%)
+    GHOST_CORR = 75
 
     def __init__(self, fs, samples, frequencies, timing=None, debug=None):
         self._fs = fs
@@ -57,7 +64,7 @@ class Detect(object):
         self._debug = debug
 
     # Get levels of each frequency
-    def filter_frequencies(self, freqBins, magnitudes):
+    def __filter_frequencies(self, freqBins, magnitudes):
         levels = []
 
         for freq in self._frequencies:
@@ -314,7 +321,7 @@ class Detect(object):
             fft = numpy.fft.fft(chunk) / Detect.DEMOD_BINS
             mags = numpy.absolute(fft)
             freqBins = numpy.fft.fftfreq(Detect.DEMOD_BINS, 1. / self._fs)
-            levels = self.filter_frequencies(freqBins, mags)
+            levels = self.__filter_frequencies(freqBins, mags)
             signals[chunkNum] = levels
 
             if self._timing is not None:
@@ -325,9 +332,56 @@ class Detect(object):
 
         return signals
 
+    def __correlate(self, a, v):
+        # Normalise
+        if self._timing is not None:
+            self._timing.start('Correl')
+        a = (a - numpy.mean(a)) / (numpy.std(a) * len(a))
+        v = (v - numpy.mean(v)) / numpy.std(v)
+        corr = numpy.correlate(a, v)
+        if self._timing is not None:
+            self._timing.stop()
+
+        return corr[0] > (self.GHOST_CORR / 100.)
+
+    def __remove_ghosts(self, signals, detected):
+        if len(detected) < 2:
+            return
+
+        # Split into groups based on rate
+        rates = [collar.rate for collar in detected]
+        rates.sort()
+        df = numpy.diff(rates)
+        pos = numpy.where(df > self.GHOST_RATE_TOL)[0] + 1
+        groups = numpy.split(rates, pos)
+
+        # Try all combinations
+        toRemove = []
+        for group in groups:
+            collars = [collar for collar in detected
+                       if collar.rate in group]
+            collars.sort(key=operator.attrgetter('level'), reverse=True)
+            combinations = itertools.combinations(collars, 2)
+            for combo in combinations:
+                # Test if signals correlate
+                corr = self.__correlate(signals[combo[0].signalNum],
+                                        signals[combo[1].signalNum])
+                if corr:
+                    toRemove.append(combo[1])
+
+        toRemove = set(toRemove)
+        for collar in toRemove:
+            detected.remove(collar)
+
+        if self._debug is not None and self._debug.verbose:
+            print '\tRemoved {} ghosts'.format(len(toRemove))
+
     def search(self):
         signals = self.__demod()
-        return self.__detect(signals)
+        detected = self.__detect(signals)
+        self.__remove_ghosts(signals, detected)
+
+        return detected
 
     def get_signals(self):
         return self._signals
