@@ -61,8 +61,10 @@ class Falconer(QtGui.QMainWindow):
 
         ui.loadUi(self, 'falconer.ui')
 
+        self.splitter.splitterMoved.connect(self.__on_splitter_moved)
         self.splitter.setCollapsible(1, True)
         self.splitter.setCollapsible(2, True)
+        self.splitter.setCollapsible(3, True)
 
         self._settings = Settings(self,
                                   self._menubar,
@@ -90,6 +92,7 @@ class Falconer(QtGui.QMainWindow):
 
         self.__set_icons()
         self.__set_fonts()
+        self.__set_table_view()
 
         self.setAcceptDrops(True)
 
@@ -216,6 +219,24 @@ class Falconer(QtGui.QMainWindow):
             self._widgetMap.set_units(self._settings.units)
             self.__set_fonts()
 
+    @QtCore.Slot(bool)
+    def on_actionViewSurveys_triggered(self, checked):
+        sizes = self.splitter.sizes()
+        sizes[1] = 9999 * checked
+        self.splitter.setSizes(sizes)
+
+    @QtCore.Slot(bool)
+    def on_actionViewScans_triggered(self, checked):
+        sizes = self.splitter.sizes()
+        sizes[2] = 9999 * checked
+        self.splitter.setSizes(sizes)
+
+    @QtCore.Slot(bool)
+    def on_actionViewSignals_triggered(self, checked):
+        sizes = self.splitter.sizes()
+        sizes[3] = 9999 * checked
+        self.splitter.setSizes(sizes)
+
     @QtCore.Slot()
     def on_actionLog_triggered(self):
         dlg = DialogLog(self, self._database.get_logs())
@@ -229,6 +250,10 @@ class Falconer(QtGui.QMainWindow):
     def on_actionAbout_triggered(self):
         dlg = DialogAbout(self)
         dlg.exec_()
+
+    @QtCore.Slot()
+    def __on_splitter_moved(self, pos, index):
+        self.__set_table_view()
 
     @QtCore.Slot()
     def __on_signal_map_loaded(self):
@@ -347,6 +372,12 @@ class Falconer(QtGui.QMainWindow):
         self.actionClose.setEnabled(enabled)
 
         self.actionLog.setEnabled(enabled)
+
+    def __set_table_view(self):
+        sizes = self.splitter.sizes()
+        self.actionViewSurveys.setChecked(sizes[1] != 0)
+        self.actionViewScans.setChecked(sizes[2] != 0)
+        self.actionViewSignals.setChecked(sizes[3] != 0)
 
     def __file_warn(self):
         if self._database.isConnected():

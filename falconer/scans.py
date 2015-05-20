@@ -42,13 +42,14 @@ class WidgetScans(QtGui.QWidget):
         proxyModel.setSourceModel(self._model)
 
         self._tableScans.setModel(proxyModel)
-        self._tableScans.resizeColumnsToContents()
         self._contextMenu = TableSelectionMenu(self._tableScans,
                                                self._model)
 
         self.__set_width()
 
     def __set_width(self):
+        self._tableScans.resizeColumnsToContents()
+
         margins = self.layout().contentsMargins()
         width = self._tableScans.verticalHeader().width()
         width += self._tableScans.horizontalHeader().length()
@@ -81,7 +82,7 @@ class WidgetScans(QtGui.QWidget):
         newFont = QtGui.QFont()
         newFont.fromString(font)
         self._tableScans.setFont(newFont)
-        self._tableScans.resizeColumnsToContents()
+        self.__set_width()
 
     def get(self):
         return self._model.get()

@@ -44,13 +44,14 @@ class WidgetSurveys(QtGui.QWidget):
         proxyModel.setSourceModel(self._model)
 
         self._tableSurveys.setModel(proxyModel)
-        self._tableSurveys.resizeColumnsToContents()
         self._contextMenu = TableSelectionMenu(self._tableSurveys,
                                                self._model)
 
         self.__set_width()
 
     def __set_width(self):
+        self._tableSurveys.resizeColumnsToContents()
+
         margins = self.layout().contentsMargins()
         width = self._tableSurveys.verticalHeader().width()
         width += self._tableSurveys.horizontalHeader().length()
@@ -105,7 +106,7 @@ class WidgetSurveys(QtGui.QWidget):
         newFont = QtGui.QFont()
         newFont.fromString(font)
         self._tableSurveys.setFont(newFont)
-        self._tableSurveys.resizeColumnsToContents()
+        self.__set_width()
 
     def get(self):
         return self._model

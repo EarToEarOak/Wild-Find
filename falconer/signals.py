@@ -50,7 +50,6 @@ class WidgetSignals(QtGui.QWidget):
         self._proxyModel.setSourceModel(self._model)
 
         self._tableSignals.setModel(self._proxyModel)
-        self._tableSignals.resizeColumnsToContents()
 
         selection = self._tableSignals.selectionModel()
         selection.selectionChanged.connect(self.__on_signal_select)
@@ -68,6 +67,8 @@ class WidgetSignals(QtGui.QWidget):
         self.setPalette(palette)
 
     def __set_width(self):
+        self._tableSignals.resizeColumnsToContents()
+
         margins = self.layout().contentsMargins()
         width = self._tableSignals.verticalHeader().width()
         width += self._tableSignals.horizontalHeader().length()
@@ -137,7 +138,7 @@ class WidgetSignals(QtGui.QWidget):
         newFont = QtGui.QFont()
         newFont.fromString(font)
         self._tableSignals.setFont(newFont)
-        self._tableSignals.resizeColumnsToContents()
+        self.__set_width()
 
     def get(self):
         return self._model.get()
