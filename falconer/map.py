@@ -339,7 +339,6 @@ class MapLink(QtCore.QObject):
         self._signal.colour.connect(colour)
         self._signal.selected.connect(selected)
 
-
     def get_layer(self):
         js = 'getLayer();'
         return self.__exec_js(js)
@@ -383,7 +382,6 @@ class MapLink(QtCore.QObject):
         js = 'clearHeatmap();'
         self.__exec_js(js)
 
-
     def show_locations(self, show):
         js = 'showLocations({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
@@ -399,7 +397,6 @@ class MapLink(QtCore.QObject):
     def show_busy(self, show):
         js = 'showBusy({});'.format(self.__bool_to_js(show))
         self.__exec_js(js)
-
 
     def follow(self):
         js = 'follow();'

@@ -31,6 +31,7 @@ class TableSelectionMenu(object):
         self._table = table
         self._model = model
         self._hasSelection = hasSelection
+        self._menu = None
 
         table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         table.customContextMenuRequested.connect(self.__contextMenu)

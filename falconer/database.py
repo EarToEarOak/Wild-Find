@@ -30,8 +30,7 @@ import sqlite3
 from common.database import create_database, name_factory
 
 
-
-class Database():
+class Database(object):
     def __init__(self):
         self._fileName = None
         self._conn = None
