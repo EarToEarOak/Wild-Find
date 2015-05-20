@@ -353,7 +353,6 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def set_locations(self, locations):
-        
         for location in locations:
             js = ('addLocation('
                   '"{:.99g}", "{:3.1f}", "{:2.1f}",'
