@@ -220,7 +220,6 @@ function _popup(event) {
 			return self.indexOf(item) == pos;
 		});
 		sigList.sort();
-		console.log(sigList);
 
 		var info = '<h4>Location</h4>';
 		info += location;
