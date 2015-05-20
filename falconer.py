@@ -95,6 +95,8 @@ class Falconer(QtGui.QMainWindow):
 
         self._statusbar.showMessage('Ready')
 
+        self.show()
+
     def __set_icons(self):
         style = self.style()
 
@@ -125,6 +127,10 @@ class Falconer(QtGui.QMainWindow):
         try:
             self._server = Server(self._heatMap.get_file())
         except socket.error:
+            QtGui.QMessageBox.warning(self, 'Warning',
+                                      'Falconer is already running',
+                                      QtGui.QMessageBox.Ok)
+
             self.close()
             exit(1)
 
@@ -332,7 +338,7 @@ class Falconer(QtGui.QMainWindow):
             self.actionPreferences.setEnabled(True)
 
         enabled = False
-        if self._database.isConnected():
+        if self._database is not None and self._database.isConnected():
             enabled = True
 
         self.actionExportPdf.setEnabled(enabled)
@@ -443,5 +449,4 @@ if __name__ == '__main__':
     settings = Settings()
     QtGui.QApplication.setStyle(settings.style)
     mainWindow = Falconer(args)
-    mainWindow.show()
     sys.exit(app.exec_())
