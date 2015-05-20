@@ -349,12 +349,15 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def set_units(self, units):
-        js = 'setUnits(\'{}\');'.format(units.lower())
+        js = 'setUnits("{}");'.format(units.lower())
         self.__exec_js(js)
 
     def set_locations(self, locations):
+        
         for location in locations:
-            js = 'addLocation(\'{:.99g}\', {}, {});'.format(*location)
+            js = ('addLocation('
+                  '"{:.99g}", "{:3.1f}", "{:2.1f}",'
+                  '{}, {});').format(*location)
             self.__exec_js(js)
 
     def set_heatmap_opacity(self, opacity):
@@ -369,8 +372,8 @@ class MapLink(QtCore.QObject):
         for signal in signals:
             freq = signal[0]
             selected = self.__bool_to_js(signal[1])
-            js = 'selectLocation(\'{:.99g}\', {})'.format(freq,
-                                                          selected)
+            js = 'selectLocation("{:.99g}", {})'.format(freq,
+                                                        selected)
             self.__exec_js(js)
 
     def clear_locations(self):

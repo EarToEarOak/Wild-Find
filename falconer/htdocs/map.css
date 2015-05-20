@@ -37,3 +37,27 @@
 	margin-top: 5px;
 	margin-bottom: 2px;
 }
+
+.SigTable {
+	border: 1px solid #DDDDDD;
+	border-collapse: collapse;
+}
+
+.SigTable th {
+	text-align: center;
+	border-left: 1px solid #DDDDDD;
+	border-right: 1px solid #DDDDDD;
+	border-bottom: 1px solid #DDDDDD;
+}
+
+.SigTable td {
+	text-align: right;
+	border-left: 1px solid #DDDDDD;
+	border-right: 1px solid #DDDDDD;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.SigTable tr:nth-child(odd) {
+	background: #DDDDDD;
+}

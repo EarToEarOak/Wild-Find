@@ -23,10 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import math
 import os
 import sqlite3
 
 from common.database import create_database, name_factory
+
 
 
 class Database():
@@ -131,7 +133,7 @@ class Database():
 
         cursor = self._conn.cursor()
 
-        cmd = 'select Freq, count(Freq) from Signals'
+        cmd = 'select Freq, Rate, count(Freq) from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
@@ -140,7 +142,7 @@ class Database():
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Freq'], row['count(Freq)']]
+        signals = [[row['Freq'], row['Rate'], row['count(Freq)']]
                    for row in rows]
 
         return signals
@@ -150,7 +152,7 @@ class Database():
             return []
 
         cursor = self._conn.cursor()
-        cmd = 'select Id, Freq, Lon, Lat from Signals'
+        cmd = 'select Id, Freq, Rate, Level, Lon, Lat from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
@@ -159,7 +161,12 @@ class Database():
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Freq'], row['Lon'], row['Lat']] for row in rows]
+        for row in rows:
+            row['Level'] = 10 * math.log(row['Level'])
+
+        signals = [[row['Freq'], row['Rate'], row['Level'],
+                    row['Lon'], row['Lat']]
+                   for row in rows]
 
         return signals
 

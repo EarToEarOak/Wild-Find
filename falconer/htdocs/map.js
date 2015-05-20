@@ -211,21 +211,38 @@ function _popup(event) {
 		var location = ol.coordinate.toStringXY(coordsFeature, 5);
 
 		var frequencies = [];
-		for (var i = 0; i < features.length; i++)
-			frequencies.push(features[i].get('name'));
-		var freqList = frequencies.filter(function(item, pos, self) {
+		for (var i = 0; i < features.length; i++) {
+			var feature = features[i];
+			frequencies.push([ feature.get('name'), feature.get('rate'),
+					feature.get('level') ]);
+		}
+		var sigList = frequencies.filter(function(item, pos, self) {
 			return self.indexOf(item) == pos;
 		});
-		freqList.sort();
+		sigList.sort();
+		console.log(sigList);
 
 		var info = '<h4>Location</h4>';
 		info += location;
 		info += '<h4>Signals</h4>';
-		for (var i = 0; i < freqList.length; i++) {
-			var freq = freqList[i] / 1000000;
+		info += '<table class="SigTable">';
+		info += '<tr>';
+		info += '<th>Freq<br/>(MHz)</th>';
+		info += '<th>Rate<br/>(PPM)</th>';
+		info += '<th>Level<br/>(dB)</th>';
+		info += '</tr>';
+		for (var i = 0; i < sigList.length; i++) {
+			var freq = sigList[i][0] / 1000000;
+			info += '<tr><td>';
 			info += freq.toFixed(4);
-			info += '<br/>';
+			info += '</td><td>';
+			info += sigList[i][1];
+			info += '</td><td>';
+			info += sigList[i][2];
+			info += '</tr></td>';
 		}
+		info += '</table>';
+
 		element.innerHTML = info;
 
 		var coords = event.coordinate;
@@ -277,7 +294,7 @@ function setHeatmapOpacity(opacity) {
 	layerHeatmap.setOpacity(opacity);
 }
 
-function addLocation(freq, lon, lat) {
+function addLocation(freq, rate, level, lon, lat) {
 	var point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
 
@@ -285,6 +302,8 @@ function addLocation(freq, lon, lat) {
 
 	var feature = new ol.Feature({
 		name : freq,
+		rate : rate,
+		level : level,
 		geometry : point
 	});
 	locations.addFeature(feature);
