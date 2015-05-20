@@ -1,16 +1,16 @@
-#map, #busy {
+.map, .busy {
 	font-family: sans-serif;
 	width: 100%;
 	height: 100%;
 	position: absolute;
 }
 
-#map {
+.map {
 	top: 0;
 	left: 0;
 }
 
-#busy {
+.busy {
 	z-index: 9999;
 	right: 10px;
 	top: 10px;
@@ -26,14 +26,14 @@
 	width: 100%;
 }
 
-#popup {
+.popup {
 	font-size: 10px;
 	background: white;
 	border-radius: 5px;
 	padding: 5px;
 }
 
-#popup>h4 {
+.popup h4 {
 	margin-top: 5px;
 	margin-bottom: 2px;
 }
