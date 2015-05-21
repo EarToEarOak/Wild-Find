@@ -33,28 +33,29 @@ from harrier.constants import SAMPLE_TIME
 from harrier.utils import Utils
 
 
-class Detect(object):
-    # Size of each block to analyse
-    DEMOD_BINS = 4096
-    # Valid pulse widths (s)
-    PULSE_WIDTHS = [25e-3, 64e-3]
-    # Pulse width tolerance (+/- %)
-    PULSE_WIDTH_TOL = 25
-    # Maximum pulse rate deviation (%)
-    PULSE_RATE_DEVIATION = 15
-    # Valid pulse rates (Pulses per minute)
-    PULSE_RATES = [40, 60, 80]
-    # Pulse rate tolerance (+/- Pulses per minute)
-    PULSE_RATE_TOL = 10
-    # Valid AM tones (Hz)
-    TONES = [260]
-    # Tolerance of AM tones (%)
-    TONE_TOL = 10
-    # Tolerance of ghosts (Hz)
-    GHOST_RATE_TOL = 5
-    # Correlation of ghosts (%)
-    GHOST_CORR = 75
+# Size of each block to analyse
+DEMOD_BINS = 4096
+# Valid pulse widths (s)
+PULSE_WIDTHS = [25e-3, 64e-3]
+# Pulse width tolerance (+/- %)
+PULSE_WIDTH_TOL = 25
+# Maximum pulse rate deviation (%)
+PULSE_RATE_DEVIATION = 15
+# Valid pulse rates (Pulses per minute)
+PULSE_RATES = [40, 60, 80]
+# Pulse rate tolerance (+/- Pulses per minute)
+PULSE_RATE_TOL = 10
+# Valid AM tones (Hz)
+TONES = [260]
+# Tolerance of AM tones (%)
+TONE_TOL = 10
+# Tolerance of ghosts (Hz)
+GHOST_RATE_TOL = 5
+# Correlation of ghosts (%)
+GHOST_CORR = 75
 
+
+class Detect(object):
     def __init__(self, fs, samples, frequencies, timing=None, debug=None):
         self._fs = fs
         self._samples = samples
@@ -77,7 +78,7 @@ class Detect(object):
 
     # Calculate thresholds based on percentiles
     def __find_edges(self, edges, pulseWidths):
-        minPulses = SAMPLE_TIME * min(Detect.PULSE_RATES) / 60.
+        minPulses = SAMPLE_TIME * min(PULSE_RATES) / 60.
         minHigh = minPulses * min(min(pulseWidths)) / 1e3
         threshold = 1 - (minHigh / SAMPLE_TIME)
         threshold *= 100
@@ -122,15 +123,15 @@ class Detect(object):
                 pulseRate = numpy.diff(pulseValid)
                 pulseAvg = numpy.average(pulseRate)
                 # Constant rate?
-                maxDeviation = pulseAvg * Detect.PULSE_RATE_DEVIATION / 100.
+                maxDeviation = pulseAvg * PULSE_RATE_DEVIATION / 100.
                 if numpy.std(pulseRate) < maxDeviation:
                     # Calculate frequency
                     freq = length / (pulseAvg * float(SAMPLE_TIME))
                     rate = freq * 60
                     # Limit to PULSE_RATES
-                    closest = min(Detect.PULSE_RATES,
+                    closest = min(PULSE_RATES,
                                   key=lambda x: abs(x - rate))
-                    if (abs(closest - rate)) < Detect.PULSE_RATE_TOL:
+                    if (abs(closest - rate)) < PULSE_RATE_TOL:
                         # Get pulse levels
                         level = 0
                         for posValid in range(len(pulseValid)):
@@ -166,7 +167,7 @@ class Detect(object):
 
         sampleRate = signal.size / float(SAMPLE_TIME)
         periods = [sampleRate / freq for freq in freqs]
-        periods = Utils.calc_tolerances(periods, Detect.TONE_TOL)
+        periods = Utils.calc_tolerances(periods, TONE_TOL)
 
         # Edge widths
         if indices[0] != 0:
@@ -208,7 +209,7 @@ class Detect(object):
     # Find AM signal
     def __find_am(self, signal, posIndices, negIndices):
         # Find +ve cycles
-        freq, amPos = self.__find_tone(signal, posIndices, Detect.TONES)
+        freq, amPos = self.__find_tone(signal, posIndices, TONES)
         if freq is None:
             return None, [], []
         # Find matching -ve cycle
@@ -248,9 +249,9 @@ class Detect(object):
 
         # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
         sampleRate = signals.shape[1] / float(SAMPLE_TIME)
-        pulseWidths = [width * sampleRate for width in sorted(Detect.PULSE_WIDTHS)]
+        pulseWidths = [width * sampleRate for width in sorted(PULSE_WIDTHS)]
         pulseWidths = Utils.calc_tolerances(pulseWidths,
-                                            Detect.PULSE_WIDTH_TOL)
+                                            PULSE_WIDTH_TOL)
 
         signalNum = 0
         for signal in signals:
@@ -303,7 +304,7 @@ class Detect(object):
 
     # Analyse blocks from capture
     def __demod(self):
-        chunks = self._samples.size / Detect.DEMOD_BINS
+        chunks = self._samples.size / DEMOD_BINS
         if chunks == 0:
             Utils.error('Sample time too long')
 
@@ -314,13 +315,13 @@ class Detect(object):
             if self._timing is not None:
                 self._timing.start('Demod')
 
-            chunkStart = chunkNum * Detect.DEMOD_BINS
-            chunk = self._samples[chunkStart:chunkStart + Detect.DEMOD_BINS]
+            chunkStart = chunkNum * DEMOD_BINS
+            chunk = self._samples[chunkStart:chunkStart + DEMOD_BINS]
 
             # Analyse chunk
-            fft = numpy.fft.fft(chunk) / Detect.DEMOD_BINS
+            fft = numpy.fft.fft(chunk) / DEMOD_BINS
             mags = numpy.absolute(fft)
-            freqBins = numpy.fft.fftfreq(Detect.DEMOD_BINS, 1. / self._fs)
+            freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / self._fs)
             levels = self.__filter_frequencies(freqBins, mags)
             signals[chunkNum] = levels
 
@@ -342,7 +343,7 @@ class Detect(object):
         if self._timing is not None:
             self._timing.stop()
 
-        return corr[0] > (self.GHOST_CORR / 100.)
+        return corr[0] > (GHOST_CORR / 100.)
 
     def __remove_ghosts(self, signals, detected):
         if len(detected) < 2:
@@ -352,7 +353,7 @@ class Detect(object):
         rates = [collar.rate for collar in detected]
         rates.sort()
         df = numpy.diff(rates)
-        pos = numpy.where(df > self.GHOST_RATE_TOL)[0] + 1
+        pos = numpy.where(df > GHOST_RATE_TOL)[0] + 1
         groups = numpy.split(rates, pos)
 
         # Try all combinations

@@ -34,12 +34,12 @@ from matplotlib.widgets import RectangleSelector
 import numpy
 from scipy.io import wavfile
 
-import matplotlib.pyplot as plt
 from harrier.constants import SAMPLE_TIME, SAMPLE_RATE
-from harrier.detect import DetectDebug, Detect
+from harrier.detect import Detect, DetectDebug, DEMOD_BINS
 from harrier.scan import Scan
 from harrier.timing import Timing
 from harrier.utils import Utils
+import matplotlib.pyplot as plt
 
 
 matplotlib.use('TkAgg')
@@ -310,8 +310,8 @@ def main(argList=None):
                 '\tDemod resolution {:.2f}Hz ({:.2f}ms)\n')
         print (info).format(SAMPLE_TIME,
                             float(fs) / Scan.SCAN_BINS,
-                            float(fs) / Detect.DEMOD_BINS,
-                            Detect.DEMOD_BINS * 1e3 / float(fs))
+                            float(fs) / DEMOD_BINS,
+                            DEMOD_BINS * 1e3 / float(fs))
 
     # Show spectrum of entire plot (-s)
     if args.spectrum:
