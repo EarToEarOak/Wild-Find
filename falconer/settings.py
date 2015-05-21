@@ -46,6 +46,8 @@ class Settings(object):
         self.fontList = None
 
         self.heatmapColour = 'jet'
+        self.mapPos = [0, 0]
+        self.mapZoom = 4
 
         self.__load()
 
@@ -82,6 +84,8 @@ class Settings(object):
         self.fontList = settings.value('fontList', self.fontList)
         self.heatmapColour = settings.value('heatmapColour',
                                             self.heatmapColour)
+        self.mapPos = settings.value('mapPos', self.mapPos)
+        self.mapZoom = settings.value('mapZoom', self.mapZoom)
 
         if self._parent is not None:
             settings.beginGroup('MainWindow')
@@ -105,6 +109,8 @@ class Settings(object):
         settings.setValue('units', self.units)
         settings.setValue('fontList', self.fontList)
         settings.setValue('heatmapColour', self.heatmapColour)
+        settings.setValue('mapPos', self.mapPos)
+        settings.setValue('mapZoom', self.mapZoom)
 
         if self._parent is not None:
             settings.beginGroup('MainWindow')

@@ -258,6 +258,7 @@ class Falconer(QtGui.QMainWindow):
     @QtCore.Slot()
     def __on_signal_map_loaded(self):
         self._mapLoaded = True
+        self._widgetMap.set_pos(self._settings.mapPos, self._settings.mapZoom)
         self._widgetMap.set_units(self._settings.units)
         self.__set_controls()
 
@@ -338,6 +339,10 @@ class Falconer(QtGui.QMainWindow):
     def closeEvent(self, _event):
         self._fullScreen = True
         self.__fullscreen()
+        pos = self._widgetMap.get_pos()
+        if pos is not None:
+            self._settings.mapPos = pos[0]
+            self._settings.mapZoom = pos[1]
         self._settings.close()
         if self._server is not None:
             self._server.close()

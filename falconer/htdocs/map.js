@@ -249,12 +249,24 @@ function _popup(event) {
 	}
 }
 
+function getPos(){
+	var pos = view.getCenter();
+	var zoom = view.getZoom();
+
+	return [pos, zoom];
+}
+
 function getLayer() {
 	for (var i = 0; i < layers.length; i++)
 		if (layers[i].getVisible())
 			return i;
 
 	return 0;
+}
+
+function setPos(lon, lat, zoom){
+	view.setZoom(zoom);
+	view.setCenter([lon, lat]);
 }
 
 function setLayer(index) {

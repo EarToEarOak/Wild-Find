@@ -190,6 +190,12 @@ class WidgetMap(QtGui.QWidget):
 
         return image
 
+    def set_pos(self, pos, zoom):
+        self._controls.set_pos(pos, zoom)
+
+    def get_pos(self):
+        return self._controls.get_pos()
+
 
 class WidgetMapControls(QtGui.QWidget):
     def __init__(self, parent, webMap):
@@ -305,6 +311,12 @@ class WidgetMapControls(QtGui.QWidget):
     def clear_heatmap(self):
         self._mapLink.clear_heatmap()
 
+    def set_pos(self, pos, zoom):
+        self._mapLink.set_pos(pos, zoom)
+
+    def get_pos(self):
+        return self._mapLink.get_pos()
+
 
 class MapLink(QtCore.QObject):
     def __init__(self, frame):
@@ -343,6 +355,10 @@ class MapLink(QtCore.QObject):
         js = 'getLayer();'
         return self.__exec_js(js)
 
+    def get_pos(self):
+        js = 'getPos();'
+        return self.__exec_js(js)
+
     def set_layer(self, layer):
         js = 'setLayer({});'.format(layer)
         self.__exec_js(js)
@@ -364,6 +380,10 @@ class MapLink(QtCore.QObject):
 
     def set_heatmap(self, bounds):
         js = 'setHeatmap({}, {}, {}, {});'.format(*bounds)
+        self.__exec_js(js)
+
+    def set_pos(self, pos, zoom):
+        js = 'setPos({}, {}, {});'.format(pos[0], pos[1], zoom)
         self.__exec_js(js)
 
     def select_locations(self, signals):
