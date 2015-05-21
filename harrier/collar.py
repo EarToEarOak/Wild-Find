@@ -54,6 +54,9 @@ class Collar(object):
         self.level = level
         self.width = width
 
+    def get_modulation(self):
+        return MOD_DESC[self.mod]
+
     def get_description(self, baseband=0):
         desc = ('Freq: {:.4f}MHz Type: {}\n'
                 'Count: {} Rate: {:.2f}PPM\n'

@@ -161,7 +161,7 @@ def callback_egdes(edge, signalNum, pulse, frequencies,
     ax = plt.subplot(111)
     title = 'Signal Edges ({})'.format(signalNum + 1)
     if pulse is not None:
-        title += ' (Pulses Found - {})'.format(pulse.mod)
+        title += ' (Pulses Found - {})'.format(pulse.get_modulation())
     plt.title(title)
     plt.grid()
     label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
