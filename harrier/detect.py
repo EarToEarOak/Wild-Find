@@ -90,36 +90,37 @@ class Detect(object):
         threshPos = t2 + (t1 - t2) / 2
         threshNeg = t4 + (t3 - t4) / 2
 
-        # Mark edges
-        pos = edges > threshPos
-        neg = edges < threshNeg
-        # Find edge indices
-        posIndices = numpy.where((pos[1:] == True) & (pos[:-1] == False))[0]
-        negIndices = numpy.where((neg[1:] == True) & (neg[:-1] == False))[0]
+        # TODO: optimise!!
+        posIndices = []
+        negIndices = []
+        high = False
+        for i in range(edges.size):
+            if edges[i] > threshPos and not high:
+                posIndices.append(i)
+                high = True
+            elif edges[i] < threshNeg and high:
+                negIndices.append(i)
+                high = False
+
         minSize = min(len(posIndices), len(negIndices))
         posIndices = posIndices[:minSize]
         negIndices = negIndices[:minSize]
 
-        return threshPos, threshNeg, posIndices, negIndices
+        return (threshPos, threshNeg,
+                numpy.array(posIndices), numpy.array(negIndices))
 
     # Find pulses
     def __find_pulses(self, signal, negIndices, posIndices, pulseWidths):
         pulse = None
         length = signal.size
         # Find pulses of pulseWidths
-        widthsFound = negIndices - posIndices
-        # Ignore negative pulse widths:
-        if numpy.any(widthsFound < 0):
-            if self._debug is not None and self._debug.verbose:
-                Utils.error('Negative widths found', False)
-            return None
+        widths = negIndices - posIndices
 
         for wMax, wMin in pulseWidths:
-            widthsValid = widthsFound[(widthsFound > wMin) &
-                                      (widthsFound < wMax)]
+            posValid = numpy.where((widths > wMin) & (widths < wMax))[0]
             # Must have at least 2 pulses
-            if widthsValid.size > 1:
-                pulseValid = posIndices[:widthsValid.size]
+            if posValid.size > 1:
+                pulseValid = posIndices[posValid]
                 pulseRate = numpy.diff(pulseValid)
                 pulseAvg = numpy.average(pulseRate)
                 # Constant rate?
@@ -136,12 +137,12 @@ class Detect(object):
                         level = 0
                         for posValid in range(len(pulseValid)):
                             pos = pulseValid[posValid]
-                            width = widthsValid[posValid]
+                            width = widths[posValid]
                             pulseSignal = signal[pos:pos + width - 1]
                             level += numpy.average(pulseSignal)
                         level /= len(pulseValid)
                         # Store valid pulse
-                        pulse = collar.Collar(widthsValid.size,
+                        pulse = collar.Collar(widths.size,
                                               freq * 60.,
                                               level,
                                               width * SAMPLE_TIME * 1000. / length)
@@ -155,7 +156,7 @@ class Detect(object):
                                      1000 * maxDeviation * SAMPLE_TIME / length)
                     Utils.error(msg, False)
             elif self._debug is not None and self._debug.verbose:
-                Utils.error('Only found {} pulses'.format(widthsValid.size),
+                Utils.error('Only found {} pulses'.format(widths.size),
                             False)
 
         return pulse
