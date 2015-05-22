@@ -271,16 +271,18 @@ class Detect(object):
             # Find AM collars
             if pulse is None:
                 if self._debug is not None and not self._debug.disableAm:
-                    am, posIndices, negIndices = self.__find_am(signal,
-                                                                posIndices,
-                                                                negIndices)
+                    am, posIndicesAm, negIndicesAm = self.__find_am(signal,
+                                                                    posIndices,
+                                                                    negIndices)
                 if self._debug is not None:
                     if not self._debug.disableAm and am is not None:
                         pulse = self.__find_pulses(am,
-                                                   negIndices, posIndices,
+                                                   negIndicesAm, posIndicesAm,
                                                    pulseWidths)
                         if pulse is not None:
                             pulse.mod = collar.AM
+                            posIndices = posIndicesAm
+                            negIndices = negIndicesAm
             else:
                 pulse.mod = collar.CW
 
