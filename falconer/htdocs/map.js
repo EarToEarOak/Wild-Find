@@ -99,8 +99,7 @@ var controlScale = new ol.control.ScaleLine();
 
 var controlPos = new ol.control.MousePosition({
 	coordinateFormat : ol.coordinate.createStringXY(5),
-	projection : 'EPSG:4326',
-	undefinedHTML : '&nbsp;'
+	projection : 'EPSG:4326'
 });
 
 var overlaySignals = new ol.Overlay({
@@ -249,11 +248,11 @@ function _popup(event) {
 	}
 }
 
-function getPos(){
+function getPos() {
 	var pos = view.getCenter();
 	var zoom = view.getZoom();
 
-	return [pos, zoom];
+	return [ pos, zoom ];
 }
 
 function getLayer() {
@@ -264,9 +263,9 @@ function getLayer() {
 	return 0;
 }
 
-function setPos(lon, lat, zoom){
+function setPos(lon, lat, zoom) {
 	view.setZoom(zoom);
-	view.setCenter([lon, lat]);
+	view.setCenter([ lon, lat ]);
 }
 
 function setLayer(index) {
