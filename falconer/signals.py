@@ -245,9 +245,9 @@ class DialogHistogram(QtGui.QDialog):
         axes.xaxis.set_major_formatter(formatter)
         axes.yaxis.set_major_formatter(formatter)
 
-        x, y = zip(*self._signals)
+        x, _, y = zip(*self._signals)
         x = [freq / 1e6 for freq in x]
-        width = min(numpy.diff(x))
+        width = 0.06
         bars = axes.bar(x, y, width=width, color='blue')
         for i in range(len(y)):
             bar = bars[i]
