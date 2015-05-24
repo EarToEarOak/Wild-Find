@@ -36,7 +36,7 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
 
-DPD = 5
+IMAGE_SIZE = 300
 
 
 class HeatMap(QtCore.QObject):
@@ -127,8 +127,8 @@ class ThreadPlot(QtCore.QThread):
         if width != 0 and height != 0:
             figure.set_size_inches((6, 6. * height / width))
 
-            xi = numpy.linspace(west, east, width * DPD)
-            yi = numpy.linspace(south, north, height * DPD)
+            xi = numpy.linspace(west, east, IMAGE_SIZE)
+            yi = numpy.linspace(south, north, IMAGE_SIZE)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 zi = mlab.griddata(x, y, z, xi=xi, yi=yi)
