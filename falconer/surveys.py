@@ -27,10 +27,14 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.table import Model
 from falconer.utils_qt import TableSelectionMenu
 
 
 class WidgetSurveys(QtGui.QWidget):
+    HEADER = [None, 'Name']
+    HEADER_TIPS = ['Included', 'Survey name']
+
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
@@ -38,7 +42,7 @@ class WidgetSurveys(QtGui.QWidget):
 
         ui.loadUi(self, 'surveys.ui')
 
-        self._model = ModelSurveys(self)
+        self._model = Model(self._signal, self.HEADER, self.HEADER_TIPS)
         proxyModel = QtGui.QSortFilterProxyModel(self)
         proxyModel.setDynamicSortFilter(True)
         proxyModel.setSourceModel(self._model)
@@ -70,7 +74,8 @@ class WidgetSurveys(QtGui.QWidget):
             surveys.remove(survey.encode("utf-8"))
             self._model.set_filtered(surveys)
 
-    def on_filter(self):
+    @QtCore.Slot()
+    def __on_filter(self):
         surveys = self._model.get()
         filtered = self._model.get_filtered()
         selected = set(surveys) - set(filtered)
@@ -109,7 +114,7 @@ class WidgetSurveys(QtGui.QWidget):
         self.__set_width()
 
     def get(self):
-        return self._model
+        return self._model.get()
 
     def get_filtered(self):
         return self._model.get_filtered()
@@ -122,105 +127,6 @@ class WidgetSurveys(QtGui.QWidget):
         self._model.set_filtered([])
         self._tableSurveys.setEnabled(False)
         self._comboSurveys.setEnabled(False)
-
-
-class ModelSurveys(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Name']
-    HEADER_TIPS = ['Included', 'Survey name']
-
-    def __init__(self, parent):
-        QtCore.QAbstractTableModel.__init__(self)
-
-        self._signal = SignalSurveys()
-        self._signal.filter.connect(parent.on_filter)
-        self._surveys = []
-        self._filtered = []
-
-    def rowCount(self, _parent):
-        return len(self._surveys)
-
-    def columnCount(self, _parent):
-        return len(self.HEADER)
-
-    def headerData(self, col, orientation, role):
-        if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
-            return self.HEADER[col]
-        elif role == QtCore.Qt.ToolTipRole:
-            return self.HEADER_TIPS[col]
-
-        return None
-
-    def data(self, index, role):
-        value = self._surveys[index.row()][index.column()]
-        data = None
-
-        if role == QtCore.Qt.DisplayRole:
-            if index.column() == 1:
-                data = value
-            elif index.column() != 0:
-                data = value
-        elif role == QtCore.Qt.CheckStateRole:
-            if index.column() == 0:
-                data = value
-
-        return data
-
-    def setData(self, index, value, role):
-        if role == QtCore.Qt.CheckStateRole:
-            self._surveys[index.row()][index.column()] = value
-            timeStamp = self._surveys[index.row()][1]
-            checked = value == QtCore.Qt.Checked
-            if checked:
-                self._filtered.remove(timeStamp)
-            else:
-                self._filtered.append(timeStamp)
-
-            self._signal.filter.emit()
-            return True
-
-        return False
-
-    def flags(self, index):
-        flags = (QtCore.Qt.ItemIsEnabled)
-        if index.column() == 0:
-            flags |= (QtCore.Qt.ItemIsEditable |
-                      QtCore.Qt.ItemIsUserCheckable)
-
-        return flags
-
-    def connect(self, slot):
-        self._signal.filter.connect(slot)
-
-    def set(self, surveys):
-        self.beginResetModel()
-        del self._surveys[:]
-        for name in surveys:
-            checked = QtCore.Qt.Checked
-            if name in self._filtered:
-                checked = QtCore.Qt.Unchecked
-            self._surveys.append([checked, name])
-        self.endResetModel()
-
-    def get(self):
-        surveys = [survey for _check, survey in self._surveys]
-        return surveys
-
-    def get_filtered(self):
-        return self._filtered
-
-    def set_filtered(self, filtered):
-        self.beginResetModel()
-        self._filtered = filtered
-        for i in range(len(self._surveys)):
-            survey = self._surveys[i]
-            if survey[1] in filtered:
-                survey[0] = QtCore.Qt.Unchecked
-            else:
-                survey[0] = QtCore.Qt.Checked
-
-        self.endResetModel()
-
-        self._signal.filter.emit()
 
 
 class SignalSurveys(QtCore.QObject):

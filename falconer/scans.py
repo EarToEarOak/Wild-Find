@@ -27,16 +27,24 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.table import Model, format_qtime
 from falconer.utils_qt import TableSelectionMenu, remove_context_help
 
 
 class WidgetScans(QtGui.QWidget):
+    HEADER = [None, 'Time', 'Freq']
+    HEADER_TIPS = ['Included', 'Scan time', 'Scan frequency (MHz)']
+
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
+        self._signal = SignalScans()
+
         ui.loadUi(self, 'scans.ui')
 
-        self._model = ModelScans()
+        formatters = [None, format_qtime, None]
+        self._model = Model(self._signal, self.HEADER, self.HEADER_TIPS,
+                            formatters)
         proxyModel = QtGui.QSortFilterProxyModel(self)
         proxyModel.setDynamicSortFilter(True)
         proxyModel.setSourceModel(self._model)
@@ -95,104 +103,6 @@ class WidgetScans(QtGui.QWidget):
         self._model.set_filtered([])
         self._tableScans.setEnabled(False)
         self._buttonRange.setEnabled(False)
-
-
-class ModelScans(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Time', 'Freq']
-    HEADER_TIPS = ['Included', 'Scan time', 'Scan frequency (MHz)']
-
-    def __init__(self):
-        QtCore.QAbstractTableModel.__init__(self)
-
-        self._signal = SignalScans()
-        self._scans = []
-        self._filtered = []
-
-    def rowCount(self, _parent):
-        return len(self._scans)
-
-    def columnCount(self, _parent):
-        return len(self.HEADER)
-
-    def headerData(self, col, orientation, role):
-        if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
-            return self.HEADER[col]
-        elif role == QtCore.Qt.ToolTipRole:
-            return self.HEADER_TIPS[col]
-
-        return None
-
-    def data(self, index, role):
-        value = self._scans[index.row()][index.column()]
-        data = None
-
-        if role == QtCore.Qt.DisplayRole:
-            if index.column() == 1:
-                data = QtCore.QDateTime().fromTime_t(value)
-            elif index.column() != 0:
-                data = value
-        elif role == QtCore.Qt.CheckStateRole:
-            if index.column() == 0:
-                data = value
-
-        return data
-
-    def setData(self, index, value, role):
-        if role == QtCore.Qt.CheckStateRole:
-            self._scans[index.row()][index.column()] = value
-            timeStamp = self._scans[index.row()][1]
-            checked = value == QtCore.Qt.Checked
-            if checked:
-                self._filtered.remove(timeStamp)
-            else:
-                self._filtered.append(timeStamp)
-
-            self._signal.filter.emit()
-            return True
-
-        return False
-
-    def flags(self, index):
-        flags = (QtCore.Qt.ItemIsEnabled)
-        if index.column() == 0:
-            flags |= (QtCore.Qt.ItemIsEditable |
-                      QtCore.Qt.ItemIsUserCheckable)
-
-        return flags
-
-    def connect(self, slot):
-        self._signal.filter.connect(slot)
-
-    def set(self, scans):
-        self.beginResetModel()
-        del self._scans[:]
-        for timeStamp, count in scans:
-            checked = QtCore.Qt.Checked
-            if timeStamp in self._filtered:
-                checked = QtCore.Qt.Unchecked
-            self._scans.append([checked, timeStamp, count])
-        self.endResetModel()
-
-    def get(self):
-        timeStamps = [timeStamp for _check, timeStamp, _freq in self._scans]
-        return timeStamps
-
-    def get_filtered(self):
-        return self._filtered
-
-    def set_filtered(self, filtered):
-        self.beginResetModel()
-        self._filtered = filtered
-        for i in range(len(self._scans)):
-            scan = self._scans[i]
-            if scan[1] in filtered:
-                scan[0] = QtCore.Qt.Unchecked
-            else:
-                scan[0] = QtCore.Qt.Checked
-
-        self.endResetModel()
-
-        self._signal.filter.emit()
 
 
 class DialogScansRange(QtGui.QDialog):

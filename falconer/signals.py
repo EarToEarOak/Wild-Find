@@ -32,11 +32,16 @@ from matplotlib.ticker import ScalarFormatter
 import numpy
 
 from falconer import ui
+from falconer.table import format_freq, format_rate, Model
 from falconer.utils_qt import TableSelectionMenu
 import matplotlib.pyplot as plt
 
 
 class WidgetSignals(QtGui.QWidget):
+    HEADER = [None, 'Freq', 'Rate', 'Seen']
+    HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
+                   'Rate (PPM)', 'Total detections']
+
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
 
@@ -44,7 +49,9 @@ class WidgetSignals(QtGui.QWidget):
 
         self._signal = SignalSignals()
 
-        self._model = ModelSignals()
+        formatters = [None, format_freq, format_rate, None]
+        self._model = Model(self._signal, self.HEADER, self.HEADER_TIPS,
+                            formatters, 1)
         self._proxyModel = QtGui.QSortFilterProxyModel(self)
         self._proxyModel.setDynamicSortFilter(True)
         self._proxyModel.setSourceModel(self._model)
@@ -156,114 +163,6 @@ class WidgetSignals(QtGui.QWidget):
         self._buttonHistogram.setEnabled(False)
 
 
-class ModelSignals(QtCore.QAbstractTableModel):
-    HEADER = [None, 'Freq', 'Rate', 'Seen']
-    HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
-                   'Rate (PPM)', 'Total detections']
-
-    def __init__(self):
-        QtCore.QAbstractTableModel.__init__(self)
-
-        self._signal = SignalSignals()
-        self._signals = []
-        self._filtered = []
-
-    def rowCount(self, _parent=None):
-        return len(self._signals)
-
-    def columnCount(self, _parent=None):
-        return len(self.HEADER)
-
-    def headerData(self, col, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return self.HEADER[col]
-        elif role == QtCore.Qt.ToolTipRole:
-            return self.HEADER_TIPS[col]
-
-        return None
-
-    def data(self, index, role):
-        value = self._signals[index.row()][index.column()]
-        data = None
-
-        if role == QtCore.Qt.DisplayRole:
-            if index.column() == 1:
-                data = '{:8.4f}'.format(value / 1e6)
-            elif index.column() == 2:
-                data = '{:5.1f}'.format(value)
-            elif index.column() != 0:
-                data = value
-        elif role == QtCore.Qt.CheckStateRole:
-            if index.column() == 0:
-                data = value
-
-        return data
-
-    def setData(self, index, value, role):
-        if role == QtCore.Qt.CheckStateRole:
-            self._signals[index.row()][index.column()] = value
-            frequency = self._signals[index.row()][1]
-            checked = value == QtCore.Qt.Checked
-            if checked:
-                self._filtered.remove(frequency)
-            else:
-                self._filtered.append(frequency)
-
-            self._signal.filter.emit()
-            return True
-
-        return False
-
-    def flags(self, index):
-        flags = QtCore.Qt.ItemIsEnabled
-        if index.column() == 0:
-            flags |= (QtCore.Qt.ItemIsEditable |
-                      QtCore.Qt.ItemIsUserCheckable)
-        elif index.column() == 1:
-            flags |= QtCore.Qt.ItemIsSelectable
-
-        return flags
-
-    def connect(self, on_filter):
-        self._signal.filter.connect(on_filter)
-
-    def set(self, signals):
-        self.beginResetModel()
-        del self._signals[:]
-        for frequency, rate, count in signals:
-            checked = QtCore.Qt.Checked
-            if frequency in self._filtered:
-                checked = QtCore.Qt.Unchecked
-            self._signals.append([checked, frequency, rate, count])
-        self.endResetModel()
-
-    def get(self):
-        frequencies = [frequency for _check, frequency,
-                       _rate, _freq in self._signals]
-        return frequencies
-
-    def get_all(self):
-        return self._signals
-
-    def get_filtered(self):
-        return self._filtered
-
-    def set_filtered(self, filtered):
-        self.beginResetModel()
-        self._filtered = filtered
-        for i in range(len(self._signals)):
-            signal = self._signals[i]
-            if signal[1] in filtered:
-                signal[0] = QtCore.Qt.Unchecked
-            else:
-                signal[0] = QtCore.Qt.Checked
-
-        self.endResetModel()
-
-        self._signal.filter.emit()
-
-
 class DialogHistogram(QtGui.QDialog):
     def __init__(self, parent, signals):
         QtGui.QDialog.__init__(self, parent)
@@ -346,7 +245,7 @@ class DialogHistogram(QtGui.QDialog):
         axes.xaxis.set_major_formatter(formatter)
         axes.yaxis.set_major_formatter(formatter)
 
-        _, x, y = zip(*self._signals)
+        x, y = zip(*self._signals)
         x = [freq / 1e6 for freq in x]
         width = min(numpy.diff(x))
         bars = axes.bar(x, y, width=width, color='blue')
