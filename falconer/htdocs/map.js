@@ -109,7 +109,46 @@ var overlaySignals = new ol.Overlay({
 	}
 });
 
+var keyBing = 'AtgkX0aGPsyJJcv1x9QSyVxqWDJL8B0-bKPnUz3ZDQ0LD0yYbbfhQfux4MPeQUv1';
+
 function init() {
+	layers.push(new ol.layer.Tile({
+		name : 'Bing Aerial',
+		source : new ol.source.BingMaps({
+			key: keyBing,
+			imagerySet: 'Aerial',
+			maxZoom: 19
+		})
+	}));
+
+	layers.push(new ol.layer.Tile({
+		name : 'Bing Aerial with Labels',
+		source : new ol.source.BingMaps({
+			key: keyBing,
+			imagerySet: 'AerialWithLabels',
+			maxZoom: 19
+		})
+	}));
+
+	layers.push(new ol.layer.Tile({
+		name : 'Bing Ordnance Survey',
+		source : new ol.source.BingMaps({
+			key: keyBing,
+			imagerySet: 'ordnanceSurvey',
+			culture: 'en-gb',
+			maxZoom: 17
+		})
+	}));
+
+	layers.push(new ol.layer.Tile({
+		name : 'Bing Road',
+		source : new ol.source.BingMaps({
+			key: keyBing,
+			imagerySet: 'Road',
+			maxZoom: 19
+		})
+	}));
+
 	layers.push(new ol.layer.Tile({
 		name : 'MapQuest Satellite',
 		source : new ol.source.MapQuest({
@@ -144,7 +183,8 @@ function init() {
 		view : view,
 		layers : layers,
 		controls : controls,
-		overlays : [ overlaySignals ]
+		overlays : [ overlaySignals ],
+		loadTilesWhileInteracting: true
 	});
 
 	map.addLayer(layerHeatmap);
