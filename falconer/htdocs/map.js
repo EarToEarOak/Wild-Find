@@ -161,7 +161,6 @@ function init() {
 
 	setLayer(layers.length - 1);
 	_sendLayerNames();
-	showBusy(false);
 }
 
 function _setListeners(enable) {
@@ -369,7 +368,6 @@ function clearLocations() {
 
 function clearHeatmap() {
 	layerHeatmap.setSource(null);
-	showBusy(false);
 }
 
 function showBusy(show) {

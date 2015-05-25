@@ -252,7 +252,7 @@ class Falconer(QtGui.QMainWindow):
         dlg.exec_()
 
     @QtCore.Slot()
-    def __on_splitter_moved(self, pos, index):
+    def __on_splitter_moved(self, _pos, _index):
         self.__set_table_view()
 
     @QtCore.Slot()
@@ -260,6 +260,7 @@ class Falconer(QtGui.QMainWindow):
         self._mapLoaded = True
         self._widgetMap.set_pos(self._settings.mapPos, self._settings.mapZoom)
         self._widgetMap.set_units(self._settings.units)
+        self._widgetMap.show_busy(False)
         self.__set_controls()
 
         fileName = self._args.file
