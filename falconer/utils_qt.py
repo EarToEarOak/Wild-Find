@@ -23,7 +23,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from PySide import QtCore, QtGui
+from PySide import QtCore, QtGui, QtWebKit
+
+from falconer import ui
 
 
 class TableSelectionMenu(object):
@@ -103,6 +105,24 @@ class TableSelectionMenu(object):
     @QtCore.Slot()
     def on_selection_clear(self):
         self._table.clearSelection()
+
+
+class DialogPopup(QtGui.QDialog):
+    def __init__(self):
+        QtGui.QDialog.__init__(self)
+
+        ui.loadUi(self, 'popup.ui')
+
+        self.setWindowFlags(QtCore.Qt.Tool)
+
+        self._web.titleChanged.connect(self.__on_title)
+
+    @QtCore.Slot(unicode)
+    def __on_title(self, title):
+        self.setWindowTitle(title)
+
+    def load(self, url):
+        self._web.load(url)
 
 
 def remove_context_help(dialog):

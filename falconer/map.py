@@ -31,6 +31,7 @@ from matplotlib import cm
 
 from falconer import server, ui
 from falconer.utils import add_program_path
+from falconer.utils_qt import DialogPopup
 
 
 RETRY_TIME = 2000
@@ -42,6 +43,7 @@ class WidgetMap(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self._signal = SignalMap()
+        self._popup = None
 
         url = 'http://localhost:{}/map.html'.format(server.PORT)
         self._url = QtCore.QUrl(url)
@@ -61,8 +63,10 @@ class WidgetMap(QtGui.QWidget):
         self._webMap.setAcceptDrops(False)
         self._webMap.setVisible(False)
         self._webMap.loadFinished.connect(self.__on_load_finished)
+        self._webMap.linkClicked.connect(self.__on_link_clicked)
 
         page = self._webMap.page()
+        page.setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateExternalLinks)
         manager = page.networkAccessManager()
         manager.finished[QtNetwork.QNetworkReply].connect(self.__loaded)
 
@@ -104,6 +108,16 @@ class WidgetMap(QtGui.QWidget):
         self._labelLoad.setVisible(False)
         self._webMap.setVisible(True)
 
+    @QtCore.Slot(QtCore.QUrl)
+    def __on_link_clicked(self, url):
+        if self._popup is None:
+            self._popup = DialogPopup()
+            self._popup.rejected.connect(self.__on_close_popup)
+            self._popup.show()
+
+        self._popup.load(url)
+        self._popup.raise_()
+
     @QtCore.Slot(QtNetwork.QNetworkReply)
     def __loaded(self, reply):
         if reply.error() != QtNetwork.QNetworkReply.NoError:
@@ -141,6 +155,10 @@ class WidgetMap(QtGui.QWidget):
     def on_selected(self, selected):
         sels = [float(f) for f in json.loads(selected)]
         self._signal.selected.emit(sels)
+
+    @QtCore.Slot()
+    def __on_close_popup(self):
+        self._popup = None
 
     def resizeEvent(self, _event):
         self._controls.follow()
