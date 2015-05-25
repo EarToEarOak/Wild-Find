@@ -29,7 +29,6 @@ from matplotlib import patheffects
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import ScalarFormatter
-import numpy
 
 from falconer import ui
 from falconer.table import format_freq, format_rate, Model
