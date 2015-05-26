@@ -24,6 +24,8 @@
 #
 import os
 import sys
+import tempfile
+import zipfile
 
 
 def get_program_path():
@@ -33,6 +35,51 @@ def get_program_path():
 def add_program_path(*paths):
     cwd = get_program_path()
     return os.path.join(cwd, *paths)
+
+
+def export_kml(fileName, image, telemetry):
+    xyz = zip(*telemetry)
+    north = max(xyz[1])
+    south = min(xyz[1])
+    east = max(xyz[0])
+    west = min(xyz[0])
+
+    keyhole = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+               '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+               '<GroundOverlay>\n'
+               '\t<name>Wild Find</name>\n'
+               '\t<Icon>\n'
+               '\t\t<href>heatmap.png</href>\n'
+               '\t\t<viewBoundScale>0.75</viewBoundScale>\n'
+               '\t</Icon>\n'
+               '\t<LatLonBox>\n'
+               '\t\t<north>{north}</north>\n'
+               '\t\t<south>{south}</south>\n'
+               '\t\t<east>{east}</east>\n'
+               '\t\t<west>{west}</west>\n'
+               '\t</LatLonBox>\n'
+               '</GroundOverlay>\n'
+               '</kml>\n'
+               ).format(north=north, south=south, east=east, west=west)
+
+    fd, heatmap = tempfile.mkstemp()
+    tempFile = os.fdopen(fd, 'wb')
+    image.seek(0)
+    tempFile.write(image.read())
+    tempFile.close()
+
+    fd, kml = tempfile.mkstemp()
+    tempFile = os.fdopen(fd, 'w')
+    tempFile.write(keyhole)
+    tempFile.close()
+
+    kmz = zipfile.ZipFile(fileName, 'w')
+    kmz.write(heatmap, 'heatmap.png')
+    kmz.write(kml, 'WildFind.kml')
+    kmz.close()
+
+    os.remove(heatmap)
+    os.remove(kml)
 
 
 if __name__ == '__main__':

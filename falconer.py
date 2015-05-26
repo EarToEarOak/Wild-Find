@@ -43,6 +43,7 @@ from falconer.server import Server
 from falconer.settings import Settings
 from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
+from falconer.utils import export_kml
 from falconer.utils_qt import remove_context_help
 
 
@@ -198,6 +199,25 @@ class Falconer(QtGui.QMainWindow):
             self._settings.dirExport, _ = os.path.split(fileName)
             mapImage = self._widgetMap.get_map()
             mapImage.save(fileName)
+
+    @QtCore.Slot()
+    def on_actionExportKml_triggered(self):
+        filter = 'Keyhole Markup Language (*.kmz)'
+        dialog = QtGui.QFileDialog
+        fileName, _ = dialog.getSaveFileName(self,
+                                             'Export KML',
+                                             dir=self._settings.dirExport,
+                                             filter=filter)
+        if fileName:
+            self._settings.dirExport, _ = os.path.split(fileName)
+            filteredSurveys = self._widgetSurveys.get_filtered()
+            filteredScans = self._widgetScans.get_filtered()
+            filteredSignals = self._widgetSignals.get_filtered()
+            telemetry = self._database.get_telemetry(filteredSurveys,
+                                                     filteredScans,
+                                                     filteredSignals)
+
+            export_kml(fileName, self._heatMap.get_file(), telemetry)
 
     @QtCore.Slot()
     def on_actionPrint_triggered(self):
@@ -374,6 +394,7 @@ class Falconer(QtGui.QMainWindow):
 
         self.actionExportPdf.setEnabled(enabled)
         self.actionExportImage.setEnabled(enabled)
+        self.actionExportKml.setEnabled(enabled)
         self.actionPrint.setEnabled(enabled)
         self.actionClose.setEnabled(enabled)
 

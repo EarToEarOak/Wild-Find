@@ -57,6 +57,7 @@
     <addaction name="separator"/>
     <addaction name="actionExportPdf"/>
     <addaction name="actionExportImage"/>
+    <addaction name="actionExportKml"/>
     <addaction name="separator"/>
     <addaction name="actionPrint"/>
     <addaction name="separator"/>
@@ -265,6 +266,14 @@
    </property>
    <property name="toolTip">
     <string>Show/hide signal table</string>
+   </property>
+  </action>
+  <action name="actionExportKml">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export to KML...</string>
    </property>
   </action>
  </widget>
