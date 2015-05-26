@@ -130,6 +130,9 @@ class WidgetMap(QtGui.QWidget):
     def __on_retry(self):
         self._webMap.load(self._url)
 
+    def __on_close_popup(self):
+        self._popup = None
+
     def on_interaction(self,):
         self._controls.cancel_track()
 
@@ -146,9 +149,6 @@ class WidgetMap(QtGui.QWidget):
         sels = [float(f) for f in json.loads(selected)]
         self._signal.selected.emit(sels)
 
-    def __on_close_popup(self):
-        self._popup = None
-
     def resizeEvent(self, _event):
         self._controls.follow()
 
@@ -157,33 +157,14 @@ class WidgetMap(QtGui.QWidget):
         self._signal.colour.connect(colour)
         self._signal.selected.connect(selected)
 
-    def set_settings(self, settings):
-        self._controls.set_settings(settings)
-
     def transform_coords(self, xyz):
         return self._controls.transform_coords(xyz)
 
     def show_busy(self, show):
         self._controls.show_busy(show)
 
-    def set_units(self, units):
-        self._controls.set_units(units)
-
-    def set_locations(self, locations):
-        self.clear_locations()
-        self._controls.set_locations(locations)
-
-    def select_locations(self, frequencies):
-        self._controls.select_locations(frequencies)
-
-    def clear_locations(self):
-        self._controls.clear_locations()
-
-    def set_heatmap(self, bounds):
-        self._controls.set_heatmap(bounds)
-
-    def clear_heatmap(self):
-        self._controls.clear_heatmap()
+    def get_pos(self):
+        return self._controls.get_pos()
 
     def get_map(self):
         page = self._webMap.page()
@@ -197,11 +178,30 @@ class WidgetMap(QtGui.QWidget):
 
         return image
 
+    def set_settings(self, settings):
+        self._controls.set_settings(settings)
+
+    def set_units(self, units):
+        self._controls.set_units(units)
+
     def set_pos(self, pos, zoom):
         self._controls.set_pos(pos, zoom)
 
-    def get_pos(self):
-        return self._controls.get_pos()
+    def set_locations(self, locations):
+        self.clear_locations()
+        self._controls.set_locations(locations)
+
+    def set_heatmap(self, bounds):
+        self._controls.set_heatmap(bounds)
+
+    def select_locations(self, frequencies):
+        self._controls.select_locations(frequencies)
+
+    def clear_locations(self):
+        self._controls.clear_locations()
+
+    def clear_heatmap(self):
+        self._controls.clear_heatmap()
 
 
 class WidgetMapControls(QtGui.QWidget):
@@ -274,13 +274,6 @@ class WidgetMapControls(QtGui.QWidget):
     def show_busy(self, show):
         self._mapLink.show_busy(show)
 
-    def set_settings(self, settings):
-        self._settings = settings
-        colours = [colour for colour in cm.cmap_d]
-        colours.sort()
-        index = colours.index(settings.heatmapColour)
-        self._comboColour.setCurrentIndex(index)
-
     def update_layers(self, names):
         self._comboLayers.clear()
         self._comboLayers.addItems(names)
@@ -297,12 +290,28 @@ class WidgetMapControls(QtGui.QWidget):
     def transform_coords(self, xyz):
         return self._mapLink.transform_coords(xyz)
 
+    def get_pos(self):
+        return self._mapLink.get_pos()
+
+    def set_settings(self, settings):
+        self._settings = settings
+        colours = [colour for colour in cm.cmap_d]
+        colours.sort()
+        index = colours.index(settings.heatmapColour)
+        self._comboColour.setCurrentIndex(index)
+
     def set_units(self, units):
         self._mapLink.set_units(units)
+
+    def set_pos(self, pos, zoom):
+        self._mapLink.set_pos(pos, zoom)
 
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
         self.follow()
+
+    def set_heatmap(self, bounds):
+        self._mapLink.set_heatmap(bounds)
 
     def select_locations(self, frequencies):
         self._mapLink.select_locations(frequencies)
@@ -312,17 +321,9 @@ class WidgetMapControls(QtGui.QWidget):
         self._checkFollow.setChecked(self._follow)
         self._mapLink.clear_locations()
 
-    def set_heatmap(self, bounds):
-        self._mapLink.set_heatmap(bounds)
-
     def clear_heatmap(self):
         self._mapLink.clear_heatmap()
 
-    def set_pos(self, pos, zoom):
-        self._mapLink.set_pos(pos, zoom)
-
-    def get_pos(self):
-        return self._mapLink.get_pos()
 
 
 class MapLink(QtCore.QObject):
