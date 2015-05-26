@@ -74,7 +74,6 @@ class WidgetSurveys(QtGui.QWidget):
             surveys.remove(survey.encode("utf-8"))
             self._model.set_filtered(surveys)
 
-    @QtCore.Slot()
     def __on_filter(self):
         surveys = self._model.get()
         filtered = self._model.get_filtered()
@@ -89,7 +88,6 @@ class WidgetSurveys(QtGui.QWidget):
 
         self._signal.filter.emit()
 
-    @QtCore.Slot()
     def connect(self, slot):
         self._signal.filter.connect(slot)
 

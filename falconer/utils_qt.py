@@ -38,7 +38,6 @@ class TableSelectionMenu(object):
         table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         table.customContextMenuRequested.connect(self.__contextMenu)
 
-    @QtCore.Slot(QtCore.QPoint)
     def __contextMenu(self, pos):
         style = self._table.style()
         filters = len(self._model.get())
@@ -117,7 +116,6 @@ class DialogPopup(QtGui.QDialog):
 
         self._web.titleChanged.connect(self.__on_title)
 
-    @QtCore.Slot(unicode)
     def __on_title(self, title):
         self.setWindowTitle(title)
 

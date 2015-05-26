@@ -53,11 +53,9 @@ class HeatMap(QtCore.QObject):
         self._signal.plotted.connect(on_plotted)
         self._signal.cleared.connect(on_cleared)
 
-    @QtCore.Slot(object)
     def __on_plotted(self, bounds):
         self._signal.plotted.emit(bounds)
 
-    @QtCore.Slot()
     def __on_cleared(self):
         self._signal.plotted.emit()
 

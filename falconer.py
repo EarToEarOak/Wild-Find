@@ -275,7 +275,6 @@ class Falconer(QtGui.QMainWindow):
     def __on_splitter_moved(self, _pos, _index):
         self.__set_table_view()
 
-    @QtCore.Slot()
     def __on_signal_map_loaded(self):
         self._mapLoaded = True
         self._widgetMap.set_pos(self._settings.mapPos, self._settings.mapZoom)
@@ -288,49 +287,39 @@ class Falconer(QtGui.QMainWindow):
             self._args.file = None
             self.__open(fileName)
 
-    @QtCore.Slot(object)
     def __on_signal_map_plotted(self, bounds):
         if self._database.isConnected():
             self._widgetMap.set_heatmap(bounds)
 
-    @QtCore.Slot()
     def __on_signal_map_cleared(self):
         self._widgetMap.clear_heatmap()
 
-    @QtCore.Slot()
     def __on_signal_map_colour(self):
         self.__set_map()
 
-    @QtCore.Slot(list)
     def __on_signal_map_selected(self, frequencies):
         freqs = set(frequencies)
         self._widgetSignals.select(list(freqs))
 
-    @QtCore.Slot(str)
     def __on_open_history(self, fileName):
         if self.__open(fileName):
             self._settings.add_history(fileName)
 
-    @QtCore.Slot()
     def __on_survey_filter(self):
         self.__set_scans()
         self.__set_signals()
         self.__set_map()
 
-    @QtCore.Slot()
     def __on_scan_filter(self):
         self.__set_signals()
         self.__set_map()
 
-    @QtCore.Slot()
     def __on_signal_filter(self):
         self.__set_map()
 
-    @QtCore.Slot(list)
     def __on_signal_select(self, frequencies):
         self._widgetMap.select_locations(frequencies)
 
-    @QtCore.Slot(QtGui.QPrinter)
     def __on__print(self, printer):
         print_report(printer,
                      self._database.get_filename(),

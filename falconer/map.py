@@ -103,12 +103,10 @@ class WidgetMap(QtGui.QWidget):
 
         self._webMap.load(self._url)
 
-    @QtCore.Slot(bool)
     def __on_load_finished(self, _loaded):
         self._labelLoad.setVisible(False)
         self._webMap.setVisible(True)
 
-    @QtCore.Slot(QtCore.QUrl)
     def __on_link_clicked(self, url):
         if self._popup is None:
             self._popup = DialogPopup()
@@ -118,7 +116,6 @@ class WidgetMap(QtGui.QWidget):
         self._popup.load(url)
         self._popup.raise_()
 
-    @QtCore.Slot(QtNetwork.QNetworkReply)
     def __loaded(self, reply):
         if reply.error() != QtNetwork.QNetworkReply.NoError:
             if self._retries:
@@ -127,36 +124,28 @@ class WidgetMap(QtGui.QWidget):
             else:
                 self._webMap.setHtml('Could not load map')
 
-    @QtCore.Slot()
     def __on_inspector(self):
         self._inspector.setVisible(not self._inspector.isVisible())
 
-    @QtCore.Slot()
     def __on_retry(self):
         self._webMap.load(self._url)
 
-    @QtCore.Slot()
     def on_interaction(self,):
         self._controls.cancel_track()
 
-    @QtCore.Slot(list)
     def on_layer_names(self, layers):
         self._controls.update_layers(json.loads(layers))
 
-    @QtCore.Slot(str)
     def on_map_loaded(self):
         self._signal.loaded.emit()
 
-    @QtCore.Slot()
     def on_colour(self):
         self._signal.colour.emit()
 
-    @QtCore.Slot(list)
     def on_selected(self, selected):
         sels = [float(f) for f in json.loads(selected)]
         self._signal.selected.emit(sels)
 
-    @QtCore.Slot()
     def __on_close_popup(self):
         self._popup = None
 

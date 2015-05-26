@@ -84,7 +84,6 @@ class WidgetSignals(QtGui.QWidget):
         width += self.layout().spacing()
         self.setMaximumWidth(width)
 
-    @QtCore.Slot(QtGui.QItemSelection, QtGui.QItemSelection)
     def __on_signal_select(self, selected, deselected):
         selection = []
 
