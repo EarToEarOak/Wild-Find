@@ -293,6 +293,7 @@ class Falconer(QtGui.QMainWindow):
 
     def __on_signal_map_cleared(self):
         self._widgetMap.clear_heatmap()
+        self._widgetMap.show_busy(False)
 
     def __on_signal_map_colour(self):
         self.__set_map()

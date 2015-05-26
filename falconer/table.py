@@ -89,8 +89,7 @@ class Model(QtCore.QAbstractTableModel):
                       QtCore.Qt.ItemIsUserCheckable)
         elif self._selectable is not None:
             if column == self._selectable:
-                flags |= (QtCore.Qt.ItemIsEditable |
-                          QtCore.Qt.ItemIsSelectable)
+                flags |= QtCore.Qt.ItemIsSelectable
 
         return flags
 
