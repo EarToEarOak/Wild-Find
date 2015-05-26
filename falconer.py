@@ -43,7 +43,7 @@ from falconer.server import Server
 from falconer.settings import Settings
 from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
-from falconer.utils import export_kml
+from falconer.utils import export_kml, add_program_path
 from falconer.utils_qt import remove_context_help
 
 
@@ -102,6 +102,11 @@ class Falconer(QtGui.QMainWindow):
         self.show()
 
     def __set_icons(self):
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
+                                            'logo.png'))
+        self.setWindowIcon(icon)
+
         style = self.style()
 
         icon = style.standardIcon(QtGui.QStyle.SP_DialogSaveButton)

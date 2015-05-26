@@ -53,7 +53,7 @@ class WidgetMap(QtGui.QWidget):
         self._labelLoad.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                       QtGui.QSizePolicy.Expanding)
         self._labelLoad.setAlignment(QtCore.Qt.AlignCenter)
-        anim = add_program_path('falconer/ui/loader.gif')
+        anim = add_program_path('falconer', 'ui', 'loader.gif')
         movie = QtGui.QMovie(anim)
         self._labelLoad.setMovie(movie)
         movie.start()

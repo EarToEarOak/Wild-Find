@@ -26,6 +26,7 @@
 from PySide import QtGui
 
 from falconer import ui
+from falconer.utils import add_program_path
 from falconer.utils_qt import remove_context_help
 
 
@@ -36,6 +37,11 @@ class DialogAbout(QtGui.QDialog):
         remove_context_help(self)
 
         ui.loadUi(self, 'about.ui')
+
+        pixmap = QtGui.QPixmap(add_program_path('falconer',
+                                                'ui',
+                                                'logo.png'))
+        self._labelLogo.setPixmap(pixmap)
 
 
 if __name__ == '__main__':
