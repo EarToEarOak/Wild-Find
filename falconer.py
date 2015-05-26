@@ -202,22 +202,27 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionExportKml_triggered(self):
-        filter = 'Keyhole Markup Language (*.kmz)'
+        filters = 'Keyhole Markup Language (*.kmz)'
         dialog = QtGui.QFileDialog
         fileName, _ = dialog.getSaveFileName(self,
                                              'Export KML',
                                              dir=self._settings.dirExport,
-                                             filter=filter)
+                                             filter=filters)
         if fileName:
             self._settings.dirExport, _ = os.path.split(fileName)
             filteredSurveys = self._widgetSurveys.get_filtered()
             filteredScans = self._widgetScans.get_filtered()
             filteredSignals = self._widgetSignals.get_filtered()
+
+            locations = self._database.get_locations(filteredSurveys,
+                                                 filteredScans,
+                                                 filteredSignals)
             telemetry = self._database.get_telemetry(filteredSurveys,
                                                      filteredScans,
                                                      filteredSignals)
+            heatmap = self._heatMap.get_file()
 
-            export_kml(fileName, self._heatMap.get_file(), telemetry)
+            export_kml(fileName, locations, telemetry, heatmap)
 
     @QtCore.Slot()
     def on_actionPrint_triggered(self):

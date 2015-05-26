@@ -175,11 +175,12 @@ class Database(object):
 
         cursor = self._conn.cursor()
 
-        cmd = 'select Lon, Lat, Level from Signals'
+        cmd = 'select Id, Lon, Lat, Level from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
                              filteredSignals)
+        cmd += 'order by Id'
 
         cursor.execute(cmd)
         rows = cursor.fetchall()

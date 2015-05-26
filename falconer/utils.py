@@ -37,7 +37,39 @@ def add_program_path(*paths):
     return os.path.join(cwd, *paths)
 
 
-def export_kml(fileName, image, telemetry):
+def export_kml(fileName, locations, telemetry, image):
+    points = ('    <Folder>\n'
+              '      <name>Locations</name>\n')
+    for location in locations:
+        desc = ('{:.4f}MHz\n'
+                '{:.1f}PPM\n'
+                '{:.1f}dB').format(location[0] / 1e6,
+                                   location[1],
+                                   location[2])
+        points += ('      <Placemark>\n'
+                   '      <description>{}</description>\n'
+                   '        <styleUrl>#location</styleUrl>\n'
+                   '        <Point>\n'
+                   '          <altitudeMode>clampToGround</altitudeMode>\n'
+                   '        <coordinates>{},{},0</coordinates>\n'
+                   '        </Point>\n'
+                   '    </Placemark>\n').format(desc,
+                                                location[3],
+                                                location[4])
+    points += '    </Folder>\n'
+
+    coords = ''
+    for coord in telemetry:
+        coords += '{},{},0\n'.format(coord[0], coord[1])
+    track = ('    <Placemark>\n'
+             '      <name>Track</name>\n'
+             '      <styleUrl>#track</styleUrl>\n'
+             '      <LineString>\n'
+             '        <altitudeMode>clampToGround</altitudeMode>\n'
+             '        <coordinates>{coords}</coordinates>\n'
+             '      </LineString>\n'
+             '    </Placemark>\n').format(coords=coords)
+
     xyz = zip(*telemetry)
     north = max(xyz[1])
     south = min(xyz[1])
@@ -46,21 +78,45 @@ def export_kml(fileName, image, telemetry):
 
     keyhole = ('<?xml version="1.0" encoding="UTF-8"?>\n'
                '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
-               '<GroundOverlay>\n'
-               '\t<name>Wild Find</name>\n'
-               '\t<Icon>\n'
-               '\t\t<href>heatmap.png</href>\n'
-               '\t\t<viewBoundScale>0.75</viewBoundScale>\n'
-               '\t</Icon>\n'
-               '\t<LatLonBox>\n'
-               '\t\t<north>{north}</north>\n'
-               '\t\t<south>{south}</south>\n'
-               '\t\t<east>{east}</east>\n'
-               '\t\t<west>{west}</west>\n'
-               '\t</LatLonBox>\n'
-               '</GroundOverlay>\n'
+               '  <Document>\n'
+               '    <Style id="track">\n'
+               '      <LineStyle>\n'
+               '        <width>3</width>\n'
+               '        <color>ff0063dd</color>\n'
+               '      </LineStyle>\n'
+               '    </Style>\n'
+
+               '    <Style id="location">\n'
+               '      <IconStyle>\n'
+               '        <Icon>\n'
+               '          <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>'
+               '        </Icon>\n'
+               '        <color>ff0060ff</color>'
+               '      </IconStyle>\n'
+               '    </Style>\n'
+
+               '    <name>Wild Find</name>\n'
+               '    <GroundOverlay>\n'
+               '      <name>Heatmap</name>\n'
+               '      <Icon>\n'
+               '        <href>heatmap.png</href>\n'
+               '        <viewBoundScale>0.75</viewBoundScale>\n'
+               '      </Icon>\n'
+               '      <LatLonBox>\n'
+               '        <north>{north}</north>\n'
+               '        <south>{south}</south>\n'
+               '        <east>{east}</east>\n'
+               '        <west>{west}</west>\n'
+               '      </LatLonBox>\n'
+               '    </GroundOverlay>\n'
+
+               '{points}'
+               '{track}'
+
+               '  </Document>\n'
                '</kml>\n'
-               ).format(north=north, south=south, east=east, west=west)
+               ).format(north=north, south=south, east=east, west=west,
+                        points=points, track=track)
 
     fd, heatmap = tempfile.mkstemp()
     tempFile = os.fdopen(fd, 'wb')
