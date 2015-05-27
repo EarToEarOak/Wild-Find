@@ -36,9 +36,9 @@ class TableSelectionMenu(object):
         self._menu = None
 
         table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        table.customContextMenuRequested.connect(self.__contextMenu)
+        table.customContextMenuRequested.connect(self.__context_menu)
 
-    def __contextMenu(self, pos):
+    def __context_menu(self, pos):
         style = self._table.style()
         filters = len(self._model.get())
         filtered = len(self._model.get_filtered())
