@@ -106,6 +106,10 @@ class Falconer(QtGui.QMainWindow):
                                             'ui',
                                             'logo.png'))
         self.setWindowIcon(icon)
+        if os.name == 'nt':
+            import ctypes
+            id = u'com.eartoearoak.0.0'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(id)
 
         style = self.style()
 
