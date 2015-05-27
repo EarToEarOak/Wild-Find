@@ -108,8 +108,8 @@ class Falconer(QtGui.QMainWindow):
         self.setWindowIcon(icon)
         if os.name == 'nt':
             import ctypes
-            id = u'com.eartoearoak.0.0'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(id)
+            appId = u'com.eartoearoak.0.0'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(appId)
 
         style = self.style()
 
@@ -231,8 +231,8 @@ class Falconer(QtGui.QMainWindow):
             filteredSignals = self._widgetSignals.get_filtered()
 
             locations = self._database.get_locations(filteredSurveys,
-                                                 filteredScans,
-                                                 filteredSignals)
+                                                     filteredScans,
+                                                     filteredSignals)
             telemetry = self._database.get_telemetry(filteredSurveys,
                                                      filteredScans,
                                                      filteredSignals)

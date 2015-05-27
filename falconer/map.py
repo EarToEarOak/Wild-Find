@@ -325,7 +325,6 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.clear_heatmap()
 
 
-
 class MapLink(QtCore.QObject):
     def __init__(self, frame):
         QtCore.QObject.__init__(self)
