@@ -150,6 +150,8 @@ def create_database(connection):
             table = cursor.fetchall()
             if len(table):
                 __upgrade(cursor)
+                cmd = 'drop table if exists temp'
+                cursor.execute(cmd)
             else:
                 __create_tables(cursor)
         except sqlite3.IntegrityError as error:
