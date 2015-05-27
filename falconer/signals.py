@@ -255,7 +255,7 @@ class DialogHistogram(QtGui.QDialog):
                              height,
                              '{:.4f}'.format(freq),
                              rotation=45,
-                             ha='center', va='bottom', size='smaller')
+                             ha='left', va='bottom', size='smaller')
             if matplotlib.__version__ >= '1.3':
                 effect = patheffects.withStroke(linewidth=2,
                                                 foreground="w",
