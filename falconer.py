@@ -36,6 +36,7 @@ from falconer.database import Database
 from falconer.heatmap import HeatMap
 from falconer.log import DialogLog
 from falconer.map import WidgetMap
+from falconer.plot3d import DialogPlot3d
 from falconer.preferences import DialogPreferences
 from falconer.printer import print_report
 from falconer.scans import WidgetScans
@@ -45,6 +46,12 @@ from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
 from falconer.utils import export_kml, add_program_path
 from falconer.utils_qt import remove_context_help
+
+SIP = True
+try:
+    import sip
+except ImportError as error:
+    SIP = False
 
 
 class Falconer(QtGui.QMainWindow):
@@ -79,6 +86,8 @@ class Falconer(QtGui.QMainWindow):
                                 self.__on_signal_map_colour,
                                 self.__on_signal_map_selected)
         self._widgetMap.set_settings(self._settings)
+
+        self.actionPlot3d.setVisible(SIP)
 
         self._heatMap = HeatMap(self, self._settings,
                                 self.__on_signal_map_plotted,
@@ -282,6 +291,18 @@ class Falconer(QtGui.QMainWindow):
         self.splitter.setSizes(sizes)
 
     @QtCore.Slot()
+    def on_actionPlot3d_triggered(self):
+        filteredSurveys = self._widgetSurveys.get_filtered()
+        filteredScans = self._widgetScans.get_filtered()
+        filteredSignals = self._widgetSignals.get_filtered()
+        telemetry = self._database.get_telemetry(filteredSurveys,
+                                                 filteredScans,
+                                                 filteredSignals)
+
+        dlg = DialogPlot3d(settings, telemetry)
+        dlg.exec_()
+
+    @QtCore.Slot()
     def on_actionLog_triggered(self):
         dlg = DialogLog(self, self._database.get_logs())
         dlg.exec_()
@@ -415,6 +436,8 @@ class Falconer(QtGui.QMainWindow):
         self.actionExportKml.setEnabled(enabled)
         self.actionPrint.setEnabled(enabled)
         self.actionClose.setEnabled(enabled)
+        self.actionClose.setEnabled(enabled)
+        self.actionPlot3d.setEnabled(enabled)
 
         self.actionLog.setEnabled(enabled)
 

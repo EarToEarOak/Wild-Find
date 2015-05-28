@@ -87,6 +87,8 @@
     <addaction name="actionViewScans"/>
     <addaction name="actionViewSignals"/>
     <addaction name="separator"/>
+    <addaction name="actionPlot3d"/>
+    <addaction name="separator"/>
     <addaction name="actionLog"/>
     <addaction name="separator"/>
     <addaction name="actionFullscreen"/>
@@ -274,6 +276,14 @@
    </property>
    <property name="text">
     <string>Export to KML...</string>
+   </property>
+  </action>
+  <action name="actionPlot3d">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>3D Plot...</string>
    </property>
   </action>
  </widget>
