@@ -71,7 +71,7 @@ class DialogPlot3d(QtGui.QDialog):
 
 class WidgetPlot(FigureCanvas):
     def __init__(self, parent=None):
-        FigureCanvas.__init__(self, Figure(frameon=False))
+        FigureCanvas.__init__(self, Figure())
 
         self._telemetry = None
         self._resolution = None
@@ -80,11 +80,11 @@ class WidgetPlot(FigureCanvas):
 
         self.setParent(parent)
 
-        self._figure = Figure(frameon=False)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setFocus()
 
-        self._canvas = FigureCanvas(self._figure)
-        self._canvas.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self._canvas.setFocus()
+        colour = self.palette().color(self.backgroundRole()).getRgbF()
+        self.figure.patch.set_facecolor(colour[:-1])
 
         gs = GridSpec(1, 2, width_ratios=[9.5, 0.5])
 
@@ -93,6 +93,7 @@ class WidgetPlot(FigureCanvas):
         self._axes.set_xlabel('Longitude')
         self._axes.set_ylabel('Latitude')
         self._axes.set_zlabel('Level')
+        self._axes.tick_params(axis='both', which='major', labelsize='smaller')
         self._axes.grid(True)
         formatMaj = ScalarFormatter(useOffset=False)
         self._axes.xaxis.set_major_formatter(formatMaj)
@@ -104,6 +105,8 @@ class WidgetPlot(FigureCanvas):
         self._axes.zaxis.set_minor_locator(formatMinor)
 
         self._axesBar = self.figure.add_subplot(gs[1])
+        self._axesBar.tick_params(axis='both', which='major',
+                                  labelsize='smaller')
         self._bar = ColorbarBase(self._axesBar)
 
         if matplotlib.__version__ >= '1.2':
