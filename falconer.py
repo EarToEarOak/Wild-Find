@@ -180,7 +180,6 @@ class Falconer(QtGui.QMainWindow):
         if fileName:
             self._statusbar.showMessage('Opening...')
             self._settings.dirFile, _ = os.path.split(fileName)
-            self._settings.add_history(fileName)
             self.__open(fileName)
 
     @QtCore.Slot()
@@ -352,8 +351,7 @@ class Falconer(QtGui.QMainWindow):
         self._widgetSignals.select(list(freqs))
 
     def __on_open_history(self, fileName):
-        if self.__open(fileName):
-            self._settings.add_history(fileName)
+        self.__open(fileName)
 
     def __on_survey_filter(self):
         self.__set_scans()
@@ -490,6 +488,8 @@ class Falconer(QtGui.QMainWindow):
         name = os.path.basename(fileName)
         self.setWindowTitle('Falconer - {}'.format(name))
         self._statusbar.showMessage('Ready')
+
+        self._settings.add_history(fileName)
 
         return True
 
