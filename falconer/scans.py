@@ -28,7 +28,7 @@ from PySide import QtGui, QtCore
 
 from falconer import ui
 from falconer.table import Model, format_qtime
-from falconer.utils_qt import TableSelectionMenu, remove_context_help
+from falconer.utils_qt import TableSelectionMenu, win_remove_context_help
 
 
 class WidgetScans(QtGui.QWidget):
@@ -110,9 +110,8 @@ class DialogScansRange(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self._timeStamps = timeStamps
 
-        remove_context_help(self)
-
         ui.loadUi(self, 'scans_range.ui')
+        win_remove_context_help(self)
 
         timeMin, timeMax = self.__get_range()
         self._timeFrom = timeMin.toTime_t()

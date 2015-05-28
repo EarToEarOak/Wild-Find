@@ -45,7 +45,7 @@ from falconer.settings import Settings
 from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
 from falconer.utils import export_kml, add_program_path
-from falconer.utils_qt import remove_context_help
+from falconer.utils_qt import win_remove_context_help
 
 SIP = True
 try:
@@ -194,7 +194,7 @@ class Falconer(QtGui.QMainWindow):
         self._printer.setDocName(self.windowTitle())
         printer.setOutputFormat(QtGui.QPrinter.PdfFormat)
         dialog = QtGui.QPrintPreviewDialog(printer, self)
-        remove_context_help(dialog)
+        win_remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._statusbar.showMessage('Exporting...')
@@ -253,7 +253,7 @@ class Falconer(QtGui.QMainWindow):
     def on_actionPrint_triggered(self):
         self._printer.setDocName(self.windowTitle())
         dialog = QtGui.QPrintPreviewDialog(self._printer, self)
-        remove_context_help(dialog)
+        win_remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
             self._statusbar.showMessage('Printing...')

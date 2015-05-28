@@ -39,18 +39,18 @@ from mpl_toolkits.mplot3d import Axes3D  # @UnusedImport
 from PySide import QtGui, QtCore
 
 from falconer import ui
-from falconer.utils_qt import remove_context_help
+from falconer.utils_qt import win_set_maximise, win_set_icon
 
 
 class DialogPlot3d(QtGui.QDialog):
     def __init__(self, settings, telemetry):
-        QtGui.QDialog.__init__(self, None)
-
-        remove_context_help(self)
+        QtGui.QDialog.__init__(self)
 
         self.customWidgets = {'WidgetPlot': WidgetPlot}
 
         ui.loadUi(self, 'plot3d.ui')
+        win_set_icon(self)
+        win_set_maximise(self)
 
         self._widgetPlot.set(telemetry)
         self._widgetPlot.set_cmap(settings.heatmapColour)

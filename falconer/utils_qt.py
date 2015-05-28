@@ -123,9 +123,18 @@ class DialogPopup(QtGui.QDialog):
         self._web.load(url)
 
 
-def remove_context_help(dialog):
-    flags = dialog.windowFlags()
-    dialog.setWindowFlags(flags & (~QtCore.Qt.WindowContextHelpButtonHint))
+def win_remove_context_help(window):
+    flags = window.windowFlags()
+    window.setWindowFlags(flags & (~QtCore.Qt.WindowContextHelpButtonHint))
+
+
+def win_set_maximise(window):
+    window.setWindowFlags(QtCore.Qt.WindowMaximizeButtonHint)
+
+
+def win_set_icon(window):
+    top = QtGui.QApplication.topLevelWidgets()[0]
+    window.setWindowIcon(top.windowIcon())
 
 
 if __name__ == '__main__':

@@ -32,7 +32,7 @@ from matplotlib.ticker import ScalarFormatter
 
 from falconer import ui
 from falconer.table import format_freq, format_rate, Model
-from falconer.utils_qt import TableSelectionMenu
+from falconer.utils_qt import TableSelectionMenu, win_set_maximise, win_set_icon
 import matplotlib.pyplot as plt
 
 
@@ -96,7 +96,7 @@ class WidgetSignals(QtGui.QWidget):
 
     @QtCore.Slot(bool)
     def on__buttonHistogram_clicked(self, _clicked):
-        dlg = DialogHistogram(self, self._model.get_all())
+        dlg = DialogHistogram(self._model.get_all())
         dlg.exec_()
 
     def __append_selection(self, selection, select, selected):
@@ -162,15 +162,16 @@ class WidgetSignals(QtGui.QWidget):
 
 
 class DialogHistogram(QtGui.QDialog):
-    def __init__(self, parent, signals):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, signals):
+        QtGui.QDialog.__init__(self)
 
         self._signals = signals
         self._scale = 1.
         self._dragStart = None
 
         ui.loadUi(self, 'signals_hist.ui')
-        self.setWindowFlags(QtCore.Qt.Tool)
+        win_set_icon(self)
+        win_set_maximise(self)
 
         self._graphicsView.viewport().installEventFilter(self)
 

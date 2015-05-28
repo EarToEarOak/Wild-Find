@@ -27,18 +27,17 @@
 from PySide import QtGui, QtCore
 
 from falconer import ui
-from falconer.utils_qt import remove_context_help
+from falconer.utils_qt import win_remove_context_help
 
 
 class DialogPreferences(QtGui.QDialog):
     def __init__(self, parent, settings):
         QtGui.QDialog.__init__(self, parent)
 
-        remove_context_help(self)
-
         self._settings = settings
 
         ui.loadUi(self, 'preferences.ui')
+        win_remove_context_help(self)
 
         styles = QtGui.QStyleFactory.keys()
         style = QtGui.QApplication.style().objectName()

@@ -9,6 +9,9 @@
    <string>Time Range</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <property name="verticalSpacing">
     <number>12</number>
    </property>
