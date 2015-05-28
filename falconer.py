@@ -49,7 +49,7 @@ from falconer.utils_qt import remove_context_help
 
 SIP = True
 try:
-    import sip
+    import sip  # @UnusedImport
 except ImportError as error:
     SIP = False
 
