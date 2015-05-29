@@ -160,12 +160,11 @@ class Database(object):
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        for row in rows:
-            row['Level'] = 10 * math.log(row['Level'])
 
-        signals = [[row['Freq'], row['Rate'], row['Level'],
+        signals = [[row['Freq'], row['Rate'], 10 * math.log(row['Level']),
                     row['Lon'], row['Lat']]
-                   for row in rows]
+                   for row in rows
+                   if row['Level'] is not None and row['Level'] > 0]
 
         return signals
 
@@ -184,7 +183,8 @@ class Database(object):
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        telemetry = [[row['Lon'], row['Lat'], row['Level']] for row in rows]
+        telemetry = [[row['Lon'], row['Lat'], row['Level']] for row in rows
+                     if row['Level'] is not None and row['Level'] > 0]
 
         return telemetry
 
