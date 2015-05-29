@@ -96,7 +96,8 @@ class WidgetSignals(QtGui.QWidget):
 
     @QtCore.Slot(bool)
     def on__buttonHistogram_clicked(self, _clicked):
-        dlg = DialogHistogram(self._model.get_all())
+        dlg = DialogHistogram(self._model.get_all(),
+                              self._model.get_filtered())
         dlg.exec_()
 
     def __append_selection(self, selection, select, selected):
@@ -162,10 +163,11 @@ class WidgetSignals(QtGui.QWidget):
 
 
 class DialogHistogram(QtGui.QDialog):
-    def __init__(self, signals):
+    def __init__(self, signals, filtered):
         QtGui.QDialog.__init__(self)
 
         self._signals = signals
+        self._filtered = filtered
         self._scale = 1.
         self._dragStart = None
 
@@ -181,6 +183,10 @@ class DialogHistogram(QtGui.QDialog):
         self._buttonIn.setMaximumSize(size)
         self._buttonOut.setMaximumSize(size)
 
+        self._show_all = self._checkAll.isChecked()
+        if not len(filtered):
+            self._checkAll.setEnabled(False)
+
         self.activateWindow()
 
     @QtCore.Slot(bool)
@@ -192,6 +198,11 @@ class DialogHistogram(QtGui.QDialog):
     def on__buttonOut_clicked(self, _clicked):
         pos = self.__get_centre()
         self.__zoom(pos, -120)
+
+    @QtCore.Slot(bool)
+    def on__checkAll_clicked(self, checked):
+        self._show_all = checked
+        self.__plot()
 
     @QtCore.Slot()
     def on__buttonBox_rejected(self):
@@ -244,17 +255,24 @@ class DialogHistogram(QtGui.QDialog):
         axes.xaxis.set_major_formatter(formatter)
         axes.yaxis.set_major_formatter(formatter)
 
-        x, _, y = zip(*self._signals)
+        if self._show_all:
+            signals = self._signals
+        else:
+            signals = [signal for signal in self._signals
+                       if signal[0] not in self._filtered]
+
+        x, z, y = zip(*signals)
         x = [freq / 1e6 for freq in x]
         width = 0.06
         bars = axes.bar(x, y, width=width, color='blue')
         for i in range(len(y)):
             bar = bars[i]
             freq = x[i]
+            rate = z[i]
             height = bar.get_height()
             text = axes.text(bar.get_x() + width / 2.,
                              height,
-                             '{:.4f}'.format(freq),
+                             '{:.4f} ({:.1f})'.format(freq, rate),
                              rotation=45,
                              ha='left', va='bottom', size='smaller')
             if matplotlib.__version__ >= '1.3':
