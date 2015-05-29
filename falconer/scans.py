@@ -28,7 +28,8 @@ from PySide import QtGui, QtCore
 
 from falconer import ui
 from falconer.table import Model, format_qtime
-from falconer.utils_qt import TableSelectionMenu, win_remove_context_help
+from falconer.utils_qt import TableSelectionMenu, win_remove_context_help,\
+    cal_set_colours
 
 
 class WidgetScans(QtGui.QWidget):
@@ -121,6 +122,9 @@ class DialogScansRange(QtGui.QDialog):
         self._dateFrom.setDateTime(timeMin)
         self._dateTo.setDateTimeRange(timeMin, timeMax)
         self._dateTo.setDateTime(timeMax)
+
+        cal_set_colours(self._dateFrom)
+        cal_set_colours(self._dateTo)
 
     @QtCore.Slot(QtCore.QDateTime)
     def on__dateFrom_dateTimeChanged(self, dateTime):

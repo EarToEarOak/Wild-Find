@@ -137,6 +137,15 @@ def win_set_icon(window):
     window.setWindowIcon(top.windowIcon())
 
 
+def cal_set_colours(calendar):
+    palette = calendar.palette()
+    palette.setColor(QtGui.QPalette.Window, QtCore.Qt.lightGray)
+    palette.setColor(QtGui.QPalette.Base, QtCore.Qt.white)
+    colour = QtGui.QColor(240, 240, 240)
+    palette.setColor(QtGui.QPalette.AlternateBase, colour)
+    calendar.setPalette(palette)
+
+
 if __name__ == '__main__':
     print 'Please run falconer.py'
     exit(1)
