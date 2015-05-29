@@ -25,14 +25,12 @@
 
 import io
 import threading
+import time
 
 import serial
 from serial.serialutil import SerialException
 
 from harrier import events
-
-
-TIMEOUT = 2
 
 
 class Gps(threading.Thread):
@@ -52,12 +50,14 @@ class Gps(threading.Thread):
         self.start()
 
     def __serial_read(self):
-        data = True
-        while data and not self._cancel:
+        while not self._cancel:
             data = self._commIo.readline()
-            yield data
-
-        return
+            if data is None:
+                break
+            if len(data):
+                yield data
+            else:
+                time.sleep(0.1)
 
     def __checksum(self, data):
         checksum = 0
@@ -129,7 +129,7 @@ class Gps(threading.Thread):
                                        parity=self._gps.parity,
                                        stopbits=self._gps.stops,
                                        xonxoff=self._gps.soft,
-                                       timeout=TIMEOUT)
+                                       timeout=0)
             buff = io.BufferedReader(self._comm, 1)
             self._commIo = io.TextIOWrapper(buff,
                                             newline='\r',
@@ -148,7 +148,7 @@ class Gps(threading.Thread):
 
     def __read(self):
         for resp in self.__serial_read():
-            if not len(resp):
+            if resp is None:
                 events.Post(self._queue).gps_error('GPS timed out')
                 break
             resp = resp.replace('\n', '')
