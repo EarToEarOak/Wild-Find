@@ -34,6 +34,9 @@
      <property name="toolTip">
       <string>Start time</string>
      </property>
+     <property name="displayFormat">
+      <string>dd/MM/yyyy HH:mm:ss</string>
+     </property>
      <property name="calendarPopup">
       <bool>true</bool>
      </property>
@@ -43,6 +46,9 @@
     <widget class="QDateTimeEdit" name="_dateTo">
      <property name="toolTip">
       <string>End time</string>
+     </property>
+     <property name="displayFormat">
+      <string>dd/MM/yyyy HH:mm:ss</string>
      </property>
      <property name="calendarPopup">
       <bool>true</bool>
