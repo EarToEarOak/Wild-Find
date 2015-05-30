@@ -123,18 +123,22 @@ class Falconer(QtGui.QMainWindow):
         style = self.style()
 
         icon = style.standardIcon(QtGui.QStyle.SP_DialogSaveButton)
+        icon = QtGui.QIcon.fromTheme('document-new', icon)
         self.actionNew.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_DialogOpenButton)
+        icon = QtGui.QIcon.fromTheme('document-open', icon)
         self.actionOpen.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_DialogCloseButton)
         self.actionClose.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxQuestion)
+        icon = QtGui.QIcon.fromTheme('help-contents', icon)
         self.actionHelp.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxInformation)
+        icon = QtGui.QIcon.fromTheme('help-about', icon)
         self.actionAbout.setIcon(icon)
 
     def __set_fonts(self):

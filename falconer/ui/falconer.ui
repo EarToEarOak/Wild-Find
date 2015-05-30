@@ -48,6 +48,9 @@
      <property name="title">
       <string>Recent</string>
      </property>
+     <property name="icon">
+      <iconset theme="document-open-recent"/>
+     </property>
      <addaction name="separator"/>
     </widget>
     <addaction name="actionNew"/>
@@ -146,6 +149,9 @@
    </property>
   </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset theme="application-exit"/>
+   </property>
    <property name="text">
     <string>&amp;Exit</string>
    </property>
@@ -170,6 +176,9 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset theme="document-properties"/>
+   </property>
    <property name="text">
     <string>&amp;Preferences</string>
    </property>
@@ -185,6 +194,9 @@
   <action name="actionPrint">
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="document-print"/>
    </property>
    <property name="text">
     <string>Print...</string>
@@ -230,6 +242,9 @@
    </property>
   </action>
   <action name="actionFullscreen">
+   <property name="icon">
+    <iconset theme="view-fullscreen"/>
+   </property>
    <property name="text">
     <string>Full screen</string>
    </property>
