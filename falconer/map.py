@@ -106,7 +106,6 @@ class WidgetMap(QtGui.QWidget):
     def __on_load_finished(self, _loaded):
         self._labelLoad.setVisible(False)
         self._webMap.setVisible(True)
-        QtCore.QTimer.singleShot(2, self._controls.follow)
 
     def __on_link_clicked(self, url):
         if self._popup is None:
@@ -354,6 +353,7 @@ class MapLink(QtCore.QObject):
     def on_layer_names(self, names):
         self._signal.layers.emit(names)
         self._signal.loaded.emit()
+        QtCore.QTimer.singleShot(2, self.follow)
 
     @QtCore.Slot(str)
     def on_selected(self, frequencies):
