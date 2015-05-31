@@ -32,29 +32,35 @@ from serial.serialutil import SerialException
 
 from harrier import events
 
+TIMEOUT = 15
+
 
 class Gps(threading.Thread):
     def __init__(self, gps, queue):
         threading.Thread.__init__(self)
-        self.name = 'Location'
+        self.name = 'GPS'
 
         self._gps = gps
         self._queue = queue
 
         self._comm = None
         self._commIo = None
+        self._timeout = None
         self._cancel = False
 
         self._sats = {}
 
         self.start()
 
+    def __timeout(self):
+        self.stop()
+        events.Post(self._queue).gps_error('GPS timed out')
+
     def __serial_read(self):
         while not self._cancel:
             data = self._commIo.readline()
-            if data is None:
-                break
             if len(data):
+                self._timeout.reset()
                 yield data
             else:
                 time.sleep(0.1)
@@ -122,35 +128,21 @@ class Gps(threading.Thread):
         return pos
 
     def __open(self):
-        try:
-            self._comm = serial.Serial(self._gps.port,
-                                       baudrate=self._gps.baud,
-                                       bytesize=self._gps.bits,
-                                       parity=self._gps.parity,
-                                       stopbits=self._gps.stops,
-                                       xonxoff=self._gps.soft,
-                                       timeout=0)
-            buff = io.BufferedReader(self._comm, 1)
-            self._commIo = io.TextIOWrapper(buff,
-                                            newline='\r',
-                                            line_buffering=True)
-        except SerialException as error:
-            events.Post(self._queue).gps_error(error.message)
-            return False
-        except OSError as error:
-            events.Post(self._queue).gps_error(error)
-            return False
-        except ValueError as error:
-            events.Post(self._queue).gps_error(error)
-            return False
-
-        return True
+        self._timeout = Timeout(self.__timeout)
+        self._comm = serial.Serial(self._gps.port,
+                                   baudrate=self._gps.baud,
+                                   bytesize=self._gps.bits,
+                                   parity=self._gps.parity,
+                                   stopbits=self._gps.stops,
+                                   xonxoff=self._gps.soft,
+                                   timeout=0)
+        buff = io.BufferedReader(self._comm, 1)
+        self._commIo = io.TextIOWrapper(buff,
+                                        newline='\r',
+                                        line_buffering=True)
 
     def __read(self):
         for resp in self.__serial_read():
-            if resp is None:
-                events.Post(self._queue).gps_error('GPS timed out')
-                break
             resp = resp.replace('\n', '')
             resp = resp.replace('\r', '')
             resp = resp[1::]
@@ -169,16 +161,53 @@ class Gps(threading.Thread):
                     events.Post(self._queue).warning(warn)
 
     def __close(self):
-        self._comm.close()
+        if self._timeout is not None:
+            self._timeout.cancel()
+        if self._comm is not None:
+            self._comm.close()
 
     def run(self):
-        if not self.__open():
-            return
-        self.__read()
+        try:
+            self.__open()
+            self.__read()
+        except SerialException as error:
+            events.Post(self._queue).gps_error(error.message)
+        except OSError as error:
+            events.Post(self._queue).gps_error(error)
+        except ValueError as error:
+            events.Post(self._queue).gps_error(error)
+
         self.__close()
 
     def stop(self):
         self._cancel = True
+
+
+class Timeout(threading.Thread):
+    def __init__(self, callback):
+        threading.Thread.__init__(self)
+        self.name = 'GPS Timeout'
+
+        self._callback = callback
+        self._done = threading.Event()
+        self._reset = True
+
+        self.start()
+
+    def run(self):
+        while self._reset:
+            self._reset = False
+            self._done.wait(TIMEOUT)
+
+        if not self._done.isSet():
+            self._callback()
+
+    def reset(self):
+        self._reset = True
+        self._done.clear()
+
+    def cancel(self):
+        self._done.set()
 
 
 if __name__ == '__main__':

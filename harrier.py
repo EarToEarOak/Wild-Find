@@ -158,8 +158,9 @@ class Harrier(object):
 
         # Open GPS
         elif eventType == events.GPS_OPEN:
-            print '\nStarting GPS'
-            self._gps = Gps(settings.gps, queue)
+            if self._gps is None:
+                print '\nStarting GPS'
+                self._gps = Gps(settings.gps, queue)
 
         # GPS location
         elif eventType == events.GPS_LOC:
@@ -171,6 +172,7 @@ class Harrier(object):
 
         # GPS error
         elif eventType == events.GPS_ERR:
+            self._gps = None
             error = '\nGPS error: {}'.format(event.get_arg('error'))
             self._database.append_log(error)
             self._status.clear_gps()
