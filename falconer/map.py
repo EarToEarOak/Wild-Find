@@ -106,6 +106,7 @@ class WidgetMap(QtGui.QWidget):
     def __on_load_finished(self, _loaded):
         self._labelLoad.setVisible(False)
         self._webMap.setVisible(True)
+        QtCore.QTimer.singleShot(2, self._controls.follow)
 
     def __on_link_clicked(self, url):
         if self._popup is None:
@@ -177,6 +178,9 @@ class WidgetMap(QtGui.QWidget):
         painter.end()
 
         return image
+
+    def set_follow(self, enable):
+        self._controls.set_follow(enable)
 
     def set_settings(self, settings):
         self._controls.set_settings(settings)
@@ -284,7 +288,7 @@ class WidgetMapControls(QtGui.QWidget):
         self.setEnabled(True)
 
     def cancel_track(self):
-        self._follow = False
+        self.set_follow(False)
         self._checkFollow.setChecked(self._follow)
 
     def transform_coords(self, xyz):
@@ -292,6 +296,11 @@ class WidgetMapControls(QtGui.QWidget):
 
     def get_pos(self):
         return self._mapLink.get_pos()
+
+    def set_follow(self, enable):
+        self._follow = enable
+        self._checkFollow.setChecked(self._follow)
+        self.follow()
 
     def set_settings(self, settings):
         self._settings = settings
@@ -317,7 +326,6 @@ class WidgetMapControls(QtGui.QWidget):
         self._mapLink.select_locations(frequencies)
 
     def clear_locations(self):
-        self._follow = True
         self._checkFollow.setChecked(self._follow)
         self._mapLink.clear_locations()
 

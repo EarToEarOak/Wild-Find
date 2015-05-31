@@ -489,6 +489,7 @@ class Falconer(QtGui.QMainWindow):
         self.__set_signals()
         self.__set_map()
         self.__set_controls()
+        self._widgetMap.set_follow(True)
         name = os.path.basename(fileName)
         self.setWindowTitle('Falconer - {}'.format(name))
         self._statusbar.showMessage('Ready')
