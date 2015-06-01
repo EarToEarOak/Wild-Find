@@ -110,42 +110,60 @@ var overlaySignals = new ol.Overlay({
 });
 
 var keyBing = 'AtgkX0aGPsyJJcv1x9QSyVxqWDJL8B0-bKPnUz3ZDQ0LD0yYbbfhQfux4MPeQUv1';
+var keyGoogle = 'AIzaSyBP_bgnvfcQH4Rgd52HOHDuPpqwTWE2qfw';
 
 function init() {
+	_initOpenLayers();
+
+	var script = document.createElement('script');
+	script.type = 'text/javascript';
+	script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&callback=_initGoogleMaps&key='
+			+ keyGoogle;
+	document.body.appendChild(script);
+
+	_addLayers();
+	map.addLayer(layerHeatmap);
+	map.addLayer(layerTrack);
+	map.addLayer(layerLocations);
+	_setLayerByName('OpenStreetMap');
+	_sendLayerNames();
+}
+
+function _initOpenLayers() {
 	layers.push(new ol.layer.Tile({
 		name : 'Bing Aerial',
 		source : new ol.source.BingMaps({
-			key: keyBing,
-			imagerySet: 'Aerial',
-			maxZoom: 19
+			key : keyBing,
+			imagerySet : 'Aerial',
+			maxZoom : 19
 		})
 	}));
 
 	layers.push(new ol.layer.Tile({
 		name : 'Bing Aerial with Labels',
 		source : new ol.source.BingMaps({
-			key: keyBing,
-			imagerySet: 'AerialWithLabels',
-			maxZoom: 19
+			key : keyBing,
+			imagerySet : 'AerialWithLabels',
+			maxZoom : 19
 		})
 	}));
 
 	layers.push(new ol.layer.Tile({
 		name : 'Bing Ordnance Survey',
 		source : new ol.source.BingMaps({
-			key: keyBing,
-			imagerySet: 'ordnanceSurvey',
-			culture: 'en-gb',
-			maxZoom: 17
+			key : keyBing,
+			imagerySet : 'ordnanceSurvey',
+			culture : 'en-gb',
+			maxZoom : 17
 		})
 	}));
 
 	layers.push(new ol.layer.Tile({
 		name : 'Bing Road',
 		source : new ol.source.BingMaps({
-			key: keyBing,
-			imagerySet: 'Road',
-			maxZoom: 19
+			key : keyBing,
+			imagerySet : 'Road',
+			maxZoom : 19
 		})
 	}));
 
@@ -164,13 +182,6 @@ function init() {
 	}));
 
 	layers.push(new ol.layer.Tile({
-		name : 'MapQuest Hybrid',
-		source : new ol.source.MapQuest({
-			layer : 'hyb'
-		})
-	}));
-
-	layers.push(new ol.layer.Tile({
 		name : 'OpenStreetMap',
 		source : new ol.source.OSM()
 	}));
@@ -179,17 +190,12 @@ function init() {
 	controls.extend([ controlScale, controlPos ]);
 
 	map = new ol.Map({
-		target : 'map',
+		target : 'olMap',
 		view : view,
-		layers : layers,
 		controls : controls,
 		overlays : [ overlaySignals ],
-		loadTilesWhileInteracting: true
+		loadTilesWhileInteracting : true
 	});
-
-	map.addLayer(layerHeatmap);
-	map.addLayer(layerTrack);
-	map.addLayer(layerLocations);
 
 	map.setView(view);
 
@@ -198,9 +204,43 @@ function init() {
 	dragBox.on('boxend', selectLocations);
 
 	_setListeners(true);
+}
 
-	setLayer(layers.length - 1);
+function _initGoogleMaps() {
+	var gmap = new google.maps.Map(document.getElementById('gMap'), {
+		disableDefaultUI : true,
+		keyboardShortcuts : false,
+		draggable : false,
+		disableDoubleClickZoom : true,
+		scrollwheel : false,
+		streetViewControl : false,
+		center : {
+			lat : 0,
+			lng : 0
+		},
+		zoom : 4
+	});
+
+	view.on('change:center', function() {
+		var centre = ol.proj.transform(view.getCenter(), 'EPSG:900913',
+				'EPSG:4326');
+		gmap.setCenter(new google.maps.LatLng(centre[1], centre[0]));
+	});
+	view.on('change:resolution', function() {
+		gmap.setZoom(view.getZoom());
+	});
+
+	var layer = new ol.layer.Group({
+		name : 'Google'
+	});
+	map.addLayer(layer);
+	layers.push(layer);
 	_sendLayerNames();
+}
+
+function _addLayers() {
+	for (var i = 0; i < layers.length; i++)
+		map.addLayer(layers[i]);
 }
 
 function _setListeners(enable) {
@@ -214,7 +254,8 @@ function _setListeners(enable) {
 }
 
 function _onInteraction() {
-	mapLink.on_interaction();
+	if (typeof mapLink != "undefined")
+		mapLink.on_interaction();
 }
 
 function _sendLayerNames() {
@@ -227,6 +268,16 @@ function _sendLayerNames() {
 		names.push(layers[i].get('name'));
 
 	mapLink.on_layer_names(JSON.stringify(names));
+}
+
+function _setLayerByName(name) {
+	var i = 0;
+
+	for (i = 0; i < layers.length; i++)
+		if (layers[i].get('name').indexOf(name) > -1)
+			break;
+
+	setLayer(i);
 }
 
 function _popup(event) {
@@ -311,7 +362,15 @@ function setLayer(index) {
 	for (var i = 0; i < layers.length; i++)
 		layers[i].setVisible(false);
 
-	layers[index].setVisible(true);
+	var layer = layers[index]
+	layer.setVisible(true);
+
+	var gLayer = layer.get('name').indexOf('Google') > -1;
+	var gMap = document.getElementById('gMap');
+	if (gLayer)
+		gMap.style.visibility = 'visible';
+	else
+		gMap.style.visibility = 'hidden';
 }
 
 function setUnits(units) {

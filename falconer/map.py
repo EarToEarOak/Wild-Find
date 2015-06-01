@@ -123,6 +123,10 @@ class WidgetMap(QtGui.QWidget):
                 QtCore.QTimer.singleShot(RETRY_TIME, self.__on_retry)
             else:
                 self._webMap.setHtml('Could not load map')
+        else:
+            page = self._webMap.page()
+            manager = page.networkAccessManager()
+            manager.finished[QtNetwork.QNetworkReply].disconnect(self.__loaded)
 
     def __on_inspector(self):
         self._inspector.setVisible(not self._inspector.isVisible())
