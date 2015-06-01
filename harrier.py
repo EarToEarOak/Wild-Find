@@ -87,6 +87,10 @@ class Harrier(object):
                 except IOError:
                     pass
 
+        print '\nExiting...'
+        waiting = self._status.get_wait()
+        if waiting is not None:
+            print '(Waiting for {} to finish)'.format(self._status.get_wait())
         self.__close()
 
     def __arguments(self):
@@ -202,7 +206,6 @@ class Harrier(object):
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
         self._cancel = True
-        print '\nExiting\n'
         if self._server is not None:
             self._server.stop()
         if self._gps is not None:

@@ -75,6 +75,12 @@ class Status(object):
         self._location = None
         self._sats = []
 
+    def get_wait(self):
+        if self._status == events.STATUS_CAPTURE:
+            return 'capture'
+        elif self._status == events.STATUS_PROCESS:
+            return 'processing'
+
     def get_location(self):
         return self._location
 

@@ -59,7 +59,9 @@ class Gps(threading.Thread):
     def __serial_read(self):
         while not self._cancel:
             data = self._commIo.readline()
-            if len(data):
+            if data is None:
+                break
+            elif len(data):
                 self._timeout.reset()
                 yield data
             else:
