@@ -36,7 +36,7 @@ var view = new ol.View({
 	zoom : 4
 });
 
-var map;
+var map, gmap;
 
 var styleLocation = new ol.style.Style({
 	image : new ol.style.Circle({
@@ -207,7 +207,7 @@ function _initOpenLayers() {
 }
 
 function _initGoogleMaps() {
-	var gmap = new google.maps.Map(document.getElementById('gMap'), {
+	gmap = new google.maps.Map(document.getElementById('gMap'), {
 		disableDefaultUI : true,
 		keyboardShortcuts : false,
 		draggable : false,
@@ -217,8 +217,7 @@ function _initGoogleMaps() {
 		center : {
 			lat : 0,
 			lng : 0
-		},
-		zoom : 4
+		}
 	});
 
 	view.on('change:center', function() {
@@ -227,14 +226,45 @@ function _initGoogleMaps() {
 		gmap.setCenter(new google.maps.LatLng(centre[1], centre[0]));
 	});
 	view.on('change:resolution', function() {
-		gmap.setZoom(view.getZoom());
+		var zoom = view.getZoom();
+		if (zoom > 21){
+			zoom=21;
+			view.setZoom(zoom);
+		}
+		gmap.setZoom(zoom);
+		gmap.setTilt(0)
 	});
 
-	var layer = new ol.layer.Group({
-		name : 'Google'
+	var layer;
+
+	layer = new ol.layer.Group({
+		name : 'Google Hybrid',
+		id : google.maps.MapTypeId.HYBRID
 	});
 	map.addLayer(layer);
 	layers.push(layer);
+
+	layer = new ol.layer.Group({
+		name : 'Google Road',
+		id : google.maps.MapTypeId.ROADMAP
+	});
+	map.addLayer(layer);
+	layers.push(layer);
+
+	layer = new ol.layer.Group({
+		name : 'Google Satellite',
+		id : google.maps.MapTypeId.SATELLITE
+	});
+	map.addLayer(layer);
+	layers.push(layer);
+
+	layer = new ol.layer.Group({
+		name : 'Google Terrain',
+		id : google.maps.MapTypeId.TERRAIN
+	});
+	map.addLayer(layer);
+	layers.push(layer);
+
 	_sendLayerNames();
 }
 
@@ -366,11 +396,12 @@ function setLayer(index) {
 	layer.setVisible(true);
 
 	var gLayer = layer.get('name').indexOf('Google') > -1;
-	var gMap = document.getElementById('gMap');
-	if (gLayer)
-		gMap.style.visibility = 'visible';
-	else
-		gMap.style.visibility = 'hidden';
+	var gMapDiv = document.getElementById('gMap');
+	if (gLayer) {
+		gMapDiv.style.visibility = 'visible';
+		gmap.setMapTypeId(layer.get('id'));
+	} else
+		gMapDiv.style.visibility = 'hidden';
 }
 
 function setUnits(units) {
