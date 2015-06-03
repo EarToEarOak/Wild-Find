@@ -150,17 +150,17 @@ class Gps(threading.Thread):
             resp = resp[1::]
             resp = resp.split('*')
             if len(resp) == 2:
-                checksum = self.__checksum(resp[0])
-                if checksum == resp[1]:
-                    data = resp[0].split(',')
-                    if data[0] == 'GPGGA':
-                        self.__global_fix(data)
-                    elif data[0] == 'GPGSV':
-                        self.__sats(data)
-                else:
-                    warn = 'Invalid checksum {}, should be {}'.format(resp[1],
-                                                                      checksum)
-                    events.Post(self._queue).warning(warn)
+                data = resp[0].split(',')
+                if data[0] in ['GPGGA', 'GPGSV']:
+                    checksum = self.__checksum(resp[0])
+                    if checksum == resp[1]:
+                        if data[0] == 'GPGGA':
+                            self.__global_fix(data)
+                        elif data[0] == 'GPGSV':
+                            self.__sats(data)
+                    else:
+                        warn = 'Invalid checksum for {} sentence'.format(data[0])
+                        events.Post(self._queue).warning(warn)
 
     def __close(self):
         if self._timeout is not None:

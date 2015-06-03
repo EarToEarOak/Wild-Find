@@ -189,7 +189,6 @@ class Harrier(object):
             self._status.clear_gps()
             warning = '\nWarning: {}'.format(event.get_arg('warning'))
             print warning
-            print 'R'
             self._database.append_log(warning)
 
         # Error
