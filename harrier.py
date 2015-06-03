@@ -216,4 +216,7 @@ class Harrier(object):
 
 
 if __name__ == '__main__':
-    Harrier()
+    try:
+        Harrier()
+    except KeyboardInterrupt:
+        pass

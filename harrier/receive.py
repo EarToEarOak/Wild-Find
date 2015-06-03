@@ -38,6 +38,7 @@ class Receive(threading.Thread):
     def __init__(self, settings, queue):
         threading.Thread.__init__(self)
         self.name = 'Receive'
+        self.daemon = True
 
         self._settings = settings
         self._queue = queue
