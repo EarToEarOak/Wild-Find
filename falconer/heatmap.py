@@ -57,7 +57,7 @@ class HeatMap(QtCore.QObject):
         self._signal.plotted.emit(bounds)
 
     def __on_cleared(self):
-        self._signal.plotted.emit()
+        self._signal.cleared.emit()
 
     def get_file(self):
         return self._tempFile

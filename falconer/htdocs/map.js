@@ -227,8 +227,8 @@ function _initGoogleMaps() {
 	});
 	view.on('change:resolution', function() {
 		var zoom = view.getZoom();
-		if (zoom > 21){
-			zoom=21;
+		if (zoom > 21) {
+			zoom = 21;
 			view.setZoom(zoom);
 		}
 		gmap.setZoom(zoom);

@@ -473,6 +473,7 @@ class Falconer(QtGui.QMainWindow):
             self._statusbar.showMessage('Ready')
             return False
 
+        self._database.close()
         self.__clear_scans()
 
         error = self._database.open(fileName)
