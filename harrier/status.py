@@ -59,7 +59,7 @@ class Status(object):
             used = len([stats for _sat, stats in self._sats[0].iteritems() if stats['Used']])
             sats = '{:2}/{:2}'.format(used, total)
 
-        status = '\r{:7}  Lon {:11}  Lat {:10}  Sats {:5}  Fix {:8}  Signals {:2}'
+        status = '\r{:7}  Lon {:11}  Lat {:10}  Sats {:5}  Fix {:8}  Signals {:2} '
         status = status.format(desc, lon, lat, sats, fix, self._signals)
         sys.stdout.write(status)
 
