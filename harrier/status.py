@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from collections import OrderedDict
 import sys
 import time
 
@@ -44,16 +43,24 @@ class Status(object):
     def __display(self):
         lon = '        --'
         lat = '        --'
+        sats = '   --'
         fix = '      --'
+
+        desc = Status.STATUS[self._status - events.STATUS_IDLE]
+
         if self._location is not None:
             lon = '{: 10.5f}'.format(self._location[0][0])
             lat = '{: 09.5f}'.format(self._location[0][1])
             fix = time.strftime('%H:%M:%S',
                                 time.localtime(self._location[1]))
-        desc = Status.STATUS[self._status - events.STATUS_IDLE]
 
-        status = '\rStatus {:7}  Lon {:11}  Lat {:10}  Fix {:8}  Signals {:2}'
-        status = status.format(desc, lon, lat, fix, self._signals)
+        if self._sats is not None and len(self._sats):
+            total = len(self._sats[0])
+            used = len([stats for _sat, stats in self._sats[0].iteritems() if stats['Used']])
+            sats = '{:2}/{:2}'.format(used, total)
+
+        status = '\r{:7}  Lon {:11}  Lat {:10}  Sats {:5}  Fix {:8}  Signals {:2}'
+        status = status.format(desc, lon, lat, sats, fix, self._signals)
         sys.stdout.write(status)
 
     def set_status(self, status):
