@@ -98,16 +98,23 @@ class Harrier(object):
                                          formatter_class=
                                          argparse.ArgumentDefaultsHelpFormatter)
 
-        parser.add_argument('-s', '--survey', help='Survey name',
-                            type=str, required=True)
+        dirUser = os.path.expanduser('~')
+
         parser.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
-                            type=float, required=True)
-        parser.add_argument("-c", "--conf", help="Configuration file",
-                            default=os.path.expanduser("~/harrier.conf"))
-        parser.add_argument("-t", "--test", help="Test mode",
-                            action="store_true")
-        parser.add_argument("file", help='File', nargs='?',
-                            default=os.path.expanduser("~/harrier.wfh"))
+                            type=float, required=True, default='Required')
+        parser.add_argument('-c', '--conf', help='Configuration file',
+                            default=os.path.join(dirUser, 'harrier.conf'))
+
+        groupNomal = parser.add_argument_group('Scan mode')
+        groupNomal.add_argument('-s', '--survey', help='Survey name',
+                                type=str,
+                                default='Survey ' + time.strftime("%d/%m/%Y"))
+        groupNomal.add_argument('file', help='File', nargs='?',
+                                default=os.path.join(dirUser, 'harrier.wfh'))
+
+        groupTest = parser.add_argument_group('Test mode')
+        groupTest.add_argument('-t', '--test', help='Test mode',
+                               action='store_true')
 
         args = parser.parse_args()
 
