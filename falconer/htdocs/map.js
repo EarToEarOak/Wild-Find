@@ -232,7 +232,7 @@ function _initGoogleMaps() {
 			view.setZoom(zoom);
 		}
 		gmap.setZoom(zoom);
-		gmap.setTilt(0)
+		gmap.setTilt(0);
 	});
 
 	var layer;
@@ -392,7 +392,7 @@ function setLayer(index) {
 	for (var i = 0; i < layers.length; i++)
 		layers[i].setVisible(false);
 
-	var layer = layers[index]
+	var layer = layers[index];
 	layer.setVisible(true);
 
 	var gLayer = layer.get('name').indexOf('Google') > -1;
