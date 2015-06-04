@@ -49,13 +49,16 @@
       <string>Recent</string>
      </property>
      <property name="icon">
-      <iconset theme="document-open-recent"/>
+      <iconset theme="document-open-recent">
+       <normaloff/>
+      </iconset>
      </property>
      <addaction name="separator"/>
     </widget>
     <addaction name="actionNew"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionMerge"/>
     <addaction name="_menuRecent"/>
     <addaction name="separator"/>
     <addaction name="actionExportPdf"/>
@@ -150,7 +153,9 @@
   </action>
   <action name="actionExit">
    <property name="icon">
-    <iconset theme="application-exit"/>
+    <iconset theme="application-exit">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Exit</string>
@@ -177,7 +182,9 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="document-properties"/>
+    <iconset theme="document-properties">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>&amp;Preferences</string>
@@ -196,7 +203,9 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="document-print"/>
+    <iconset theme="document-print">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Print...</string>
@@ -243,7 +252,9 @@
   </action>
   <action name="actionFullscreen">
    <property name="icon">
-    <iconset theme="view-fullscreen"/>
+    <iconset theme="view-fullscreen">
+     <normaloff/>
+    </iconset>
    </property>
    <property name="text">
     <string>Full screen</string>
@@ -299,6 +310,14 @@
    </property>
    <property name="text">
     <string>3D Plot...</string>
+   </property>
+  </action>
+  <action name="actionMerge">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Merge...</string>
    </property>
   </action>
  </widget>

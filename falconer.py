@@ -187,6 +187,18 @@ class Falconer(QtGui.QMainWindow):
             self.__open(fileName)
 
     @QtCore.Slot()
+    def on_actionMerge_triggered(self):
+        dialog = QtGui.QFileDialog
+        fileName, _ = dialog.getOpenFileName(self,
+                                             'Merge',
+                                             dir=self._settings.dirFile,
+                                             filter='Wild Find file (*.wfh)')
+        if fileName:
+            self._statusbar.showMessage('Merge...')
+            self._settings.dirFile, _ = os.path.split(fileName)
+            self.__merge(fileName)
+
+    @QtCore.Slot()
     def on_actionClose_triggered(self):
         self.__clear_scans()
         self._database.close()
@@ -433,6 +445,7 @@ class Falconer(QtGui.QMainWindow):
         if self._database is not None and self._database.isConnected():
             enabled = True
 
+        self.actionMerge.setEnabled(enabled)
         self.actionExportPdf.setEnabled(enabled)
         self.actionExportImage.setEnabled(enabled)
         self.actionExportKml.setEnabled(enabled)
@@ -498,6 +511,24 @@ class Falconer(QtGui.QMainWindow):
         self._settings.add_history(fileName)
 
         return True
+
+    def __merge(self, fileName):
+        merge = Database()
+        error = merge.open(fileName)
+        if error is not None:
+            QtGui.QMessageBox.critical(self,
+                                       'Open failed',
+                                       error)
+            self._statusbar.showMessage('Ready')
+            return
+
+        self._database.merge(merge)
+        merge.close()
+        self.__set_surveys()
+        self.__set_scans()
+        self.__set_signals()
+        self.__set_map()
+        self._statusbar.showMessage('Ready')
 
     def __set_surveys(self):
         surveys = self._database.get_surveys()

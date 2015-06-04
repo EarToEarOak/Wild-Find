@@ -102,8 +102,11 @@ class Database(object):
     def get_filename(self):
         return self._fileName
 
+    def get_cursor(self):
+        return self._conn.cursor()
+
     def get_surveys(self):
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
         cmd = 'select * from Scans group by Survey'
         cursor.execute(cmd)
         rows = cursor.fetchall()
@@ -115,7 +118,7 @@ class Database(object):
         if self._conn is None:
             return []
 
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
         cmd = 'select * from Scans'
         cmd += self.__filter(cursor,
                              filteredSurveys)
@@ -130,7 +133,7 @@ class Database(object):
         if self._conn is None:
             return []
 
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
 
         cmd = 'select Freq, Rate, count(Freq) from Signals'
         cmd += self.__filter(cursor,
@@ -150,7 +153,7 @@ class Database(object):
         if self._conn is None:
             return []
 
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
         cmd = 'select Id, Freq, Rate, Level, Lon, Lat from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
@@ -172,7 +175,7 @@ class Database(object):
         if self._conn is None:
             return []
 
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
 
         cmd = 'select Id, Lon, Lat, Level from Signals'
         cmd += self.__filter(cursor,
@@ -189,7 +192,7 @@ class Database(object):
         return telemetry
 
     def get_logs(self):
-        cursor = self._conn.cursor()
+        cursor = self.get_cursor()
 
         cmd = 'select * from Log'
         cursor.execute(cmd)
@@ -198,6 +201,32 @@ class Database(object):
 
         return logs
 
+    def merge(self, database):
+        with self._conn:
+            cursorDest = self.get_cursor()
+            cursorSource = database.get_cursor()
+
+            cmd = 'select name from sqlite_master where type = "table"'
+            cursorDest.execute(cmd)
+            rows = cursorDest.fetchall()
+            tables = [row['name'] for row in rows
+                      if row['name'] not in ['sqlite_sequence', 'Info']]
+
+            for table in tables:
+                cmd = 'select * from {}'.format(table)
+                cursorSource.execute(cmd)
+                rows = cursorSource.fetchall()
+
+                if len(rows):
+                    columns = ', '.join(rows[0].keys())
+                    places = ':' + ', :'.join(rows[0].keys())
+                    cmd = 'insert or ignore into {} ({} ) values ({})'.format(table,
+                                                                              columns,
+                                                                              places)
+                    for row in rows:
+                        if 'id' in row:
+                            row['id'] = 'null'
+                        cursorDest.execute(cmd, row)
 
 if __name__ == '__main__':
     print 'Please run falconer.py'
