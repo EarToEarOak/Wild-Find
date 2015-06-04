@@ -108,7 +108,7 @@ class Harrier(object):
         groupNomal = parser.add_argument_group('Scan mode')
         groupNomal.add_argument('-s', '--survey', help='Survey name',
                                 type=str,
-                                default='Survey ' + time.strftime("%d/%m/%Y"))
+                                default='Survey_' + time.strftime('%d-%m-%Y'))
         groupNomal.add_argument('file', help='File', nargs='?',
                                 default=os.path.join(dirUser, 'harrier.wfh'))
 
