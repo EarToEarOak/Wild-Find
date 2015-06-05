@@ -494,6 +494,7 @@ class Falconer(QtGui.QMainWindow):
             QtGui.QMessageBox.critical(self,
                                        'Open failed',
                                        error)
+            self._database.close()
             self.__clear_scans()
             self._statusbar.showMessage('Ready')
             return False

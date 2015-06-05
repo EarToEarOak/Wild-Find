@@ -97,15 +97,19 @@ def __upgrade(cursor):
     cursor.execute(cmd)
     result = cursor.fetchone()
     version = int(result['Value'])
+
+    if version > VERSION:
+        raise sqlite3.IntegrityError('Application is out of date, please upgrade.')
+
     if version == VERSION:
-        return None
+        return
 
     if version == 1:
         __upgrade_1_to_2(cursor)
         __upgrade_2_to_3(cursor)
 
     if version == 2:
-        return __upgrade_2_to_3(cursor)
+        __upgrade_2_to_3(cursor)
 
 
 def __upgrade_1_to_2(cursor):
