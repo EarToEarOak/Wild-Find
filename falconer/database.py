@@ -210,7 +210,7 @@ class Database(object):
             cursorDest.execute(cmd)
             rows = cursorDest.fetchall()
             tables = [row['name'] for row in rows
-                      if row['name'] not in ['sqlite_sequence', 'Info']]
+                      if row['name'] not in ['sqlite_sequence']]
 
             for table in tables:
                 cmd = 'select * from {}'.format(table)
@@ -227,6 +227,28 @@ class Database(object):
                         if 'id' in row:
                             row['id'] = 'null'
                         cursorDest.execute(cmd, row)
+
+    def filter(self, filteredSurveys, filteredScans, filteredSignals):
+        with self._conn:
+            cursor = self.get_cursor()
+
+            cmd = 'delete from Scans where Survey in ('
+            cmd += str(filteredSurveys).strip('[]')
+            cmd += ')'
+            cursor.execute(cmd)
+
+            cmd = 'delete from Scans where TimeStamp in ('
+            cmd += str(filteredScans).strip('[]')
+            cmd += ')'
+            cursor.execute(cmd)
+
+            cmd = 'delete from Signals where Freq in ('
+            cmd += str(filteredSignals).strip('[]')
+            cmd += ')'
+            cursor.execute(cmd)
+
+            self._conn.execute("VACUUM")
+
 
 if __name__ == '__main__':
     print 'Please run falconer.py'

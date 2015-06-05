@@ -61,6 +61,8 @@
     <addaction name="actionMerge"/>
     <addaction name="_menuRecent"/>
     <addaction name="separator"/>
+    <addaction name="actionSaveFiltered"/>
+    <addaction name="separator"/>
     <addaction name="actionExportPdf"/>
     <addaction name="actionExportImage"/>
     <addaction name="actionExportKml"/>
@@ -318,6 +320,17 @@
    </property>
    <property name="text">
     <string>Merge...</string>
+   </property>
+  </action>
+  <action name="actionSaveFiltered">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save filtered...</string>
+   </property>
+   <property name="toolTip">
+    <string>Save filtered to a new file</string>
    </property>
   </action>
  </widget>
