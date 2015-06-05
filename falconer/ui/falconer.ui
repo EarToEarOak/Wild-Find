@@ -45,6 +45,9 @@
      <property name="enabled">
       <bool>false</bool>
      </property>
+     <property name="statusTip">
+      <string>Recent files</string>
+     </property>
      <property name="title">
       <string>Recent</string>
      </property>
@@ -135,7 +138,7 @@
    <property name="text">
     <string>&amp;Open...</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>Open a file</string>
    </property>
   </action>
@@ -149,7 +152,7 @@
    <property name="iconText">
     <string>Close</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>Closes the file</string>
    </property>
   </action>
@@ -162,13 +165,16 @@
    <property name="text">
     <string>&amp;Exit</string>
    </property>
-   <property name="iconText">
+   <property name="statusTip">
     <string>Exit the application</string>
    </property>
   </action>
   <action name="actionHelp">
    <property name="text">
     <string>&amp;Help</string>
+   </property>
+   <property name="statusTip">
+    <string>Help</string>
    </property>
    <property name="shortcut">
     <string>F1</string>
@@ -177,6 +183,9 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About</string>
+   </property>
+   <property name="statusTip">
+    <string>About</string>
    </property>
   </action>
   <action name="actionPreferences">
@@ -191,12 +200,15 @@
    <property name="text">
     <string>&amp;Preferences</string>
    </property>
+   <property name="statusTip">
+    <string>Preferences</string>
+   </property>
   </action>
   <action name="actionNew">
    <property name="text">
     <string>&amp;New...</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>Create a new file</string>
    </property>
   </action>
@@ -212,7 +224,7 @@
    <property name="text">
     <string>Print...</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>Print file</string>
    </property>
    <property name="shortcut">
@@ -227,7 +239,10 @@
     <string>Export to PDF...</string>
    </property>
    <property name="toolTip">
-    <string>Export to a PDF</string>
+    <string>Export to PDF</string>
+   </property>
+   <property name="statusTip">
+    <string>Export as a PDF</string>
    </property>
   </action>
   <action name="actionExportImage">
@@ -237,8 +252,8 @@
    <property name="text">
     <string>Export to image...</string>
    </property>
-   <property name="toolTip">
-    <string>Export an image</string>
+   <property name="statusTip">
+    <string>Export as an image</string>
    </property>
   </action>
   <action name="actionLog">
@@ -248,7 +263,7 @@
    <property name="text">
     <string>Log...</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>View log</string>
    </property>
   </action>
@@ -260,6 +275,9 @@
    </property>
    <property name="text">
     <string>Full screen</string>
+   </property>
+   <property name="statusTip">
+    <string>View full screen</string>
    </property>
    <property name="shortcut">
     <string>F11</string>
@@ -275,6 +293,9 @@
    <property name="toolTip">
     <string>Show/hide survey table</string>
    </property>
+   <property name="statusTip">
+    <string>Show/hide survey table</string>
+   </property>
   </action>
   <action name="actionViewScans">
    <property name="checkable">
@@ -284,6 +305,9 @@
     <string>Scans</string>
    </property>
    <property name="toolTip">
+    <string>Show/hide scan table</string>
+   </property>
+   <property name="statusTip">
     <string>Show/hide scan table</string>
    </property>
   </action>
@@ -297,6 +321,9 @@
    <property name="toolTip">
     <string>Show/hide signal table</string>
    </property>
+   <property name="statusTip">
+    <string>Show/hide signal table</string>
+   </property>
   </action>
   <action name="actionExportKml">
    <property name="enabled">
@@ -304,6 +331,9 @@
    </property>
    <property name="text">
     <string>Export to KML...</string>
+   </property>
+   <property name="statusTip">
+    <string>Export as a KML file</string>
    </property>
   </action>
   <action name="actionPlot3d">
@@ -313,6 +343,9 @@
    <property name="text">
     <string>3D Plot...</string>
    </property>
+   <property name="statusTip">
+    <string>Display a 3D Plot</string>
+   </property>
   </action>
   <action name="actionMerge">
    <property name="enabled">
@@ -320,6 +353,9 @@
    </property>
    <property name="text">
     <string>Merge...</string>
+   </property>
+   <property name="statusTip">
+    <string>Merge with another file</string>
    </property>
   </action>
   <action name="actionSaveFiltered">
@@ -329,7 +365,7 @@
    <property name="text">
     <string>Save filtered...</string>
    </property>
-   <property name="toolTip">
+   <property name="statusTip">
     <string>Save filtered to a new file</string>
    </property>
   </action>
