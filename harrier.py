@@ -101,7 +101,7 @@ class Harrier(object):
         dirUser = os.path.expanduser('~')
 
         parser.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
-                            type=float, required=True, default='Required')
+                            type=float, required=True)
         parser.add_argument('-c', '--conf', help='Configuration file',
                             default=os.path.join(dirUser, 'harrier.conf'))
 
