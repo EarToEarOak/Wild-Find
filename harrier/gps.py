@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import io
 import threading
 import time
 
@@ -45,7 +44,6 @@ class Gps(threading.Thread):
         self._queue = queue
 
         self._comm = None
-        self._commIo = None
         self._timeout = None
         self._cancel = False
 
@@ -58,13 +56,22 @@ class Gps(threading.Thread):
         events.Post(self._queue).gps_error('GPS timed out')
 
     def __serial_read(self):
+        isSentence = False
+        sentence = ''
         while not self._cancel:
-            data = self._commIo.readline()
-            if data is None:
-                break
-            elif len(data):
+            data = self._comm.read(1)
+            if data:
                 self._timeout.reset()
-                yield data
+                if data == '$':
+                    isSentence = True
+                    continue
+                if data == '\r' or data == '\n':
+                    isSentence = False
+                    if sentence:
+                        yield sentence
+                        sentence = ''
+                if isSentence:
+                    sentence += data
             else:
                 time.sleep(0.1)
 
@@ -139,22 +146,15 @@ class Gps(threading.Thread):
                                    stopbits=self._gps.stops,
                                    xonxoff=self._gps.soft,
                                    timeout=0)
-        buff = io.BufferedReader(self._comm, 1)
-        self._commIo = io.TextIOWrapper(buff,
-                                        newline='\r',
-                                        line_buffering=True)
 
     def __read(self):
         for resp in self.__serial_read():
-            resp = resp.replace('\n', '')
-            resp = resp.replace('\r', '')
-            resp = resp[1::]
-            resp = resp.split('*')
-            if len(resp) == 2:
-                data = resp[0].split(',')
+            nmea = resp.split('*')
+            if len(nmea) == 2:
+                data = nmea[0].split(',')
                 if data[0] in ['GPGGA', 'GPGSV']:
-                    checksum = self.__checksum(resp[0])
-                    if checksum == resp[1]:
+                    checksum = self.__checksum(nmea[0])
+                    if checksum == nmea[1]:
                         if data[0] == 'GPGGA':
                             self.__global_fix(data)
                         elif data[0] == 'GPGSV':
