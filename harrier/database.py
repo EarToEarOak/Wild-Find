@@ -183,7 +183,7 @@ class Database(threading.Thread):
                     break
             else:
                 try:
-                    time.sleep(0.05)
+                    time.sleep(0.1)
                 except IOError:
                     pass
 
