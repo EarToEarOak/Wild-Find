@@ -61,10 +61,13 @@ class Receive(threading.Thread):
             sdr.set_gain(self._settings.recvGain)
         sdr.set_center_freq(self._settings.freq * 1e6)
 
-        capture = sdr.read_samples(SAMPLE_RATE * SAMPLE_TIME)
-        sdr.close()
-
-        return capture
+        try:
+            capture = sdr.read_samples(SAMPLE_RATE * SAMPLE_TIME)
+            sdr.close()
+            return capture
+        except IOError as e:
+            error = 'Capture failed: {}'.format(e.message)
+            events.Post(self._queue).error(error=error)
 
     def __receive(self):
         self._receive = False
