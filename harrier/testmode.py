@@ -93,14 +93,8 @@ class TestMode(object):
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
         print '\nExiting\n'
-        if self._server is not None:
-            self._server.close()
-        if self._gps is not None:
-            self._gps.stop()
         if self._receive is not None:
             self._receive.stop()
-        if self._database is not None:
-            self._database.stop()
 
 
 if __name__ == '__main__':
