@@ -58,6 +58,9 @@ class TestMode(object):
             print 'Scanning...'
             self._receive.receive()
 
+        if eventType == events.STATUS_PROCESS:
+            print 'Processing...'
+
         elif eventType == events.SCAN_DONE:
             collars = event.get_arg('collars')
             if collars is not None:
