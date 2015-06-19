@@ -115,9 +115,10 @@ def read_wav(filename, noiseLevel):
     print '\tLength: {:.2f}s'.format(float(len(data)) / fs)
 
     # Scale data to +/-1
-    data = data / 256.
+    data /= 256.
     # Convert right/left to complex numbers
-    iq = data[:, 1] + 1j * data[:, 0]
+    iq = 1j * data[..., 0]
+    iq += data[..., 1]
 
     # Add noise
     if noiseLevel > 0:
