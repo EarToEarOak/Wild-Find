@@ -30,12 +30,9 @@ import time
 import rtlsdr
 
 from harrier import events
-from harrier.constants import SAMPLE_RATE, SAMPLE_TIME
+from harrier.constants import SAMPLE_RATE, SAMPLE_TIME, BLOCKS
 from harrier.detect import Detect
 from harrier.scan import Scan
-
-
-BLOCKS = 20
 
 
 class Receive(threading.Thread):

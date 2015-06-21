@@ -28,6 +28,8 @@ SAMPLE_TIME = 4
 # Sample rate (Hertz)
 SAMPLE_RATE = 2.4e6
 
+BLOCKS = 20
+
 # Retry GPS delay (seconds)
 GPS_RETRY = 5
 # Maximum age for a valid location (seconds)

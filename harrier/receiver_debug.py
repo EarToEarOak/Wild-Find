@@ -24,17 +24,20 @@
 #
 
 import argparse
+import ctypes
 import os
 import re
+import sys
 
 import matplotlib
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import EngFormatter
 from matplotlib.widgets import RectangleSelector
 import numpy
+import rtlsdr
 from scipy.io import wavfile
 
-from harrier.constants import SAMPLE_TIME, SAMPLE_RATE
+from harrier.constants import SAMPLE_TIME, SAMPLE_RATE, BLOCKS
 from harrier.detect import Detect, DetectDebug, DEMOD_BINS
 from harrier.scan import Scan
 from harrier.timing import Timing
@@ -125,6 +128,8 @@ class ReceiveDebug():
         return args
 
     def __analyse(self, iq):
+        print 'Analyse...'
+
         # Show spectrum of entire plot (-s)
         if self._args.spectrum:
             ax = plt.subplot(111)
@@ -377,27 +382,47 @@ class SourceWav(object):
 # RTLSDR Source
 class SourceRtlSdr(object):
     def __init__(self, fs, baseband, gain, callback):
+        self._gain = gain
         self.fs = fs
         self.baseband = baseband
         self._callback = callback
 
-        import rtlsdr
+        self._capture = (ctypes.c_ubyte * int(2 * SAMPLE_RATE * SAMPLE_TIME))()
+        self._captureBlock = 0
+
         print 'RTLSDR:'
         print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
         print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
+
         self._sdr = rtlsdr.RtlSdr()
-        self._sdr.set_sample_rate(fs)
-        if gain is not None:
-            self._sdr.set_gain(gain)
-            print '\tGain: {:.1f}dB'.format(gain)
-        self._sdr.set_center_freq(baseband)
+        self._sdr.set_sample_rate(self.fs)
+        if self._gain is not None:
+            self._sdr.set_gain(self._gain)
+            print '\tGain: {:.1f}dB'.format(self._gain)
+        self._sdr.set_center_freq(self.baseband)
+
+    def __capture(self, data, _sdr):
+        length = len(data)
+        pos = self._captureBlock * length
+        dst = ctypes.byref(self._capture, pos)
+        ctypes.memmove(dst, data, length * ctypes.sizeof(ctypes.c_ubyte))
+
+        self._captureBlock += 1
+        progress = 100.*self._captureBlock / BLOCKS
+        sys.stdout.write('{:.0f}%\r'.format(progress))
+        sys.stdout.flush()
+
+        if self._captureBlock == BLOCKS:
+            self._sdr.cancel_read_async()
+            self._captureBlock = 0
 
     def start(self):
         while True:
             print 'Capturing...'
-            samples = self._sdr.read_samples(SAMPLE_RATE * SAMPLE_TIME)
-
-            self._callback(samples)
+            self._sdr.read_bytes_async(self.__capture,
+                                       2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
+            iq = self._sdr.packed_bytes_to_iq(self._capture)
+            self._callback(iq)
 
 
 def main(argList=None):
