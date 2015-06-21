@@ -24,7 +24,7 @@
 #
 
 # Sampling time per location (seconds)
-SAMPLE_TIME = 3
+SAMPLE_TIME = 4
 # Sample rate (Hertz)
 SAMPLE_RATE = 2.4e6
 
