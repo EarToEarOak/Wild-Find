@@ -45,299 +45,107 @@ import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 
 
-# Parse command line arguments
-def parse_arguments(argList=None):
-    parser = argparse.ArgumentParser(description='Receiver testmode')
+class ReceiveDebug():
+    def __init__(self, argList=None):
+        self._args = self.__parse_arguments(argList)
 
-    parser.add_argument('-i', '--info', help='Display summary info',
-                        action='store_true')
-    parser.add_argument('-s', '--spectrum', help='Display capture spectrum',
-                        action='store_true')
-    parser.add_argument('-c', '--scan', help='Display signal search',
-                        action='store_true')
-    parser.add_argument('-e', '--edges', help='Display pulse edges',
-                        action='store_true')
-    parser.add_argument('-a', '--am', help='Display AM detection',
-                        action='store_true')
-    parser.add_argument('-b', '--block', help='Block to process',
-                        type=int, default=0)
-    parser.add_argument('-da', '--disableAm', help='Disable AM detection',
-                        action='store_true')
-    parser.add_argument('-v', '--verbose', help='Be more verbose',
-                        action='store_true')
+        self._timing = Timing()
 
-    subparser = parser.add_subparsers(help='Source')
+        self.debug = DetectDebug(self._args.edges, self._args.am,
+                                 self._args.disableAm, self._args.verbose)
+        callEdge = self.callback_egdes if self._args.edges else None
+        callAm = self.callback_am if self._args.am else None
+        self.debug.set_callbacks(callEdge, callAm)
 
-    parserWav = subparser.add_parser('wav')
-    parserWav.add_argument('-n', '--noise', help='Add noise (dB)',
-                           type=float, default=0)
-    parserWav.add_argument('wav', help='IQ wav file')
+        if 'wav' in self._args:
+            self._source = SourceWav(self._args.wav, self._args.noise,
+                                     self.__analyse)
+        else:
+            baseband = self._args.frequency * 1e6
+            self._source = SourceRtlSdr(SAMPLE_RATE, baseband, self._args.gain,
+                                        self.__analyse)
 
-    parserRtl = subparser.add_parser('rtlsdr')
-    parserRtl.add_argument('-f', '--frequency', help='RTLSDR frequency (MHz)',
-                           type=float, required=True)
-    parserRtl.add_argument('-g', '--gain', help='RTLSDR gain (dB)',
-                           type=float, default=None)
+        if self._args.info:
+            info = ('Info:\n'
+                    '\tBlock size: {}s\n'
+                    '\tScan resolution {:.2f}Hz\n'
+                    '\tDemod resolution {:.2f}Hz ({:.2f}ms)\n')
+            print (info).format(SAMPLE_TIME,
+                                float(self._source.fs) / Scan.SCAN_BINS,
+                                float(self._source.fs) / DEMOD_BINS,
+                                DEMOD_BINS * 1e3 / float(self._source.fs))
 
-    args = parser.parse_args(argList)
+        self._block = 0
+        self._source.start()
 
-    if 'wav' in args and args.wav is not None and not os.path.isfile(args.wav):
-        Utils.error('Cannot find file')
+        print 'Done'
 
-    if args.am and args.disableAm:
-        Utils.error('AM detection disabled - will not display graphs', False)
+    # Parse command line arguments
+    def __parse_arguments(self, argList=None):
+        parser = argparse.ArgumentParser(description='Receiver testmode')
 
-    return args
+        parser.add_argument('-i', '--info', help='Display summary info',
+                            action='store_true')
+        parser.add_argument('-s', '--spectrum', help='Display capture spectrum',
+                            action='store_true')
+        parser.add_argument('-c', '--scan', help='Display signal search',
+                            action='store_true')
+        parser.add_argument('-e', '--edges', help='Display pulse edges',
+                            action='store_true')
+        parser.add_argument('-a', '--am', help='Display AM detection',
+                            action='store_true')
+        parser.add_argument('-b', '--block', help='Block to process',
+                            type=int, default=0)
+        parser.add_argument('-da', '--disableAm', help='Disable AM detection',
+                            action='store_true')
+        parser.add_argument('-v', '--verbose', help='Be more verbose',
+                            action='store_true')
 
+        subparser = parser.add_subparsers(help='Source')
 
-# Read data from wav file
-def read_wav(filename, noiseLevel):
-    name = os.path.split(filename)[1]
+        parserWav = subparser.add_parser('wav')
+        parserWav.add_argument('-n', '--noise', help='Add noise (dB)',
+                               type=float, default=0)
+        parserWav.add_argument('wav', help='IQ wav file')
 
-    print 'Wav file:'
-    print '\tLoading capture file: {}'.format(name)
-    fs, data = wavfile.read(filename)
+        parserRtl = subparser.add_parser('rtlsdr')
+        parserRtl.add_argument('-f', '--frequency', help='RTLSDR frequency (MHz)',
+                               type=float, required=True)
+        parserRtl.add_argument('-g', '--gain', help='RTLSDR gain (dB)',
+                               type=float, default=None)
 
-    if data.shape[1] != 2:
-        Utils.error('Not an IQ file')
-    if data.dtype != 'int16':
-        Utils.error('Unexpected format')
+        args = parser.parse_args(argList)
 
-    # Get baseband from filename
-    regex = re.compile(r'_(\d+)kHz_IQ')
-    matches = regex.search(name)
-    if matches is not None:
-        baseband = int(matches.group(1)) * 1000
-    else:
-        baseband = 0
+        if 'wav' in args and args.wav is not None and not os.path.isfile(args.wav):
+            Utils.error('Cannot find file')
 
-    print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
-    print '\tLength: {:.2f}s'.format(float(len(data)) / fs)
+        if args.am and args.disableAm:
+            Utils.error('AM detection disabled - will not display graphs', False)
 
-    # Scale data to +/-1
-    data /= 256.
-    # Convert right/left to complex numbers
-    iq = 1j * data[..., 0]
-    iq += data[..., 1]
+        return args
 
-    # Add noise
-    if noiseLevel > 0:
-        noiseI = numpy.random.uniform(-1, 1, iq.size)
-        noiseQ = numpy.random.uniform(-1, 1, iq.size)
+    def __analyse(self, iq):
+        # Show spectrum of entire plot (-s)
+        if self._args.spectrum:
+            ax = plt.subplot(111)
+            plt.psd(iq, NFFT=4096, Fs=self._source.fs)
+            plt.title('Spectrum')
+            plt.xlabel('Frequency (Hz)')
+            plt.ylabel('Level')
+            plt.grid()
+            _selector = RectangleSelector(ax, self.__selection_freq,
+                                          drawtype='box', useblit=True)
+            plt.show()
 
-        iq += (noiseI + 1j * noiseQ) * 10. ** (noiseLevel / 10.)
+        self._block += 1
+        if self._args.block > 0 and self._args.block != self._block:
+            return
 
-    return baseband, fs, iq
+        print 'Block {}'.format(self._block)
 
-
-# Return wav file samples
-def source_wav(fs, iq):
-    sampleSize = fs * SAMPLE_TIME
-    sampleBlocks = iq.size / sampleSize
-    if sampleBlocks == 0:
-        Utils.error('Capture too short')
-
-    for blockNum in range(sampleBlocks):
-        sampleStart = blockNum * sampleSize
-        samples = iq[sampleStart:sampleStart + sampleSize]
-
-        yield samples
-
-
-# Return rtlsdr samples
-def source_sdr(sdr, timing):
-    samples = SAMPLE_RATE * SAMPLE_TIME
-    while True:
-        print 'Capturing...'
-        timing.start('Radio')
-        capture = sdr.read_samples(samples)
-        timing.stop()
-        yield capture
-
-
-# Callback to display edge plot
-def callback_egdes(edge, signalNum, pulse, frequencies,
-                   threshPos, threshNeg, posIndices, negIndices):
-    x = numpy.linspace(0, SAMPLE_TIME, edge.size)
-    ax = plt.subplot(111)
-    title = 'Signal Edges ({})'.format(signalNum + 1)
-    if pulse is not None:
-        title += ' (Pulses Found - {})'.format(pulse.get_modulation())
-    plt.title(title)
-    plt.grid()
-    label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
-    plt.plot(x, edge, label=label)
-    plt.axhline(threshPos, color='g', label='+ve')
-    plt.axhline(threshNeg, color='r', label='-ve')
-    xScale = float(SAMPLE_TIME) / edge.size
-    for posIndex in posIndices:
-        plt.axvline((posIndex + 1) * xScale, color='g')
-    for negIndex in negIndices:
-        plt.axvline((negIndex + 1) * xScale, color='r')
-    plt.legend(prop={'size': 10}, framealpha=0.5)
-    # Add a rectangle selector for measurements
-    _selector = RectangleSelector(ax, selection_time,
-                                  drawtype='box', useblit=True)
-    plt.show()
-
-
-# Callback to display AM plot
-def callback_am(signal, am, freq, amPosIndices, amNegIndices):
-    x = numpy.linspace(0, SAMPLE_TIME, signal.size)
-    ax = plt.subplot(111)
-    plt.title('AM Detection')
-    plt.plot(x, am, label='{:.1f}Hz'.format(freq))
-    xScale = float(SAMPLE_TIME) / am.size
-    labelPos = '+ve'
-    labelNeg = '-ve'
-    for posIndex in amPosIndices:
-        plt.axvline((posIndex + 1) * xScale, color='g', label=labelPos)
-        labelPos = None
-    for negIndex in amNegIndices:
-        plt.axvline((negIndex + 1) * xScale, color='r', label=labelNeg)
-        labelNeg = None
-    plt.xlabel('Time (s)')
-    plt.ylabel('Level')
-    plt.grid()
-    plt.legend(prop={'size': 10}, framealpha=0.5)
-    _selector = RectangleSelector(ax, selection_time,
-                                  drawtype='box', useblit=True)
-    plt.show()
-
-
-# Display dragged rectangle
-def selection_time(eventClick, eventRelease):
-    xStart = eventClick.xdata
-    xEnd = eventRelease.xdata
-    yStart = eventClick.ydata
-    yEnd = eventRelease.ydata
-    width = xEnd - xStart
-    height = yEnd - yStart
-
-    axes = eventClick.inaxes
-
-    draw_selection(axes, xStart, yStart, width, height)
-
-    dx = 'dT: {:.1f}ms'.format(abs(width) * 1000.)
-    dy = 'dL: {:.4f}'.format(abs(height))
-    text = 'Selection:\n\n' + dx + '\n' + dy
-    draw_text(axes, text)
-
-
-def selection_freq(eventClick, eventRelease):
-    xStart = eventClick.xdata
-    xEnd = eventRelease.xdata
-    yStart = eventClick.ydata
-    yEnd = eventRelease.ydata
-    width = xEnd - xStart
-    height = yEnd - yStart
-
-    axes = eventClick.inaxes
-
-    draw_selection(axes, xStart, yStart, width, height)
-
-    dx = 'df: {:.1f}kHz'.format(abs(width) / 1000.)
-    dy = 'dL: {:.4f}dB'.format(abs(height))
-    text = 'Selection:\n\n' + dx + '\n' + dy
-    draw_text(axes, text)
-
-
-# Draw selection rectangle
-def draw_selection(axes, x, y, width, height):
-    remove_child(axes, 'rectangeSelection')
-
-    rectangle = Rectangle((x, y), width, height,
-                          alpha=0.5,
-                          facecolor='grey',
-                          edgecolor='black',
-                          gid='rectangeSelection')
-    axes.add_patch(rectangle)
-
-
-# Draw text in upper right
-def draw_text(axes, text):
-    remove_child(axes, 'boxText')
-
-    bbox = dict(alpha=0.8, facecolor='w')
-    plt.text(0.02, 0.98, text, size=10,
-             transform=axes.transAxes,
-             verticalalignment='top',
-             bbox=bbox,
-             gid='boxText')
-    plt.draw()
-
-
-# Remove child from plot
-def remove_child(axes, gid):
-    for child in axes.get_children():
-        if child.get_gid() is not None:
-            if child.get_gid() is gid:
-                child.remove()
-
-
-def main(argList=None):
-    args = parse_arguments(argList)
-
-    timing = Timing()
-
-    debug = DetectDebug(args.edges, args.am, args.disableAm, args.verbose)
-    callEdge = callback_egdes if args.edges else None
-    callAm = callback_am if args.am else None
-    debug.set_callbacks(callEdge, callAm)
-
-    if 'wav' in args:
-        # Read source file
-        baseband, fs, iq = read_wav(args.wav, args.noise)
-        source = source_wav(fs, iq)
-    else:
-        import rtlsdr
-        baseband = args.frequency * 1e6
-        fs = SAMPLE_RATE
-        print 'RTLSDR:'
-        print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
-        print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
-        sdr = rtlsdr.RtlSdr()
-        sdr.set_sample_rate(fs)
-        if args.gain is not None:
-            sdr.set_gain(args.gain)
-            print '\tGain: {:.1f}dB'.format(args.gain)
-        sdr.set_center_freq(baseband)
-        source = source_sdr(sdr, timing)
-
-    if args.info:
-        info = ('Info:\n'
-                '\tBlock size: {}s\n'
-                '\tScan resolution {:.2f}Hz\n'
-                '\tDemod resolution {:.2f}Hz ({:.2f}ms)\n')
-        print (info).format(SAMPLE_TIME,
-                            float(fs) / Scan.SCAN_BINS,
-                            float(fs) / DEMOD_BINS,
-                            DEMOD_BINS * 1e3 / float(fs))
-
-    # Show spectrum of entire plot (-s)
-    if args.spectrum:
-        ax = plt.subplot(111)
-        plt.psd(iq, NFFT=4096, Fs=fs)
-        plt.title('Spectrum')
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Level')
-        plt.grid()
-        _selector = RectangleSelector(ax, selection_freq,
-                                      drawtype='box', useblit=True)
-        plt.show()
-
-    # Analyse capture
-    blockNum = 0
-    for samples in source:
-        blockNum += 1
-        if args.block > 0 and args.block != blockNum:
-            continue
-
-        print 'Block {}'.format(blockNum)
-
-        scan = Scan(fs, samples, timing)
+        scan = Scan(self._source.fs, iq, self._timing)
         frequencies = scan.search()
-        if args.scan:
+        if self._args.scan:
             # Show scan results
             freqs, levels = scan.get_spectrum()
             peaks = scan.get_peaks()
@@ -348,55 +156,252 @@ def main(argList=None):
             ax.xaxis.set_major_formatter(EngFormatter(places=1))
             ax.grid()
 
-            ax.plot(freqs + baseband, levels, label='Signal')
-            ax.plot(frequencies + baseband, peaks,
+            ax.plot(freqs + self._source.baseband, levels, label='Signal')
+            ax.plot(frequencies + self._source.baseband, peaks,
                     linestyle='None', marker='o',
                     color='r', label='Peaks')
             plt.legend(prop={'size': 10}, framealpha=0.8)
             # Add a rectangle selector for measurements
-            _selector = RectangleSelector(ax, selection_freq,
+            _selector = RectangleSelector(ax, self.__selection_freq,
                                           drawtype='box', useblit=True)
             plt.show()
 
         print '\tSignals to demodulate: {}'.format(len(frequencies))
-        if args.verbose:
+        if self._args.verbose:
             for freq in frequencies:
-                print '\t\t{:.4f}MHz'.format((baseband + freq) / 1e6)
+                print '\t\t{:.4f}MHz'.format((self._source.baseband + freq) / 1e6)
 
         # Detect
-        detect = Detect(fs, samples, frequencies, timing, debug)
+        detect = Detect(self._source.fs, iq, frequencies,
+                        self._timing, self.debug)
         pulses = detect.search()
         signals = detect.get_signals()
 
         # Plot results
         ax = plt.subplot(111)
-        plt.title('Block {}'.format(blockNum))
+        plt.title('Block {}'.format(self._block))
         plt.xlabel('Time (s)')
         plt.ylabel('Level')
         plt.grid()
 
         # Create the x axis time points
-        startTime = blockNum * SAMPLE_TIME
+        startTime = self._block * SAMPLE_TIME
         x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
                            signals[0].shape[0])
 
-        timing.print_timings()
+        self._timing.print_timings()
 
         # Plot the signals
         for pulse in pulses:
             signalNum = pulse.signalNum
             plt.plot(x, signals[signalNum],
-                     label=pulse.get_description(baseband))
+                     label=pulse.get_description(self._source.baseband))
 
         if len(pulses):
             plt.legend(prop={'size': 10}, framealpha=0.5)
 
         # Add a rectangle selector for measurements
-        _selector = RectangleSelector(ax, selection_time,
+        _selector = RectangleSelector(ax, self.__selection_time,
                                       drawtype='box', useblit=True)
         plt.show()
 
-    print 'Done'
+    # Display dragged rectangle
+    def __selection_time(self, eventClick, eventRelease):
+        xStart = eventClick.xdata
+        xEnd = eventRelease.xdata
+        yStart = eventClick.ydata
+        yEnd = eventRelease.ydata
+        width = xEnd - xStart
+        height = yEnd - yStart
+
+        axes = eventClick.inaxes
+
+        self.__draw_selection(axes, xStart, yStart, width, height)
+
+        dx = 'dT: {:.1f}ms'.format(abs(width) * 1000.)
+        dy = 'dL: {:.4f}'.format(abs(height))
+        text = 'Selection:\n\n' + dx + '\n' + dy
+        self.__draw_text(axes, text)
+
+    def __selection_freq(self, eventClick, eventRelease):
+        xStart = eventClick.xdata
+        xEnd = eventRelease.xdata
+        yStart = eventClick.ydata
+        yEnd = eventRelease.ydata
+        width = xEnd - xStart
+        height = yEnd - yStart
+
+        axes = eventClick.inaxes
+
+        self.__draw_selection(axes, xStart, yStart, width, height)
+
+        dx = 'df: {:.1f}kHz'.format(abs(width) / 1000.)
+        dy = 'dL: {:.4f}dB'.format(abs(height))
+        text = 'Selection:\n\n' + dx + '\n' + dy
+        self.__draw_text(axes, text)
+
+    # Draw selection rectangle
+    def __draw_selection(self, axes, x, y, width, height):
+        self.__remove_child(axes, 'rectangeSelection')
+
+        rectangle = Rectangle((x, y), width, height,
+                              alpha=0.5,
+                              facecolor='grey',
+                              edgecolor='black',
+                              gid='rectangeSelection')
+        axes.add_patch(rectangle)
+
+    # Draw text in upper right
+    def __draw_text(self, axes, text):
+        self.__remove_child(axes, 'boxText')
+
+        bbox = dict(alpha=0.8, facecolor='w')
+        plt.text(0.02, 0.98, text, size=10,
+                 transform=axes.transAxes,
+                 verticalalignment='top',
+                 bbox=bbox,
+                 gid='boxText')
+        plt.draw()
+
+    # Remove child from plot
+    def __remove_child(self, axes, gid):
+        for child in axes.get_children():
+            if child.get_gid() is not None:
+                if child.get_gid() is gid:
+                    child.remove()
+
+    # Callback to display edge plot
+    def callback_egdes(self, edge, signalNum, pulse, frequencies,
+                       threshPos, threshNeg, posIndices, negIndices):
+        x = numpy.linspace(0, SAMPLE_TIME, edge.size)
+        ax = plt.subplot(111)
+        title = 'Signal Edges ({})'.format(signalNum + 1)
+        if pulse is not None:
+            title += ' (Pulses Found - {})'.format(pulse.get_modulation())
+        plt.title(title)
+        plt.grid()
+        label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
+        plt.plot(x, edge, label=label)
+        plt.axhline(threshPos, color='g', label='+ve')
+        plt.axhline(threshNeg, color='r', label='-ve')
+        xScale = float(SAMPLE_TIME) / edge.size
+        for posIndex in posIndices:
+            plt.axvline((posIndex + 1) * xScale, color='g')
+        for negIndex in negIndices:
+            plt.axvline((negIndex + 1) * xScale, color='r')
+        plt.legend(prop={'size': 10}, framealpha=0.5)
+        # Add a rectangle selector for measurements
+        _selector = RectangleSelector(ax, self.__selection_time,
+                                      drawtype='box', useblit=True)
+        plt.show()
+
+    # Callback to display AM plot
+    def callback_am(self, signal, am, freq, amPosIndices, amNegIndices):
+        x = numpy.linspace(0, SAMPLE_TIME, signal.size)
+        ax = plt.subplot(111)
+        plt.title('AM Detection')
+        plt.plot(x, am, label='{:.1f}Hz'.format(freq))
+        xScale = float(SAMPLE_TIME) / am.size
+        labelPos = '+ve'
+        labelNeg = '-ve'
+        for posIndex in amPosIndices:
+            plt.axvline((posIndex + 1) * xScale, color='g', label=labelPos)
+            labelPos = None
+        for negIndex in amNegIndices:
+            plt.axvline((negIndex + 1) * xScale, color='r', label=labelNeg)
+            labelNeg = None
+        plt.xlabel('Time (s)')
+        plt.ylabel('Level')
+        plt.grid()
+        plt.legend(prop={'size': 10}, framealpha=0.5)
+        _selector = RectangleSelector(ax, self.__selection_time,
+                                      drawtype='box', useblit=True)
+        plt.show()
+
+
+# Wav file source
+class SourceWav(object):
+    def __init__(self, filename, noiseLevel, callback):
+        self._callback = callback
+
+        name = os.path.split(filename)[1]
+
+        print 'Wav file:'
+        print '\tLoading capture file: {}'.format(name)
+        self.fs, data = wavfile.read(filename)
+
+        if data.shape[1] != 2:
+            Utils.error('Not an IQ file')
+        if data.dtype not in ['int16', 'uint16', 'int8', 'uint8']:
+            Utils.error('Unexpected format')
+
+        # Get baseband from filename
+        regex = re.compile(r'_(\d+)kHz_IQ')
+        matches = regex.search(name)
+        if matches is not None:
+            self.baseband = int(matches.group(1)) * 1000
+        else:
+            self.baseband = 0
+
+        print '\tSample rate: {:.2f}MSPS'.format(self.fs / 1e6)
+        print '\tLength: {:.2f}s'.format(float(len(data)) / self.fs)
+
+        # Scale data to +/-1
+        data = data.astype(numpy.float32, copy=False)
+        data /= 256.
+        # Convert right/left to complex numbers
+        self.iq = 1j * data[..., 0]
+        self.iq += data[..., 1]
+
+        # Add noise
+        if noiseLevel > 0:
+            noiseI = numpy.random.uniform(-1, 1, self.iq.size)
+            noiseQ = numpy.random.uniform(-1, 1, self.iq.size)
+
+            self.iq += (noiseI + 1j * noiseQ) * 10. ** (noiseLevel / 10.)
+
+    # Return wav file samples
+    def start(self):
+        sampleSize = self.fs * SAMPLE_TIME
+        sampleBlocks = self.iq.size / sampleSize
+        if sampleBlocks == 0:
+            Utils.error('Capture too short')
+
+        for blockNum in range(sampleBlocks):
+            sampleStart = blockNum * sampleSize
+            samples = self.iq[sampleStart:sampleStart + sampleSize]
+
+            self._callback(samples)
+
+
+# RTLSDR Source
+class SourceRtlSdr(object):
+    def __init__(self, fs, baseband, gain, callback):
+        self.fs = fs
+        self.baseband = baseband
+        self._callback = callback
+
+        import rtlsdr
+        print 'RTLSDR:'
+        print '\tSample rate: {:.2f}MSPS'.format(fs / 1e6)
+        print '\tFrequency: {:.2f}MHz'.format(baseband / 1e6)
+        self._sdr = rtlsdr.RtlSdr()
+        self._sdr.set_sample_rate(fs)
+        if gain is not None:
+            self._sdr.set_gain(gain)
+            print '\tGain: {:.1f}dB'.format(gain)
+        self._sdr.set_center_freq(baseband)
+
+    def start(self):
+        while True:
+            print 'Capturing...'
+            samples = self._sdr.read_samples(SAMPLE_RATE * SAMPLE_TIME)
+
+            self._callback(samples)
+
+
+def main(argList=None):
+    ReceiveDebug(argList)
 
 # Main entry point
 if __name__ == '__main__':
