@@ -71,17 +71,6 @@ class Receive(threading.Thread):
         if self._captureBlock == BLOCKS:
             self._sdr.cancel_read_async()
             self._captureBlock = 0
-            events.Post(self._queue).status(events.STATUS_PROCESS)
-            iq = self._sdr.packed_bytes_to_iq(self._capture)
-            scan = Scan(SAMPLE_RATE, iq)
-            frequencies = scan.search()
-
-            detect = Detect(SAMPLE_RATE, iq, frequencies)
-            collars = detect.search()
-
-            events.Post(self._queue).status(events.STATUS_IDLE)
-            events.Post(self._queue).scan_done(collars=collars,
-                                               timeStamp=self._timeStamp)
 
     def __receive(self):
         self._receive = False
@@ -96,8 +85,22 @@ class Receive(threading.Thread):
                 if self._settings.recvGain is not None:
                     self._sdr.set_gain(self._settings.recvGain)
             self._timeStamp = time.time()
+
             self._sdr.read_bytes_async(self.__capture,
                                        2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
+
+            events.Post(self._queue).status(events.STATUS_PROCESS)
+            iq = self._sdr.packed_bytes_to_iq(self._capture)
+            scan = Scan(SAMPLE_RATE, iq)
+            frequencies = scan.search()
+
+            detect = Detect(SAMPLE_RATE, iq, frequencies)
+            collars = detect.search()
+
+            events.Post(self._queue).status(events.STATUS_IDLE)
+            events.Post(self._queue).scan_done(collars=collars,
+                                               timeStamp=self._timeStamp)
+
         except IOError as e:
             error = 'Capture failed: {}'.format(e.message)
             events.Post(self._queue).error(error=error)
