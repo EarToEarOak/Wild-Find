@@ -79,7 +79,7 @@ class ReceiveDebug():
                                 DEMOD_BINS * 1e3 / float(self._source.fs))
 
         self._block = 0
-        self._source.start()
+        self._source.start(self._timing)
 
         print 'Done'
 
@@ -366,7 +366,7 @@ class SourceWav(object):
             self.iq += (noiseI + 1j * noiseQ) * 10. ** (noiseLevel / 10.)
 
     # Return wav file samples
-    def start(self):
+    def start(self, _timing=None):
         sampleSize = self.fs * SAMPLE_TIME
         sampleBlocks = self.iq.size / sampleSize
         if sampleBlocks == 0:
@@ -416,12 +416,14 @@ class SourceRtlSdr(object):
             self._sdr.cancel_read_async()
             self._captureBlock = 0
 
-    def start(self):
+    def start(self, timing):
         while True:
             print 'Capturing...'
             self._sdr.read_bytes_async(self.__capture,
                                        2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
+            timing.start('Convert')
             iq = self._sdr.packed_bytes_to_iq(self._capture)
+            timing.stop()
             self._callback(iq)
 
 
