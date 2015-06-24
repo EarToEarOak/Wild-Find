@@ -38,7 +38,7 @@ import rtlsdr
 from scipy.io import wavfile
 
 from harrier.constants import SAMPLE_TIME, SAMPLE_RATE, BLOCKS
-from harrier.detect import Detect, DetectDebug, DEMOD_BINS
+from harrier.detect import Detect, DetectDebug, DEMOD_BINS, stream_to_complex
 from harrier.scan import Scan
 from harrier.timing import Timing
 from harrier.utils import Utils
@@ -422,7 +422,7 @@ class SourceRtlSdr(object):
             self._sdr.read_bytes_async(self.__capture,
                                        2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
             timing.start('Convert')
-            iq = self._sdr.packed_bytes_to_iq(self._capture)
+            iq = stream_to_complex(self._capture)
             timing.stop()
             self._callback(iq)
 

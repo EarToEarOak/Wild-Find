@@ -413,6 +413,16 @@ class DetectDebug(object):
             self._callbackAm(*args)
 
 
+# Convert IQ stream to complex
+def stream_to_complex(stream):
+    bytes_np = numpy.ctypeslib.as_array(stream)
+    iq = bytes_np.astype(numpy.float32).view(numpy.complex64)
+    iq /= 255/2
+    iq -= 1 + 1j
+
+    return iq
+
+
 if __name__ == '__main__':
     print 'Please run harrier.py'
     exit(1)

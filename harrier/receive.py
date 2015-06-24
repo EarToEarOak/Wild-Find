@@ -31,7 +31,7 @@ import rtlsdr
 
 from harrier import events
 from harrier.constants import SAMPLE_RATE, SAMPLE_TIME, BLOCKS
-from harrier.detect import Detect
+from harrier.detect import Detect, stream_to_complex
 from harrier.scan import Scan
 
 
@@ -90,7 +90,7 @@ class Receive(threading.Thread):
                                        2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
 
             events.Post(self._queue).status(events.STATUS_PROCESS)
-            iq = self._sdr.packed_bytes_to_iq(self._capture)
+            iq = stream_to_complex(self._capture)
             scan = Scan(SAMPLE_RATE, iq)
             frequencies = scan.search()
 
