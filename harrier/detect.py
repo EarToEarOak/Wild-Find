@@ -23,6 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from bisect import bisect_left
 import itertools
 import operator
 
@@ -66,13 +67,18 @@ class Detect(object):
 
     # Get levels of each frequency
     def __filter_frequencies(self, freqBins, magnitudes):
-        levels = []
+        pos = 0
+        levels = numpy.empty(len(self._frequencies))
 
         for freq in self._frequencies:
             # Closest bin
-            fftBin = (numpy.abs(freqBins - freq)).argmin()
+            fftBin = bisect_left(freqBins, freq)
+            if fftBin == DEMOD_BINS:
+                fftBin -= 1
+
             level = magnitudes[fftBin]
-            levels.append(level)
+            levels[pos] = level
+            pos += 1
 
         return levels
 
@@ -244,7 +250,7 @@ class Detect(object):
                                                 box, mode='same')
             signals[signalNum] -= numpy.average(signals[signalNum])
 
-        # Find pulses and their frequency
+    # Find pulses and their frequency
     def __detect(self, signals):
         collars = []
 
@@ -314,6 +320,9 @@ class Detect(object):
         signals = numpy.empty((chunks, len(self._frequencies)))
 
         # Split samples into chunks
+        freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / self._fs)
+        freqInds = freqBins.argsort()
+
         for chunkNum in range(chunks):
             if self._timing is not None:
                 self._timing.start('Demod')
@@ -324,8 +333,8 @@ class Detect(object):
             # Analyse chunk
             fft = numpy.fft.fft(chunk) / DEMOD_BINS
             mags = numpy.absolute(fft)
-            freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / self._fs)
-            levels = self.__filter_frequencies(freqBins, mags)
+            levels = self.__filter_frequencies(freqBins[freqInds],
+                                               mags[freqInds])
             signals[chunkNum] = levels
 
             if self._timing is not None:
@@ -417,7 +426,7 @@ class DetectDebug(object):
 def stream_to_complex(stream):
     bytes_np = numpy.ctypeslib.as_array(stream)
     iq = bytes_np.astype(numpy.float32).view(numpy.complex64)
-    iq /= 255/2
+    iq /= 255 / 2
     iq -= 1 + 1j
 
     return iq

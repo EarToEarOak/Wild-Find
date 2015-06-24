@@ -23,9 +23,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from matplotlib.mlab import psd
 import numpy
+from scipy.signal.spectral import welch
 
+from harrier.constants import SAMPLE_RATE
 from harrier.utils import Utils
 
 
@@ -53,8 +54,9 @@ class Scan(object):
         if self._timing is not None:
             self._timing.start('Scan')
 
-        # TODO: implement PSD in Numpy rather than add another import
-        l, f = psd(self._samples, Scan.SCAN_BINS, Fs=self._fs)
+        f, l = welch(self._samples, nperseg=Scan.SCAN_BINS, noverlap=0)
+        f *= SAMPLE_RATE
+
         decibels = 10 * numpy.log10(l)
 
         diff = numpy.diff(decibels)

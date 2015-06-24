@@ -159,6 +159,7 @@ class ReceiveDebug():
             ax.set_xlabel('Frequency (Hz)')
             ax.set_ylabel('Level')
             ax.xaxis.set_major_formatter(EngFormatter(places=1))
+            ax.fmt_xdata = EngFormatter(places=4, unit='Hz')
             ax.grid()
 
             ax.plot(freqs + self._source.baseband, levels, label='Signal')
