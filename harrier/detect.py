@@ -390,6 +390,8 @@ class Detect(object):
             print '\tRemoved {} ghosts'.format(len(toRemove))
 
     def search(self):
+        if not len(self._frequencies):
+            return []
         signals = self.__demod()
         detected = self.__detect(signals)
         self.__remove_ghosts(signals, detected)

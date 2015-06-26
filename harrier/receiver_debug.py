@@ -192,8 +192,12 @@ class ReceiveDebug():
 
         # Create the x axis time points
         startTime = self._block * SAMPLE_TIME
-        x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
-                           signals[0].shape[0])
+        if len(frequencies):
+            x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
+                               signals[0].shape[0])
+        else:
+            x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
+                               1)
 
         self._timing.print_timings()
 
