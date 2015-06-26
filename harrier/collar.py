@@ -22,6 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from math import log10
 
 CW, AM = range(2)
 MOD_DESC = ['CW', 'AM']
@@ -60,11 +61,12 @@ class Collar(object):
     def get_description(self, baseband=0):
         desc = ('Freq: {:.4f}MHz Type: {}\n'
                 'Count: {} Rate: {:.2f}PPM\n'
-                'Level: {:.4f} Width: {:.1f}ms')
+                'Level: {:.3f}dB Width: {:.1f}ms')
+        level = 10 * log10(self.level)
         desc = desc.format((self.freq + baseband) / 1e6,
                            MOD_DESC[self.mod],
                            self.count, self.rate,
-                           self.level, self.width)
+                           level, self.width)
 
         return desc
 
