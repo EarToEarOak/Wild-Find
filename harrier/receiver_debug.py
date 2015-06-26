@@ -403,7 +403,8 @@ class SourceRtlSdr(object):
         self._sdr.set_sample_rate(self.fs)
         if self._gain is not None:
             self._sdr.set_gain(self._gain)
-            print '\tGain: {:.1f}dB'.format(self._gain)
+            gain = self._sdr.get_gain()
+            print '\tGain: {:.1f}dB'.format(gain)
         self._sdr.set_center_freq(self.baseband)
 
     def __capture(self, data, _sdr):
