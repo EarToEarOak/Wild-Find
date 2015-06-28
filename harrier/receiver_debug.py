@@ -39,7 +39,7 @@ from scipy.io import wavfile
 
 from harrier.constants import SAMPLE_TIME, SAMPLE_RATE, BLOCKS
 from harrier.detect import Detect, DetectDebug, DEMOD_BINS, stream_to_complex
-from harrier.scan import Scan
+from harrier.scan import Scan, SCAN_BINS
 from harrier.timing import Timing
 from harrier.utils import Utils
 import matplotlib.pyplot as plt
@@ -74,7 +74,7 @@ class ReceiveDebug():
                     '\tScan resolution {:.2f}Hz\n'
                     '\tDemod resolution {:.2f}Hz ({:.2f}ms)\n')
             print (info).format(SAMPLE_TIME,
-                                float(self._source.fs) / Scan.SCAN_BINS,
+                                float(self._source.fs) / SCAN_BINS,
                                 float(self._source.fs) / DEMOD_BINS,
                                 DEMOD_BINS * 1e3 / float(self._source.fs))
 

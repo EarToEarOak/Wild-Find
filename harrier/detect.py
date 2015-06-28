@@ -28,6 +28,7 @@ import itertools
 import operator
 
 import numpy
+from scipy import fftpack
 
 from harrier import collar
 from harrier.constants import SAMPLE_TIME
@@ -320,7 +321,7 @@ class Detect(object):
         signals = numpy.empty((chunks, len(self._frequencies)))
 
         # Split samples into chunks
-        freqBins = numpy.fft.fftfreq(DEMOD_BINS, 1. / self._fs)
+        freqBins = fftpack.fftfreq(DEMOD_BINS, 1. / self._fs)
         freqInds = freqBins.argsort()
 
         for chunkNum in range(chunks):
@@ -331,7 +332,8 @@ class Detect(object):
             chunk = self._samples[chunkStart:chunkStart + DEMOD_BINS]
 
             # Analyse chunk
-            fft = numpy.fft.fft(chunk) / DEMOD_BINS
+            fft = fftpack.fft(chunk, overwrite_x=True)
+            fft /= DEMOD_BINS
             mags = numpy.absolute(fft)
             levels = self.__filter_frequencies(freqBins[freqInds],
                                                mags[freqInds])

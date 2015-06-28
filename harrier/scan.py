@@ -30,15 +30,16 @@ from harrier.constants import SAMPLE_RATE
 from harrier.utils import Utils
 
 
+# FFT bins used to search
+SCAN_BINS = 4096
+# Peak level change (dB)
+SCAN_CHANGE = 2.
+
+
 # Search for possible signals
 # Filtered to SCAN_BINS
 # Peak must differ by SCAN_CHANGE from one of it's neighbouring bins
 class Scan(object):
-    # FFT bins used to search
-    SCAN_BINS = 4096
-    # Peak level change (dB)
-    SCAN_CHANGE = 2.
-
     def __init__(self, fs, samples, timing=None):
         self._fs = fs
         self._samples = samples
@@ -48,13 +49,14 @@ class Scan(object):
         self._peaks = None
 
     def search(self):
-        if self._samples.size < Scan.SCAN_BINS:
+        if self._samples.size < SCAN_BINS:
             Utils.error('Sample too short')
 
         if self._timing is not None:
             self._timing.start('Scan')
 
-        f, l = welch(self._samples, nperseg=Scan.SCAN_BINS, noverlap=0)
+        f, l = welch(self._samples, nperseg=SCAN_BINS,
+                     noverlap=-64 * 1024)
         f *= SAMPLE_RATE
 
         decibels = 10 * numpy.log10(l)
@@ -63,8 +65,8 @@ class Scan(object):
         # Peaks
         peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
         # Changes above SCAN_CHANGE
-        threshIndices = numpy.where((diff > Scan.SCAN_CHANGE) |
-                                    (diff < -Scan.SCAN_CHANGE))[0]
+        threshIndices = numpy.where((diff > SCAN_CHANGE) |
+                                    (diff < -SCAN_CHANGE))[0]
         # Peaks above SCAN_CHANGE
         signalIndices = numpy.where(numpy.in1d(peakIndices, threshIndices))[0]
         freqIndices = peakIndices[signalIndices]
