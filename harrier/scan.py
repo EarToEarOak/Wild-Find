@@ -65,8 +65,9 @@ class Scan(object):
         # Peaks
         peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
         # Changes above SCAN_CHANGE
-        threshIndices = numpy.where((diff > SCAN_CHANGE) |
-                                    (diff < -SCAN_CHANGE))[0]
+        threshPos = numpy.where((diff > SCAN_CHANGE))[0] + 1
+        threshNeg = numpy.where((diff < -SCAN_CHANGE))[0]
+        threshIndices = numpy.union1d(threshPos, threshNeg)
         # Peaks above SCAN_CHANGE
         signalIndices = numpy.where(numpy.in1d(peakIndices, threshIndices))[0]
         freqIndices = peakIndices[signalIndices]
