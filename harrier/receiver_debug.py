@@ -56,8 +56,8 @@ class ReceiveDebug():
 
         self.debug = DetectDebug(self._args.edges, self._args.am,
                                  self._args.disableAm, self._args.verbose)
-        callEdge = self.callback_egdes if self._args.edges else None
-        callAm = self.callback_am if self._args.am else None
+        callEdge = self.callback_egdes if self._args.edges is not None else None
+        callAm = self.callback_am if self._args.am is not None else None
         self.debug.set_callbacks(callEdge, callAm)
 
         if 'wav' in self._args:
@@ -94,7 +94,8 @@ class ReceiveDebug():
         parser.add_argument('-c', '--scan', help='Display signal search',
                             action='store_true')
         parser.add_argument('-e', '--edges', help='Display pulse edges',
-                            action='store_true')
+                            type=float,
+                            nargs='?', const=0, default=None)
         parser.add_argument('-a', '--am', help='Display AM detection',
                             action='store_true')
         parser.add_argument('-b', '--block', help='Block to process',
@@ -283,6 +284,12 @@ class ReceiveDebug():
     # Callback to display edge plot
     def callback_egdes(self, edge, signalNum, pulse, frequencies,
                        threshPos, threshNeg, posIndices, negIndices):
+
+        freq = frequencies[signalNum]
+        edges = self._args.edges * 1e6
+        if edges != 0 and (abs(freq - edges) > 50e3):
+            return
+
         x = numpy.linspace(0, SAMPLE_TIME, edge.size)
         ax = plt.subplot(111)
         title = 'Signal Edges ({})'.format(signalNum + 1)
