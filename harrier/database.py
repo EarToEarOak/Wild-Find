@@ -45,7 +45,6 @@ class Database(threading.Thread):
     def __init__(self, path, notify):
         threading.Thread.__init__(self)
         self.name = 'Database'
-        self.daemon = True
 
         self._path = path
         self._notify = notify

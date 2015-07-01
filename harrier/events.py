@@ -58,7 +58,6 @@ class Post(object):
             self._queue.put(event)
         else:
             thread = threading.Timer(delay, self._queue.put, args=(event,))
-            thread.daemon = True
             thread.start()
 
     def status(self, eventType):

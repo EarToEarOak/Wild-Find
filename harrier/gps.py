@@ -38,7 +38,6 @@ class Gps(threading.Thread):
     def __init__(self, gps, queue):
         threading.Thread.__init__(self)
         self.name = 'GPS'
-        self.daemon = True
 
         self._gps = gps
         self._queue = queue
@@ -190,7 +189,6 @@ class Timeout(threading.Thread):
     def __init__(self, callback):
         threading.Thread.__init__(self)
         self.name = 'GPS Timeout'
-        self.daemon = True
 
         self._callback = callback
         self._done = threading.Event()

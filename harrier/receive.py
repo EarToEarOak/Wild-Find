@@ -90,11 +90,18 @@ class Receive(threading.Thread):
 
             self._sdr.read_bytes_async(self.__capture,
                                        2 * SAMPLE_RATE * SAMPLE_TIME / BLOCKS)
+            if self._cancel:
+                return
 
             events.Post(self._queue).status(events.STATUS_PROCESS)
             iq = stream_to_complex(self._capture)
+            if self._cancel:
+                return
+
             scan = Scan(SAMPLE_RATE, iq)
             frequencies = scan.search(self._settings.scanFast)
+            if self._cancel:
+                return
 
             detect = Detect(SAMPLE_RATE, iq, frequencies)
             collars = detect.search()

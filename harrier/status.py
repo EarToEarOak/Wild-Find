@@ -23,6 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from collections import OrderedDict
 import sys
 import time
 
@@ -62,6 +63,7 @@ class Status(object):
         status = '\r{:7}  Lon {:11}  Lat {:10}  Sats {:5}  Fix {:8}  Signals {:2} '
         status = status.format(desc, lon, lat, sats, fix, self._signals)
         sys.stdout.write(status)
+        sys.stdout.flush()
 
     def set_status(self, status):
         self._status = status

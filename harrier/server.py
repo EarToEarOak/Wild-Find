@@ -40,7 +40,6 @@ class Server(threading.Thread):
     def __init__(self, queue, status, database):
         threading.Thread.__init__(self)
         self.name = 'Server'
-        self.daemon = True
 
         self._queue = queue
         self._status = status
