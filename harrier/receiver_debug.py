@@ -93,6 +93,8 @@ class ReceiveDebug():
                             action='store_true')
         parser.add_argument('-c', '--scan', help='Display signal search',
                             action='store_true')
+        parser.add_argument('--scan_fast', help='Enable fast scan mode',
+                            action='store_true')
         parser.add_argument('-e', '--edges', help='Display pulse edges',
                             type=float,
                             nargs='?', const=0, default=None)
@@ -150,7 +152,7 @@ class ReceiveDebug():
         print 'Block {}'.format(self._block)
 
         scan = Scan(self._source.fs, iq, self._timing)
-        frequencies = scan.search()
+        frequencies = scan.search(self._args.scan_fast)
         if self._args.scan:
             # Show scan results
             freqs, levels = scan.get_spectrum()

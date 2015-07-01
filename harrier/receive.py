@@ -94,7 +94,7 @@ class Receive(threading.Thread):
             events.Post(self._queue).status(events.STATUS_PROCESS)
             iq = stream_to_complex(self._capture)
             scan = Scan(SAMPLE_RATE, iq)
-            frequencies = scan.search()
+            frequencies = scan.search(self._settings.scanFast)
 
             detect = Detect(SAMPLE_RATE, iq, frequencies)
             collars = detect.search()

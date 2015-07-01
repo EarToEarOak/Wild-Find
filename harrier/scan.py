@@ -24,6 +24,7 @@
 #
 
 import numpy
+from scipy.signal._peak_finding import find_peaks_cwt
 from scipy.signal.spectral import welch
 
 from harrier.constants import SAMPLE_RATE
@@ -48,7 +49,7 @@ class Scan(object):
         self._levels = None
         self._peaks = None
 
-    def search(self):
+    def search(self, fast):
         if self._samples.size < SCAN_BINS:
             Utils.error('Sample too short')
 
@@ -61,16 +62,22 @@ class Scan(object):
 
         decibels = 10 * numpy.log10(l)
 
-        diff = numpy.diff(decibels)
-        # Peaks
-        peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
-        # Changes above SCAN_CHANGE
-        threshPos = numpy.where((diff > SCAN_CHANGE))[0] + 1
-        threshNeg = numpy.where((diff < -SCAN_CHANGE))[0]
-        threshIndices = numpy.union1d(threshPos, threshNeg)
-        # Peaks above SCAN_CHANGE
-        signalIndices = numpy.where(numpy.in1d(peakIndices, threshIndices))[0]
-        freqIndices = peakIndices[signalIndices]
+        if fast:
+            diff = numpy.diff(decibels)
+            # Peaks
+            peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
+            # Changes above SCAN_CHANGE
+            threshPos = numpy.where((diff > SCAN_CHANGE))[0] + 1
+            threshNeg = numpy.where((diff < -SCAN_CHANGE))[0]
+            threshIndices = numpy.union1d(threshPos, threshNeg)
+            # Peaks above SCAN_CHANGE
+            signalIndices = numpy.where(numpy.in1d(peakIndices,
+                                                   threshIndices))[0]
+            freqIndices = peakIndices[signalIndices]
+        else:
+            freqIndices = find_peaks_cwt(decibels,
+                                         numpy.arange(1, 4),
+                                         min_snr=SCAN_CHANGE)
 
         self._freqs = f
         self._levels = decibels
