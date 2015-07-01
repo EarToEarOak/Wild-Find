@@ -94,8 +94,8 @@ class Detect(object):
         t2 = numpy.mean(edges[edges > 0])
         t3 = numpy.percentile(edges[edges < 0], 100 - threshold)
         t4 = numpy.mean(edges[edges < 0])
-        threshPos = t2 + (t1 - t2) / 2
-        threshNeg = t4 + (t3 - t4) / 2
+        threshPos = t2 + (t1 - t2) * 3. / 4.
+        threshNeg = t4 + (t3 - t4) * 3. / 4.
 
         # TODO: optimise!!
         posIndices = []
