@@ -76,7 +76,8 @@ class Scan(object):
             freqIndices = peakIndices[signalIndices]
         else:
             freqIndices = find_peaks_cwt(decibels,
-                                         numpy.arange(1, 4),
+                                         numpy.arange(1, 3),
+                                         gap_thresh=1,
                                          min_snr=SCAN_CHANGE)
 
         self._freqs = f
