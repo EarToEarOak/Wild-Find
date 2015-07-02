@@ -29,6 +29,7 @@ var layers = [];
 
 var locations = new ol.source.Vector();
 var track = new ol.source.Vector();
+var harrier = new ol.source.Vector();
 
 var view = new ol.View({
 	projection : 'EPSG:900913',
@@ -45,10 +46,10 @@ var styleLocation = new ol.style.Style({
 			opacity : 0.2,
 			width : 0.5
 		}),
-		radius : 5,
 		fill : new ol.style.Fill({
 			color : 'ff6000'
-		})
+		}),
+		radius : 5
 	})
 });
 
@@ -59,10 +60,26 @@ var styleLocationSelect = new ol.style.Style({
 			opacity : 0.2,
 			width : 2
 		}),
-		radius : 5,
 		fill : new ol.style.Fill({
 			color : 'ffa066'
-		})
+		}),
+		radius : 5,
+	})
+});
+
+var styleHarrier = new ol.style.Style({
+	image : new ol.style.RegularShape({
+		stroke : new ol.style.Stroke({
+			color : 'black',
+			opacity : 0.2,
+			width : 2
+		}),
+		fill : new ol.style.Fill({
+			color : 'white'
+		}),
+		radius : 8,
+		points: 3,
+		angle: 0
 	})
 });
 
@@ -83,6 +100,11 @@ var layerTrack = new ol.layer.Vector({
 
 var layerHeatmap = new ol.layer.Image({
 	opacity : 0.6
+});
+
+var layerHarrier = new ol.layer.Vector({
+	source : harrier,
+	style: styleHarrier
 });
 
 var dragBox = new ol.interaction.DragBox({
@@ -125,6 +147,7 @@ function init() {
 	map.addLayer(layerHeatmap);
 	map.addLayer(layerTrack);
 	map.addLayer(layerLocations);
+	map.addLayer(layerHarrier);
 	_setLayerByName('OpenStreetMap');
 	_sendLayerNames();
 }
@@ -433,6 +456,18 @@ function setHeatmapOpacity(opacity) {
 	layerHeatmap.setOpacity(opacity);
 }
 
+function setHarrier(lon, lat) {
+	var point = new ol.geom.Point([ lon, lat ]);
+	point.transform('EPSG:4326', 'EPSG:900913');
+
+	var feature = new ol.Feature({
+		geometry : point,
+//		style: styleHarrier
+	});
+	clearHarrier();
+	harrier.addFeature(feature);
+}
+
 function addLocation(freq, rate, level, lon, lat) {
 	var point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
@@ -500,6 +535,10 @@ function clearHeatmap() {
 	layerHeatmap.setSource(null);
 }
 
+function clearHarrier() {
+	harrier.clear(true);
+}
+
 function showBusy(show) {
 	var display = 'none';
 	if (show)
@@ -521,7 +560,9 @@ function showHeatmap(show) {
 }
 
 function follow() {
-	var extent = locations.getExtent();
+	var extentLoc = locations.getExtent();
+	var extentHar = harrier.getExtent();
+	var extent = ol.extent.extend(extentLoc, extentHar)
 
 	_setListeners(false);
 	view.fitExtent(extent, map.getSize());

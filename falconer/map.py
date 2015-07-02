@@ -194,6 +194,9 @@ class WidgetMap(QtGui.QWidget):
     def set_pos(self, pos, zoom):
         self._controls.set_pos(pos, zoom)
 
+    def set_harrier(self, lon, lat):
+        self._controls.set_harrier(lon, lat)
+
     def set_locations(self, locations):
         self.clear_locations()
         self._controls.set_locations(locations)
@@ -318,6 +321,10 @@ class WidgetMapControls(QtGui.QWidget):
     def set_pos(self, pos, zoom):
         self._mapLink.set_pos(pos, zoom)
 
+    def set_harrier(self, lon, lat):
+        self._mapLink.set_harrier(lon, lat)
+        self.follow()
+
     def set_locations(self, locations):
         self._mapLink.set_locations(locations)
         self.follow()
@@ -403,6 +410,14 @@ class MapLink(QtCore.QObject):
 
     def set_pos(self, pos, zoom):
         js = 'setPos({}, {}, {});'.format(pos[0], pos[1], zoom)
+        self.__exec_js(js)
+
+    def set_harrier(self, lon, lat):
+        if lon is None or lat is None:
+            js = 'clearHarrier()'
+        else:
+            js = 'setHarrier({}, {});'.format(lon, lat)
+
         self.__exec_js(js)
 
     def select_locations(self, signals):

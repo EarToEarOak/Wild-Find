@@ -38,8 +38,11 @@ class Settings(object):
             self._history = FileHistory(menuBar, historyCallback)
 
         self.style = 'Cleanlooks'
+
         self.dirFile = '.'
         self.dirExport = '.'
+
+        self.remoteAddr = ''
 
         self.units = 'metric'
 
@@ -78,8 +81,9 @@ class Settings(object):
         settings = self.__open()
 
         self.style = settings.value('style', self.style)
-        self.dirExport = settings.value('dirExport', self.dirExport)
         self.dirFile = settings.value('dirFile', self.dirFile)
+        self.dirExport = settings.value('dirExport', self.dirExport)
+        self.remoteAddr = settings.value('remoteAddr', self.remoteAddr)
         self.units = settings.value('units', self.units)
         self.fontList = settings.value('fontList', self.fontList)
         self.heatmapColour = settings.value('heatmapColour',
@@ -106,6 +110,7 @@ class Settings(object):
         settings.setValue('style', self.style)
         settings.setValue('dirFile', self.dirFile)
         settings.setValue('dirExport', self.dirExport)
+        settings.setValue('remoteAddr', self.remoteAddr)
         settings.setValue('units', self.units)
         settings.setValue('fontList', self.fontList)
         settings.setValue('heatmapColour', self.heatmapColour)

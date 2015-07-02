@@ -27,13 +27,12 @@ import select
 import socket
 import threading
 
+from common.constants import PORT_HARRIER
 from harrier import events
 from harrier.parse import Parse
 
 
 VERSION = 1
-
-PORT = 12014
 
 
 class Server(threading.Thread):
@@ -45,18 +44,16 @@ class Server(threading.Thread):
         self._status = status
         self._database = database
 
-        self._push_last = False
-
         self._parse = Parse(queue, status, database, self)
 
         self._client = None
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            self._server.bind(('', PORT))
+            self._server.bind(('', PORT_HARRIER))
             self._server.listen(5)
         except socket.error:
-            events.Post(self._queue).error(error='Could not start server')
+            events.Post(self._queue).error('Could not start server')
             return
 
         self._cancel = False
@@ -69,17 +66,26 @@ class Server(threading.Thread):
             try:
                 data = self._client.recv(1024)
                 if not data:
+                    self.__close_client()
                     return
             except socket.timeout:
+                self.__close_client()
                 return
             buf += data
             while buf.find('\n') != -1:
                 line, buf = buf.split('\n', 1)
                 yield line
 
-    def send(self, result):
-        if result is not None:
-            self._client.sendall(result)
+    def __close_client(self):
+        host = self.__get_client_name(self._client)
+        info = '\'{}\' disconnected'.format(host)
+        events.Post(self._queue).info(info)
+
+        self._client.close()
+        self._client = None
+
+    def __get_client_name(self, client):
+        return socket.gethostbyaddr(client.getpeername()[0])[0]
 
     def run(self):
         while not self._cancel:
@@ -88,7 +94,7 @@ class Server(threading.Thread):
             else:
                 endpoints = [self._server, self._client]
 
-            read, _write, _error = select.select(endpoints, [], [], 1)
+            read, _write, error = select.select(endpoints, [], [], 0.5)
 
             for sock in read:
                 if sock is self._server:
@@ -97,10 +103,13 @@ class Server(threading.Thread):
                         if self._client is not None:
                             self._client.close()
 
-                        client.sendall('\r\nHarrier\r\n')
                         self._client = client
-                        result = self._parse.result('Version', VERSION)
+                        result = self._parse.result_connect(VERSION)
                         self.send(result)
+
+                        host = self.__get_client_name(client)
+                        info = 'Connection from \'{}\''.format(host)
+                        events.Post(self._queue).info(info)
                     except socket.error:
                         self._client = None
                 elif sock is self._client:
@@ -108,24 +117,39 @@ class Server(threading.Thread):
                         if line:
                             result = self._parse.parse(line)
                             self.send(result)
-                        else:
-                            self._client = None
-            for sock in _error:
+
+            for sock in error:
                 if sock is self._client:
                     self._client = None
                 sock.close()
 
-    def set_push(self, push):
-        self._push_last = push
+    def send(self, result):
+        if result is not None and self._client is not None:
+            try:
+                self._client.sendall(result)
+            except socket.error:
+                self.__close_client()
 
-    def push_signals(self, timeStamp, signals):
-        if self._push_last:
-            resp = []
-            for signal in signals:
-                resp.append(signal.get_dict(timeStamp))
+    def send_signals(self, timeStamp, signals):
+        resp = []
+        for signal in signals:
+            resp.append(signal.get_dict(timeStamp))
 
-            result = self._parse.result_signals_last(resp)
-            self.send(result)
+        sigs = self._parse.result_signals(resp)
+        self.send(sigs)
+
+    def send_status(self):
+        status = self._parse.result('Status', self._status.get())
+        self.send(status)
+
+    def send_sats(self):
+        sats = self._parse.result('Satellites', self._status.get_satellites())
+        self.send(sats)
+
+    def send_log(self, timeStamp, message):
+        entry = {'TimeStamp': timeStamp,
+                 'Message': message}
+        self._parse.result_log([entry])
 
     def stop(self):
         self._cancel = True

@@ -57,7 +57,7 @@ class Receive(threading.Thread):
         if self._settings.recvIndex >= devices:
             error = 'Cannot find device at index {}'
             error = error.format(self._settings.recvIndex)
-            events.Post(self._queue).error(error=error)
+            events.Post(self._queue).error(error)
         else:
             self.start()
 
@@ -112,7 +112,7 @@ class Receive(threading.Thread):
 
         except IOError as e:
             error = 'Capture failed: {}'.format(e.message)
-            events.Post(self._queue).error(error=error)
+            events.Post(self._queue).error(error)
 
     def run(self):
         while not self._cancel:

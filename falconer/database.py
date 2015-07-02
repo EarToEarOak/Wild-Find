@@ -93,11 +93,73 @@ class Database(object):
             self._conn.close()
             self._conn = None
 
-    def isConnected(self):
+    def is_connected(self):
         if self._conn is None:
             return False
 
         return True
+
+    def add_scans(self, scans):
+        with self._conn:
+            for scan in scans:
+                timeStamp = int(scan['TimeStamp'])
+                freq = float(scan['Freq'])
+                survey = scan['Survey']
+
+                cmd = 'insert or ignore into Scans values(?, ?, ?)'
+                self._conn.execute(cmd, (timeStamp, freq, survey))
+
+    def add_signals(self, signals):
+        with self._conn:
+            for signal in signals:
+                timeStamp = int(signal['TimeStamp'])
+                freq = float(signal['Freq'])
+                mod = int(signal['Mod'])
+                rate = float(signal['Rate'])
+                level = float(signal['Level'])
+                lon = float(signal['Lon'])
+                lat = float(signal['Lat'])
+
+                cmd = ('insert or replace into Signals values'
+                       '    ((select Id from Signals where'
+                       '        TimeStamp=? and'
+                       '        Freq=? and'
+                       '        Mod=? and'
+                       '        Rate=? and'
+                       '        Level=? and'
+                       '        Lon=? and'
+                       '        lat=?),'
+                       '      ?, ?, ?, ?, ?, ?, ?)')
+                self._conn.execute(cmd,
+                                   (timeStamp,
+                                    freq,
+                                    mod,
+                                    rate,
+                                    level,
+                                    lon,
+                                    lat,
+                                    timeStamp,
+                                    freq,
+                                    mod,
+                                    rate,
+                                    level,
+                                    lon,
+                                    lat))
+
+    def add_log(self, log):
+        with self._conn:
+            for entry in log:
+                timeStamp = int(entry['TimeStamp'])
+                message = entry['Message']
+
+                cmd = ('insert or replace into Log values'
+                       '    ((select Id from Log where'
+                       '        TimeStamp=? and'
+                       '        Message=?),'
+                       '      ?, ?)')
+                self._conn.execute(cmd,
+                                   (timeStamp, message,
+                                    timeStamp, message))
 
     def get_filename(self):
         return self._fileName

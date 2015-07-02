@@ -24,3 +24,5 @@
 
 # Log size (lines)
 LOG_SIZE = 50
+
+PORT_HARRIER = 12014

@@ -34,11 +34,10 @@ import time
 from common.database import create_database, name_factory
 from harrier import events
 
-
-ADD_SIGNAL, GET_SIGNALS_LAST, GET_SIGNALS, \
-    GET_SCANS, DEL_SCAN, DEL_SCANS, \
+GET_SCANS, \
+    ADD_SIGNAL, GET_SIGNALS, \
     ADD_LOG, GET_LOG, \
-    CLOSE = range(9)
+    CLOSE = range(6)
 
 
 class Database(threading.Thread):
@@ -53,9 +52,9 @@ class Database(threading.Thread):
         self._queue = Queue.Queue()
 
         if os.path.exists(path):
-            print 'Appending data to {}'.format(path)
+            print 'Appending:\t{}'.format(path)
         else:
-            print 'Creating {}'.format(path)
+            print 'Creating:\t{}'.format(path)
 
         self.start()
 
@@ -65,7 +64,7 @@ class Database(threading.Thread):
 
         error = create_database(self._conn)
         if error is not None:
-            events.Post(self._notify).error(error=error)
+            events.Post(self._notify).error(error)
 
     def __add_signal(self, **kwargs):
         with self._conn:
@@ -104,19 +103,10 @@ class Database(threading.Thread):
         scans = cursor.fetchall()
         callback(scans)
 
-    def __get_signals_last(self, callback):
+    def __get_signals(self, callback):
         cursor = self._conn.cursor()
-        cmd = 'select * from Signals order by Id desc limit 1'
+        cmd = 'select * from Signals'
         cursor.execute(cmd)
-        signals = cursor.fetchall()
-        for signal in signals:
-            del signal['Id']
-        callback(signals)
-
-    def __get_signals(self, callback, timeStamp):
-        cursor = self._conn.cursor()
-        cmd = 'select * from Signals where TimeStamp = ?'
-        cursor.execute(cmd, (timeStamp,))
         signals = cursor.fetchall()
         for signal in signals:
             del signal['Id']
@@ -129,22 +119,8 @@ class Database(threading.Thread):
         signals = cursor.fetchall()
         for signal in signals:
             del signal['Id']
+
         callback(signals)
-
-    def __del_scan(self, callback, timeStamp):
-        cursor = self._conn.cursor()
-        cmd = 'delete from Scans where TimeStamp = ?'
-        with self._conn:
-            cursor.execute(cmd, (timeStamp,))
-        callback(cursor.rowcount)
-
-    def __del_scans(self, callback):
-        cursor = self._conn.cursor()
-        cmd = 'delete from Scans'
-        with self._conn:
-            cursor.execute(cmd)
-            self._conn.execute('pragma incremental_vacuum;')
-        callback(cursor.rowcount)
 
     def run(self):
         self.__connect()
@@ -154,28 +130,17 @@ class Database(threading.Thread):
                 event = self._queue.get()
                 eventType = event.get_type()
 
-                if eventType == ADD_SIGNAL:
-                    self.__add_signal(**event.get_args())
-                elif eventType == GET_SCANS:
+                if eventType == GET_SCANS:
                     callback = event.get_arg('callback')
                     self.__get_scans(callback)
-                elif eventType == GET_SIGNALS_LAST:
-                    callback = event.get_arg('callback')
-                    self.__get_signals_last(callback)
+                elif eventType == ADD_SIGNAL:
+                    self.__add_signal(**event.get_args())
                 elif eventType == GET_SIGNALS:
                     callback = event.get_arg('callback')
-                    timeStamp = event.get_arg('timeStamp')
-                    self.__get_signals(callback, timeStamp)
-                elif eventType == DEL_SCAN:
-                    callback = event.get_arg('callback')
-                    timeStamp = event.get_arg('timeStamp')
-                    self.__del_scan(callback, timeStamp)
-                elif eventType == DEL_SCANS:
-                    callback = event.get_arg('callback')
-                    self.__del_scans(callback)
-                if eventType == ADD_LOG:
+                    self.__get_signals(callback)
+                elif eventType == ADD_LOG:
                     self.__add_log(**event.get_args())
-                if eventType == GET_LOG:
+                elif eventType == GET_LOG:
                     callback = event.get_arg('callback')
                     self.__get_log(callback)
                 elif eventType == CLOSE:
@@ -197,8 +162,11 @@ class Database(threading.Thread):
         self._queue.put(event)
 
     def append_log(self, message):
-        event = events.Event(ADD_LOG, message=message, timeStamp=time.time())
+        timeStamp = time.time()
+        event = events.Event(ADD_LOG, message=message, timeStamp=timeStamp)
         self._queue.put(event)
+
+        return timeStamp
 
     def get_size(self):
         path = os.path.realpath(self._path)
@@ -224,26 +192,12 @@ class Database(threading.Thread):
         event = events.Event(GET_SCANS, callback=callback)
         self._queue.put(event)
 
-    def get_signals_last(self, callback):
-        event = events.Event(GET_SIGNALS_LAST, callback=callback)
-        self._queue.put(event)
-
-    def get_signals(self, callback, timeStamp):
-        event = events.Event(GET_SIGNALS, callback=callback,
-                             timeStamp=timeStamp)
+    def get_signals(self, callback):
+        event = events.Event(GET_SIGNALS, callback=callback)
         self._queue.put(event)
 
     def get_log(self, callback):
         event = events.Event(GET_LOG, callback=callback)
-        self._queue.put(event)
-
-    def del_scan(self, callback, timeStamp):
-        event = events.Event(DEL_SCAN, callback=callback,
-                             timeStamp=timeStamp)
-        self._queue.put(event)
-
-    def del_scans(self, callback):
-        event = events.Event(DEL_SCANS, callback=callback)
         self._queue.put(event)
 
     def stop(self):

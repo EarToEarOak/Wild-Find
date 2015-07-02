@@ -104,7 +104,19 @@
     <addaction name="separator"/>
     <addaction name="actionFullscreen"/>
    </widget>
+   <widget class="QMenu" name="menuRemote">
+    <property name="title">
+     <string>Remote</string>
+    </property>
+    <addaction name="actionConnect"/>
+    <addaction name="actionDisconnect"/>
+    <addaction name="separator"/>
+    <addaction name="actionDownload"/>
+    <addaction name="separator"/>
+    <addaction name="actionRecord"/>
+   </widget>
    <addaction name="_menuFile"/>
+   <addaction name="menuRemote"/>
    <addaction name="menu_edit"/>
    <addaction name="menuView"/>
    <addaction name="menu_Help"/>
@@ -126,6 +138,11 @@
    <addaction name="actionNew"/>
    <addaction name="actionOpen"/>
    <addaction name="actionClose"/>
+   <addaction name="separator"/>
+   <addaction name="actionConnect"/>
+   <addaction name="actionDisconnect"/>
+   <addaction name="actionDownload"/>
+   <addaction name="actionRecord"/>
    <addaction name="separator"/>
    <addaction name="actionViewSurveys"/>
    <addaction name="actionViewScans"/>
@@ -367,6 +384,53 @@
    </property>
    <property name="statusTip">
     <string>Save filtered to a new file</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Connect...</string>
+   </property>
+   <property name="statusTip">
+    <string>Connect to Harrier</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Disconnect</string>
+   </property>
+   <property name="statusTip">
+    <string>Disconnect from Harrier</string>
+   </property>
+  </action>
+  <action name="actionDownload">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Download...</string>
+   </property>
+   <property name="statusTip">
+    <string>Download existing telemetry from Harrier</string>
+   </property>
+  </action>
+  <action name="actionRecord">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Record</string>
+   </property>
+   <property name="statusTip">
+    <string>Save new data from Harrier</string>
    </property>
   </action>
  </widget>

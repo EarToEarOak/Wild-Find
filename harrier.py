@@ -47,7 +47,7 @@ class Harrier(object):
         print 'Harrier\n'
 
         hostname = socket.gethostname()
-        print 'Host name: {}'.format(hostname)
+        print 'Host name:\t{}'.format(hostname)
 
         queue = Queue.Queue()
 
@@ -58,7 +58,7 @@ class Harrier(object):
             TestMode(settings)
             return
 
-        print 'Survey: {}'.format(settings.survey)
+        print 'Survey:\t\t{}'.format(settings.survey)
 
         self._gps = None
         self._database = Database(settings.db, queue)
@@ -71,8 +71,14 @@ class Harrier(object):
         self._signal = signal.signal(signal.SIGINT, self.__close)
 
         halfBand = SAMPLE_RATE / 2e6
-        print 'Scanning {:.2f}-{:.2f}MHz'.format(settings.freq - halfBand,
-                                                 settings.freq + halfBand)
+        print 'Scan range:\t{:.2f}-{:.2f}MHz'.format(settings.freq - halfBand,
+                                                   settings.freq + halfBand)
+
+        if settings.delay is None:
+            mode = 'Remote'
+        else:
+            mode = 'Automatic, after {}s'.format(settings.delay)
+        print 'Scan mode:\t{}'.format(mode)
 
         events.Post(queue).gps_open(0)
         if settings.delay is not None:
@@ -141,6 +147,8 @@ class Harrier(object):
             elif not self._isScanning:
                 self._receive.receive()
 
+            self._server.send_status()
+
         # Scan finished
         elif eventType == events.SCAN_DONE:
             self._isScanning = False
@@ -160,12 +168,16 @@ class Harrier(object):
             else:
                 self._status.set_signals(0)
 
-            self._server.push_signals(timeStamp, collars)
+            self._server.send_signals(timeStamp, collars)
+
             log = 'Found {} signals'.format(len(collars))
-            self._database.append_log(log)
+            logTime = self._database.append_log(log)
+            self._server.send_log(logTime, log)
 
             if settings.delay is not None:
                 events.Post(queue).scan_start(settings.delay)
+
+            self._server.send_status()
 
         # Open GPS
         elif eventType == events.GPS_OPEN:
@@ -176,38 +188,55 @@ class Harrier(object):
         # GPS location
         elif eventType == events.GPS_LOC:
             self._status.set_location(event.get_arg('location'))
+            self._server.send_status()
 
         # GPS satellites
         elif eventType == events.GPS_SATS:
             self._status.set_sats(event.get_arg('satellites'))
+            self._server.send_sats()
 
         # GPS error
         elif eventType == events.GPS_ERR:
             self._gps = None
             error = '\nGPS error: {}'.format(event.get_arg('error'))
-            self._database.append_log(error)
-            self._status.clear_gps()
             print error
             print 'Retry in {}s'.format(GPS_RETRY)
+            logTime = self._database.append_log(error)
+            self._server.send_log(logTime, error)
+
+            self._status.clear_gps()
+            self._server.send_status()
+
             events.Post(queue).gps_open(GPS_RETRY)
+
+        # Info
+        elif eventType == events.INFO:
+            self._status.clear_gps()
+            info = '\nInfo: {}'.format(event.get_arg('info'))
+            print info
+            logTime = self._database.append_log(info)
+            self._server.send_log(logTime, info)
 
         # Warning
         elif eventType == events.WARN:
             self._status.clear_gps()
             warning = '\nWarning: {}'.format(event.get_arg('warning'))
             print warning
-            self._database.append_log(warning)
+            logTime = self._database.append_log(warning)
+            self._server.send_log(logTime, log)
 
         # Error
         elif eventType == events.ERR:
             error = event.get_arg('error')
             sys.stderr.write(error)
-            self._database.append_log(error)
+            logTime = self._database.append_log(error)
+            self._server.send_log(logTime, log)
             self.__close()
             exit(3)
 
         else:
             self._status.set_status(eventType)
+            self._server.send_status()
 
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)

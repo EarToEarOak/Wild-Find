@@ -39,6 +39,7 @@ from falconer.map import WidgetMap
 from falconer.plot3d import DialogPlot3d
 from falconer.preferences import DialogPreferences
 from falconer.printer import print_report
+from falconer.remote import Remote
 from falconer.scans import WidgetScans
 from falconer.server import Server
 from falconer.settings import Settings
@@ -46,6 +47,7 @@ from falconer.signals import WidgetSignals
 from falconer.surveys import WidgetSurveys
 from falconer.utils import export_kml, add_program_path
 from falconer.utils_qt import win_remove_context_help
+
 
 SIP = True
 try:
@@ -93,9 +95,18 @@ class Falconer(QtGui.QMainWindow):
                                 self.__on_signal_map_plotted,
                                 self.__on_signal_map_cleared)
 
+        self._database = Database()
+
+        self._remote = Remote(self,
+                              self._statusbar,
+                              self._database,
+                              self.__on_remote_opened,
+                              self.__on_remote_status,
+                              self.__on_remote_synched,
+                              self.__on_remote_closed)
+
         self._server = None
         self.__start_server()
-        self._database = Database()
 
         self._printer = QtGui.QPrinter()
         self._printer.setCreator('Falconer')
@@ -173,7 +184,7 @@ class Falconer(QtGui.QMainWindow):
             self._settings.dirFile, _ = os.path.split(fileName)
             if os.path.exists(fileName):
                 os.remove(fileName)
-            self.__open(fileName)
+            self.__open(fileName, True)
 
     @QtCore.Slot()
     def on_actionOpen_triggered(self):
@@ -293,6 +304,42 @@ class Falconer(QtGui.QMainWindow):
         self.close()
 
     @QtCore.Slot()
+    def on_actionConnect_triggered(self):
+        addr, ok = QtGui.QInputDialog.getText(self,
+                                              'Connect',
+                                              'Hostname or address:',
+                                              text=self._settings.remoteAddr)
+
+        if ok:
+            self._statusbar.showMessage('Connecting...')
+            self._settings.remoteAddr = addr
+            self._remote.open(addr)
+
+    @QtCore.Slot()
+    def on_actionDisconnect_triggered(self):
+        self._remote.close()
+        self.__set_controls()
+
+    @QtCore.Slot()
+    def on_actionDownload_triggered(self):
+        flags = (QtGui.QMessageBox.StandardButton.Yes |
+                 QtGui.QMessageBox.StandardButton.No)
+        message = 'Merge into current file?'
+        response = QtGui.QMessageBox.question(self, 'Download',
+                                              message,
+                                              flags)
+        if response == QtGui.QMessageBox.Yes:
+            self._remote.download()
+            self.__set_surveys()
+            self.__set_scans()
+            self.__set_signals()
+            self.__set_map()
+
+    @QtCore.Slot(bool)
+    def on_actionRecord_triggered(self, checked):
+        self._remote.record(checked)
+
+    @QtCore.Slot()
     def on_actionPreferences_triggered(self):
         dlg = DialogPreferences(self, self._settings)
         if dlg.exec_():
@@ -363,7 +410,7 @@ class Falconer(QtGui.QMainWindow):
         self._statusbar.showMessage('Ready')
 
     def __on_signal_map_plotted(self, bounds):
-        if self._database.isConnected():
+        if self._database.is_connected():
             self._widgetMap.set_heatmap(bounds)
 
     def __on_signal_map_cleared(self):
@@ -404,6 +451,23 @@ class Falconer(QtGui.QMainWindow):
                      self._widgetSignals,
                      self._widgetMap)
 
+    def __on_remote_opened(self):
+        self.__set_controls()
+
+    def __on_remote_status(self, status):
+        self._widgetMap.set_harrier(status['lon'], status['lat'])
+
+    def __on_remote_synched(self):
+        self.__set_surveys()
+        self.__set_scans()
+        self.__set_signals()
+        self.__set_map()
+        self.__set_controls()
+        self._widgetMap.set_follow(True)
+
+    def __on_remote_closed(self):
+        self.__set_controls()
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             urls = event.mimeData().urls()
@@ -432,6 +496,8 @@ class Falconer(QtGui.QMainWindow):
         self._settings.close()
         if self._server is not None:
             self._server.close()
+        if self._remote is not None:
+            self._remote.close()
 
     def __fullscreen(self):
         self._statusbar.setVisible(self._fullScreen)
@@ -453,21 +519,27 @@ class Falconer(QtGui.QMainWindow):
             self._menuRecent.setEnabled(True)
             self.actionPreferences.setEnabled(True)
 
-        enabled = False
-        if self._database is not None and self._database.isConnected():
-            enabled = True
+        db = False
+        remote = False
+        if self._database is not None and self._database.is_connected():
+            db = True
+        if self._remote.is_connected():
+            remote = True
 
-        self.actionMerge.setEnabled(enabled)
-        self.actionSaveFiltered.setEnabled(enabled)
-        self.actionExportPdf.setEnabled(enabled)
-        self.actionExportImage.setEnabled(enabled)
-        self.actionExportKml.setEnabled(enabled)
-        self.actionPrint.setEnabled(enabled)
-        self.actionClose.setEnabled(enabled)
-        self.actionClose.setEnabled(enabled)
-        self.actionPlot3d.setEnabled(enabled)
+        self.actionMerge.setEnabled(db)
+        self.actionSaveFiltered.setEnabled(db)
+        self.actionExportPdf.setEnabled(db)
+        self.actionExportImage.setEnabled(db)
+        self.actionExportKml.setEnabled(db)
+        self.actionPrint.setEnabled(db)
+        self.actionClose.setEnabled(db)
+        self.actionConnect.setEnabled(db and not remote)
+        self.actionDownload.setEnabled(db and remote)
+        self.actionRecord.setEnabled(db and remote)
+        self.actionDisconnect.setEnabled(remote)
+        self.actionPlot3d.setEnabled(db)
 
-        self.actionLog.setEnabled(enabled)
+        self.actionLog.setEnabled(db)
 
     def __set_table_view(self):
         sizes = self.splitter.sizes()
@@ -476,7 +548,7 @@ class Falconer(QtGui.QMainWindow):
         self.actionViewSignals.setChecked(sizes[3] != 0)
 
     def __file_warn(self):
-        if self._database.isConnected():
+        if self._database.is_connected():
             flags = (QtGui.QMessageBox.StandardButton.Yes |
                      QtGui.QMessageBox.StandardButton.No)
             message = 'Close existing file?'
@@ -488,8 +560,8 @@ class Falconer(QtGui.QMainWindow):
 
         return True
 
-    def __open(self, fileName):
-        if not os.path.exists(fileName):
+    def __open(self, fileName, create=False):
+        if not os.path.exists(fileName) and not create:
             message = 'File not found'
             QtGui.QMessageBox.warning(self, 'Warning', message)
             self._statusbar.showMessage('Ready')

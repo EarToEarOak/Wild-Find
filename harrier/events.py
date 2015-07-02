@@ -30,7 +30,7 @@ import time
 SCAN_START, SCAN_DONE, \
     GPS_OPEN, GPS_LOC, GPS_SATS, GPS_ERR, \
     STATUS_IDLE, STATUS_WAIT, STATUS_CAPTURE, STATUS_PROCESS, \
-    WARN, ERR = range(12)
+    INFO, WARN, ERR = range(13)
 
 
 class Event(object):
@@ -97,6 +97,10 @@ class Post(object):
 
     def warning(self, warning):
         event = Event(WARN, warning=warning)
+        self.__post(event)
+
+    def info(self, info):
+        event = Event(INFO, info=info)
         self.__post(event)
 
 
