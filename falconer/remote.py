@@ -99,6 +99,7 @@ class Remote(object):
                                    'Connection failed')
 
     def __on_error(self, error):
+        self._timeout.stop()
         QtGui.QMessageBox.critical(self._parent, 'Remote error', error)
         self._statusbar.showMessage('Ready')
 

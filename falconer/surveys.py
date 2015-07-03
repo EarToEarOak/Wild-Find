@@ -96,9 +96,7 @@ class WidgetSurveys(QtGui.QWidget):
         self._tableSurveys.resizeColumnsToContents()
         self.__set_width()
 
-        for i in range(self._comboSurveys.count()):
-            self._comboSurveys.removeItem(i)
-
+        self._comboSurveys.clear()
         self._comboSurveys.addItem('All')
         self._comboSurveys.addItems(surveys)
 
