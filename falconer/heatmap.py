@@ -66,7 +66,7 @@ class HeatMap(QtCore.QObject):
         if telemetry is not None:
             self._telemetry = copy.copy(telemetry)
             if self._thread is not None and self._thread.isRunning():
-                QtCore.QTimer.singleShot(0.5, self.set)
+                QtCore.QTimer.singleShot(500, self.set)
                 return
             else:
                 if len(telemetry) > 2:
