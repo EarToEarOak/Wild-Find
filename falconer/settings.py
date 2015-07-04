@@ -57,25 +57,24 @@ class Settings(object):
     def __open(self):
         return QtCore.QSettings('Ear to Ear Oak', 'Falconer')
 
-    def __load_history(self):
-        history = []
-
+    def __load_array(self, arrayName):
+        array = []
         settings = self.__open()
-        settings.beginGroup('History')
-        files = settings.value('files', 0)
-        for i in range(int(files)):
-            history.append(settings.value('{}'.format(i)))
-        settings.endGroup()
-        self._history.set(history)
+        size = settings.beginReadArray(arrayName)
+        for i in range(size):
+            settings.setArrayIndex(i)
+            array.append(settings.value('{}'.format(i)))
+        settings.endArray()
 
-    def __save_history(self):
+        return array
+
+    def __save_array(self, arrayName, array):
         settings = self.__open()
-        settings.beginGroup('History')
-        history = self._history.get()
-        settings.setValue('files', len(history))
-        for i in range(len(history)):
-            settings.setValue('{}'.format(i), history[i])
-        settings.endGroup()
+        settings.beginWriteArray(arrayName)
+        for i in range(len(array)):
+            settings.setArrayIndex(i)
+            settings.setValue('{}'.format(i), array[i])
+        settings.endArray()
 
     def __load(self):
         settings = self.__open()
@@ -102,7 +101,8 @@ class Settings(object):
             settings.endGroup()
 
         if self._history is not None:
-            self.__load_history()
+            history = self.__load_array('History')
+            self._history.set(history)
 
     def __save(self):
         settings = self.__open()
@@ -124,7 +124,8 @@ class Settings(object):
             settings.endGroup()
 
         if self._history is not None:
-            self.__save_history()
+            history = self._history.get()
+            self.__save_array('History', history)
 
     def add_history(self, fileName):
         self._history.add(fileName)
