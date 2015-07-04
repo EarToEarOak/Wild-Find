@@ -51,6 +51,7 @@ class FileHistory(object):
         for fileName in self._history:
             name = os.path.basename(fileName)
             action = QtGui.QAction(name, self._signal)
+            action.setStatusTip(fileName)
             callback = partial(self._signal.open.emit, fileName)
             action.triggered.connect(callback)
             self._actions.append(action)
