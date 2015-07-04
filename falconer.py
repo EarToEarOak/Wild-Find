@@ -144,6 +144,26 @@ class Falconer(QtGui.QMainWindow):
         icon = style.standardIcon(QtGui.QStyle.SP_DialogCloseButton)
         self.actionClose.setIcon(icon)
 
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
+                                            'connect.png'))
+        self.actionConnect.setIcon(icon)
+
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
+                                            'disconnect.png'))
+        self.actionDisconnect.setIcon(icon)
+
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
+                                            'download.png'))
+        self.actionDownload.setIcon(icon)
+
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
+                                            'record.png'))
+        self.actionRecord.setIcon(icon)
+
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxQuestion)
         icon = QtGui.QIcon.fromTheme('help-contents', icon)
         self.actionHelp.setIcon(icon)
