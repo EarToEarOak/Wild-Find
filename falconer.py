@@ -44,6 +44,7 @@ from falconer.scans import WidgetScans
 from falconer.server import Server
 from falconer.settings import Settings
 from falconer.signals import WidgetSignals
+from falconer.status import Status
 from falconer.surveys import WidgetSurveys
 from falconer.utils import export_kml, add_program_path
 from falconer.utils_qt import win_remove_context_help
@@ -91,6 +92,8 @@ class Falconer(QtGui.QMainWindow):
 
         self.actionPlot3d.setVisible(SIP)
 
+        self._status = Status(self._statusbar)
+
         self._heatMap = HeatMap(self, self._settings,
                                 self.__on_signal_map_plotted,
                                 self.__on_signal_map_cleared)
@@ -98,7 +101,7 @@ class Falconer(QtGui.QMainWindow):
         self._database = Database()
 
         self._remote = Remote(self,
-                              self._statusbar,
+                              self._status,
                               self._database,
                               self.__on_remote_opened,
                               self.__on_remote_status,
@@ -117,7 +120,7 @@ class Falconer(QtGui.QMainWindow):
 
         self.setAcceptDrops(True)
 
-        self._statusbar.showMessage('Loading...')
+        self._status.show_message(Status.STARTING)
 
         self.show()
 
@@ -200,7 +203,7 @@ class Falconer(QtGui.QMainWindow):
                                              filter='Wild Find file (*.wfh)')
 
         if fileName:
-            self._statusbar.showMessage('Creating...')
+            self._status.show_message(Status.CREATING)
             self._settings.dirFile, _ = os.path.split(fileName)
             if os.path.exists(fileName):
                 os.remove(fileName)
@@ -213,7 +216,7 @@ class Falconer(QtGui.QMainWindow):
                                              dir=self._settings.dirFile,
                                              filter='Wild Find file (*.wfh)')
         if fileName:
-            self._statusbar.showMessage('Opening...')
+            self._status.show_message(Status.OPENING)
             self._settings.dirFile, _ = os.path.split(fileName)
             self.__open(fileName)
 
@@ -225,7 +228,7 @@ class Falconer(QtGui.QMainWindow):
                                              dir=self._settings.dirFile,
                                              filter='Wild Find file (*.wfh)')
         if fileName:
-            self._statusbar.showMessage('Merge...')
+            self._status.show_message(Status.MERGING)
             self._settings.dirFile, _ = os.path.split(fileName)
             self.__merge(fileName)
 
@@ -237,7 +240,7 @@ class Falconer(QtGui.QMainWindow):
                                              dir=self._settings.dirFile,
                                              filter='Wild Find file (*.wfh)')
         if fileName:
-            self._statusbar.showMessage('Saving...')
+            self._status.show_message(Status.SAVING)
             self._settings.dirFile, _ = os.path.split(fileName)
             self.__save_filtered(fileName)
 
@@ -256,9 +259,9 @@ class Falconer(QtGui.QMainWindow):
         win_remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
-            self._statusbar.showMessage('Exporting...')
+            self._status.show_message(Status.EXPORTING)
             self._printer = dialog.printer()
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
 
     @QtCore.Slot()
     def on_actionExportImage_triggered(self):
@@ -276,11 +279,11 @@ class Falconer(QtGui.QMainWindow):
                                              filter=filters,
                                              selectedFilter='Portable Network Graphics (*.png)')
         if fileName:
-            self._statusbar.showMessage('Exporting...')
+            self._status.show_message(Status.EXPORTING)
             self._settings.dirExport, _ = os.path.split(fileName)
             mapImage = self._widgetMap.get_map()
             mapImage.save(fileName)
-            self._statusbar.showMessage('Ready...')
+            self._status.show_message(Status.READY)
 
     @QtCore.Slot()
     def on_actionExportKml_triggered(self):
@@ -291,7 +294,7 @@ class Falconer(QtGui.QMainWindow):
                                              dir=self._settings.dirExport,
                                              filter=filters)
         if fileName:
-            self._statusbar.showMessage('Exporting...')
+            self._status.show_message(Status.EXPORTING)
             self._settings.dirExport, _ = os.path.split(fileName)
             filteredSurveys = self._widgetSurveys.get_filtered()
             filteredScans = self._widgetScans.get_filtered()
@@ -306,7 +309,7 @@ class Falconer(QtGui.QMainWindow):
             heatmap = self._heatMap.get_file()
 
             export_kml(fileName, locations, telemetry, heatmap)
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
 
     @QtCore.Slot()
     def on_actionPrint_triggered(self):
@@ -315,9 +318,9 @@ class Falconer(QtGui.QMainWindow):
         win_remove_context_help(dialog)
         dialog.paintRequested.connect(self.__on__print)
         if dialog.exec_():
-            self._statusbar.showMessage('Printing...')
+            self._status.show_message(Status.PRINTING)
             self._printer = dialog.printer()
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
 
     @QtCore.Slot()
     def on_actionExit_triggered(self):
@@ -327,8 +330,8 @@ class Falconer(QtGui.QMainWindow):
     def on_actionConnect_triggered(self):
         dlg = DialogRemote(self, self._settings)
         if dlg.exec_():
-            message = 'Connecting to {}...'.format(self._settings.remoteAddr)
-            self._statusbar.showMessage(message)
+            self._status.show_message(Status.CONNECTING,
+                                      self._settings.remoteAddr)
             self._remote.open(self._settings.remoteAddr)
 
     @QtCore.Slot()
@@ -423,7 +426,7 @@ class Falconer(QtGui.QMainWindow):
             self._args.file = None
             self.__open(fileName)
 
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
     def __on_signal_map_plotted(self, bounds):
         if self._database.is_connected():
@@ -432,7 +435,7 @@ class Falconer(QtGui.QMainWindow):
     def __on_signal_map_cleared(self):
         self._widgetMap.clear_heatmap()
         self._widgetMap.show_busy(False)
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
     def __on_signal_map_colour(self):
         self.__set_map()
@@ -580,11 +583,11 @@ class Falconer(QtGui.QMainWindow):
         if not os.path.exists(fileName) and not create:
             message = 'File not found'
             QtGui.QMessageBox.warning(self, 'Warning', message)
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             return
 
         if not self.__file_warn():
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             return False
 
         self._database.close()
@@ -597,7 +600,7 @@ class Falconer(QtGui.QMainWindow):
                                        error)
             self._database.close()
             self.__clear_scans()
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             return False
 
         self.__set_surveys()
@@ -608,7 +611,7 @@ class Falconer(QtGui.QMainWindow):
         self._widgetMap.set_follow(True)
         name = os.path.basename(fileName)
         self.setWindowTitle('Falconer - {}'.format(name))
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
         self._settings.add_history(fileName)
 
@@ -621,7 +624,7 @@ class Falconer(QtGui.QMainWindow):
             QtGui.QMessageBox.critical(self,
                                        'Open failed',
                                        error)
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             return
 
         self._database.merge(merge)
@@ -630,7 +633,7 @@ class Falconer(QtGui.QMainWindow):
         self.__set_scans()
         self.__set_signals()
         self.__set_map()
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
     def __save_filtered(self, fileName):
         save = Database()
@@ -642,7 +645,7 @@ class Falconer(QtGui.QMainWindow):
             QtGui.QMessageBox.critical(self,
                                        'Open failed',
                                        error)
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             return
 
         save.merge(self._database)
@@ -651,7 +654,7 @@ class Falconer(QtGui.QMainWindow):
         filteredSignals = self._widgetSignals.get_filtered()
         save.filter(filteredSurveys, filteredScans, filteredSignals)
         save.close()
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
     def __set_surveys(self):
         surveys = self._database.get_surveys()
@@ -672,7 +675,7 @@ class Falconer(QtGui.QMainWindow):
 
     def __set_map(self):
         self._widgetMap.show_busy(True)
-        self._statusbar.showMessage('Processing...')
+        self._status.show_message(Status.pro)
 
         filteredSurveys = self._widgetSurveys.get_filtered()
         filteredScans = self._widgetScans.get_filtered()

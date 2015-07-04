@@ -33,6 +33,7 @@ from PySide import QtCore, QtGui
 from common.constants import PORT_HARRIER
 from falconer import ui
 from falconer.parse import Parse
+from falconer.status import Status
 from falconer.utils_qt import win_remove_context_help
 
 
@@ -40,9 +41,9 @@ TIMEOUT_CONNECT = 5
 
 
 class Remote(object):
-    def __init__(self, parent, statusbar, database, onOpened, onStatus, onSynched, onClosed):
+    def __init__(self, parent, status, database, onOpened, onStatus, onSynched, onClosed):
         self._parent = parent
-        self._statusbar = statusbar
+        self._status = status
         self._database = database
 
         self._client = None
@@ -71,7 +72,7 @@ class Remote(object):
         QtGui.QMessageBox.information(self._parent,
                                       'Information',
                                       message)
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
         self._signal.opened.emit()
 
     def __on_scans(self, scans):
@@ -89,14 +90,14 @@ class Remote(object):
 
         if self._isDownloading:
             self._isDownloading = False
-            self._statusbar.showMessage('Ready')
+            self._status.show_message(Status.READY)
             QtGui.QMessageBox.information(self._parent,
                                           'Information',
                                           'Download finished')
 
     def __on_timeout(self):
         self.close()
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
         QtGui.QMessageBox.critical(self._parent,
                                    'Error',
                                    'Connection failed')
@@ -104,7 +105,7 @@ class Remote(object):
     def __on_error(self, error):
         self.close()
         QtGui.QMessageBox.critical(self._parent, 'Remote error', error)
-        self._statusbar.showMessage('Ready')
+        self._status.show_message(Status.READY)
 
     def __command(self, command, method):
         resp = {}
@@ -119,7 +120,7 @@ class Remote(object):
 
     def download(self):
         self._isDownloading = True
-        self._statusbar.showMessage('Downloading...')
+        self._status.show_message(Status.DOWNLOADING)
         self.__command('Get', 'Scans')
         self.__command('Get', 'Signals')
         self.__command('Get', 'Log')
