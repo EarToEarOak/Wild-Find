@@ -549,7 +549,7 @@ class Falconer(QtGui.QMainWindow):
         self.actionExportKml.setEnabled(db)
         self.actionPrint.setEnabled(db)
         self.actionClose.setEnabled(db)
-        self.actionConnect.setEnabled(db and not remote)
+        self.actionConnect.setEnabled(not remote)
         self.actionDownload.setEnabled(db and remote)
         self.actionRecord.setEnabled(db and remote)
         self.actionDisconnect.setEnabled(remote)
