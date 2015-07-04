@@ -31,7 +31,10 @@ import threading
 from PySide import QtCore, QtGui
 
 from common.constants import PORT_HARRIER
+from falconer import ui
 from falconer.parse import Parse
+from falconer.utils_qt import win_remove_context_help
+
 
 TIMEOUT_CONNECT = 5
 
@@ -99,7 +102,7 @@ class Remote(object):
                                    'Connection failed')
 
     def __on_error(self, error):
-        self._timeout.stop()
+        self.close()
         QtGui.QMessageBox.critical(self._parent, 'Remote error', error)
         self._statusbar.showMessage('Ready')
 
@@ -125,6 +128,7 @@ class Remote(object):
         self._record = record
 
     def close(self):
+        self._timeout.stop()
         if self._client is not None:
             self._client.close()
             self._client = None
@@ -135,24 +139,39 @@ class Remote(object):
         return self._parse.is_connected()
 
 
+class DialogRemote(QtGui.QDialog):
+    def __init__(self, parent, settings):
+        QtGui.QDialog.__init__(self, parent)
+
+        self._settings = settings
+
+        ui.loadUi(self, 'remote.ui')
+        win_remove_context_help(self)
+
+        completer = QtGui.QCompleter(settings.remoteHistory, self)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self._editAddr.setCompleter(completer)
+
+        self._editAddr.setText(settings.remoteAddr)
+
+    @QtCore.Slot()
+    def on__buttonBox_accepted(self):
+        self._settings.remoteAddr = self._editAddr.text()
+        self._settings.update_remote_history()
+        self.accept()
+
+
 class Client(threading.Thread):
     def __init__(self, addr, signal, parse):
         threading.Thread.__init__(self)
         self.name = 'Client'
 
+        self._addr = addr
         self._signal = signal
         self._parse = parse
 
         self._sock = None
         self._cancel = False
-
-        try:
-            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._sock.connect((addr, PORT_HARRIER))
-        except socket.error as e:
-            self._sock = None
-            self._signal.error.emit(e.strerror)
-            return
 
         self.start()
 
@@ -163,15 +182,23 @@ class Client(threading.Thread):
             try:
                 data = sock.recv(1024)
                 if not data:
-                    return
+                    self.close()
             except socket.error:
-                return
+                self.close()
             buf += data
             while buf.find('\n') != -1:
                 line, buf = buf.split('\n', 1)
                 yield line
 
     def run(self):
+        try:
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._sock.connect((self._addr, PORT_HARRIER))
+        except socket.error as e:
+            self._sock = None
+            self._signal.error.emit(e.strerror)
+            return
+
         while not self._cancel:
             read, _write, _error = select.select([self._sock], [], [], 0.5)
 

@@ -43,6 +43,7 @@ class Settings(object):
         self.dirExport = '.'
 
         self.remoteAddr = ''
+        self.remoteHistory = set()
 
         self.units = 'metric'
 
@@ -104,6 +105,8 @@ class Settings(object):
             history = self.__load_array('History')
             self._history.set(history)
 
+        self.remoteHistory = self.__load_array('RemoteHistory')
+
     def __save(self):
         settings = self.__open()
 
@@ -127,8 +130,13 @@ class Settings(object):
             history = self._history.get()
             self.__save_array('History', history)
 
+        self.__save_array('RemoteHistory', self.remoteHistory)
+
     def add_history(self, fileName):
         self._history.add(fileName)
+
+    def update_remote_history(self):
+        self.remoteHistory.append(self.remoteAddr)
 
     def close(self):
         self.__save()

@@ -39,7 +39,7 @@ from falconer.map import WidgetMap
 from falconer.plot3d import DialogPlot3d
 from falconer.preferences import DialogPreferences
 from falconer.printer import print_report
-from falconer.remote import Remote
+from falconer.remote import Remote, DialogRemote
 from falconer.scans import WidgetScans
 from falconer.server import Server
 from falconer.settings import Settings
@@ -325,15 +325,11 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionConnect_triggered(self):
-        addr, ok = QtGui.QInputDialog.getText(self,
-                                              'Connect',
-                                              'Hostname or address:',
-                                              text=self._settings.remoteAddr)
-
-        if ok:
-            self._statusbar.showMessage('Connecting...')
-            self._settings.remoteAddr = addr
-            self._remote.open(addr)
+        dlg = DialogRemote(self, self._settings)
+        if dlg.exec_():
+            message = 'Connecting to {}...'.format(self._settings.remoteAddr)
+            self._statusbar.showMessage(message)
+            self._remote.open(self._settings.remoteAddr)
 
     @QtCore.Slot()
     def on_actionDisconnect_triggered(self):
