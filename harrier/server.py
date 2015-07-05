@@ -85,7 +85,11 @@ class Server(threading.Thread):
         self._client = None
 
     def __get_client_name(self, client):
-        return socket.gethostbyaddr(client.getpeername()[0])[0]
+        try:
+            return socket.gethostbyaddr(client.getpeername()[0])[0]
+        except socket.error:
+            return 'Client'
+
 
     def run(self):
         while not self._cancel:
