@@ -152,6 +152,9 @@ class Server(threading.Thread):
         self._parse.result_log([entry])
 
     def stop(self):
+        shutdown = self._parse.result('Shutdown', None)
+        self.send(shutdown)
+
         self._cancel = True
         self._server.close()
 

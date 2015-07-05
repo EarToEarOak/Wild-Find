@@ -72,7 +72,7 @@ class Harrier(object):
 
         halfBand = SAMPLE_RATE / 2e6
         print 'Scan range:\t{:.2f}-{:.2f}MHz'.format(settings.freq - halfBand,
-                                                   settings.freq + halfBand)
+                                                     settings.freq + halfBand)
 
         if settings.delay is None:
             mode = 'Remote'
@@ -97,7 +97,16 @@ class Harrier(object):
         waiting = self._status.get_wait()
         if waiting is not None:
             print '(Waiting for {} to finish)'.format(self._status.get_wait())
-        self.__close()
+
+        self._cancel = True
+        if self._server is not None:
+            self._server.stop()
+        if self._gps is not None:
+            self._gps.stop()
+        if self._receive is not None:
+            self._receive.stop()
+        if self._database is not None:
+            self._database.stop()
 
     def __arguments(self):
         parser = argparse.ArgumentParser(description='Harrier',
@@ -241,14 +250,6 @@ class Harrier(object):
     def __close(self, _signal=None, _frame=None):
         signal.signal(signal.SIGINT, self._signal)
         self._cancel = True
-        if self._server is not None:
-            self._server.stop()
-        if self._gps is not None:
-            self._gps.stop()
-        if self._receive is not None:
-            self._receive.stop()
-        if self._database is not None:
-            self._database.stop()
 
 
 if __name__ == '__main__':

@@ -60,7 +60,8 @@ class Remote(object):
                             self.__on_signals,
                             self.__on_log,
                             onStatus,
-                            self.__on_sats)
+                            self.__on_sats,
+                            self.__on_shutdown)
 
         self._signal = SignalClient()
         self._signal.opened.connect(onOpened)
@@ -100,6 +101,12 @@ class Remote(object):
 
     def __on_sats(self, sats):
         self._status.set_remote_sats(sats)
+
+    def __on_shutdown(self):
+        QtGui.QMessageBox.warning(self._parent,
+                                  'Warning',
+                                  'Harrier has been shut down')
+        self.close()
 
     def __on_timeout(self):
         self.close()
@@ -221,7 +228,10 @@ class Client(threading.Thread):
     def close(self):
         self._cancel = True
         if self._sock is not None:
-            self._sock.shutdown(socket.SHUT_RDWR)
+            try:
+                self._sock.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                pass
             self._sock.close()
 
 
