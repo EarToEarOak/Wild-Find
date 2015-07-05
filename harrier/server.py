@@ -27,7 +27,7 @@ import select
 import socket
 import threading
 
-from common.constants import PORT_HARRIER
+from common.constants import HARRIER_PORT
 from harrier import events
 from harrier.parse import Parse
 
@@ -50,7 +50,7 @@ class Server(threading.Thread):
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            self._server.bind(('', PORT_HARRIER))
+            self._server.bind(('', HARRIER_PORT))
             self._server.listen(5)
         except socket.error:
             events.Post(self._queue).error('Could not start server')

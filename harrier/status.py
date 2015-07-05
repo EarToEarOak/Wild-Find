@@ -27,12 +27,11 @@ from collections import OrderedDict
 import sys
 import time
 
+from common.constants import HARRIER_STATUS
 from harrier import events
 
 
 class Status(object):
-    STATUS = ['Idle', 'Locate', 'Capture', 'Process']
-
     _status = events.STATUS_IDLE
     _signals = 0
     _location = None
@@ -47,7 +46,7 @@ class Status(object):
         sats = '   --'
         fix = '      --'
 
-        desc = Status.STATUS[self._status - events.STATUS_IDLE]
+        desc = HARRIER_STATUS[self._status - events.STATUS_IDLE]
 
         if self._location is not None:
             lon = '{: 10.5f}'.format(self._location[0][0])
@@ -57,7 +56,7 @@ class Status(object):
 
         if self._sats is not None and len(self._sats):
             total = len(self._sats[0])
-            used = len([stats for _sat, stats in self._sats[0].iteritems() if stats['Used']])
+            used = len([sat for _sat, sat in self._sats[0].iteritems() if sat['Used']])
             sats = '{:2}/{:2}'.format(used, total)
 
         status = '\r{:7}  Lon {:11}  Lat {:10}  Sats {:5}  Fix {:8}  Signals {:2} '

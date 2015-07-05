@@ -474,6 +474,7 @@ class Falconer(QtGui.QMainWindow):
         self.__set_controls()
 
     def __on_remote_status(self, status):
+        self._status.set_remote_status(status)
         self._widgetMap.set_harrier(status['lon'], status['lat'])
 
     def __on_remote_synched(self):
@@ -675,7 +676,7 @@ class Falconer(QtGui.QMainWindow):
 
     def __set_map(self):
         self._widgetMap.show_busy(True)
-        self._status.show_message(Status.pro)
+        self._status.show_message(Status.PROCESSING)
 
         filteredSurveys = self._widgetSurveys.get_filtered()
         filteredScans = self._widgetScans.get_filtered()

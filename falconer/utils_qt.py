@@ -146,6 +146,12 @@ def cal_set_colours(calendar):
     calendar.setPalette(palette)
 
 
+def set_max_text_width(label, textList):
+    longest = max(textList, key=len)
+    width = label.fontMetrics().width(longest)
+    label.setFixedWidth(width * 1.5)
+
+
 if __name__ == '__main__':
     print 'Please run falconer.py'
     exit(1)

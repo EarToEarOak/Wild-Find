@@ -23,6 +23,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PySide import QtGui, QtCore
+
+from common.constants import HARRIER_STATUS
+from falconer.utils_qt import set_max_text_width
+
 
 class Status(object):
 
@@ -34,15 +39,82 @@ class Status(object):
                  'Printing...', 'Processing...', 'Connecting to {}...',
                  'Downloading...']
 
+    _CONNECTED = ['Not connected', 'Connected']
+    _FIX = ['No fix', 'Fix']
+
     def __init__(self, statusBar):
         self._statusBar = statusBar
 
+        statusBar.addPermanentWidget(QtGui.QLabel('Remote:'))
+
+        self._labelConnected = QtGui.QLabel()
+        self._labelConnected.setFrameStyle(QtGui.QFrame.Panel |
+                                           QtGui.QFrame.Sunken)
+        self._labelConnected.setToolTip('Remote connection')
+        set_max_text_width(self._labelConnected, Status._CONNECTED)
+        statusBar.addPermanentWidget(self._labelConnected)
+
+        self._labelRemoteStatus = QtGui.QLabel()
+        self._labelRemoteStatus.setFrameStyle(QtGui.QFrame.Panel |
+                                              QtGui.QFrame.Sunken)
+        self._labelRemoteStatus.setToolTip('Remote status')
+        set_max_text_width(self._labelRemoteStatus, HARRIER_STATUS)
+        statusBar.addPermanentWidget(self._labelConnected)
+
+        self._labelRemoteFix = QtGui.QLabel()
+        self._labelRemoteFix.setFrameStyle(QtGui.QFrame.Panel |
+                                           QtGui.QFrame.Sunken)
+        self._labelRemoteFix.setToolTip('Remote GPS fix')
+        set_max_text_width(self._labelRemoteFix, Status._FIX)
+        statusBar.addPermanentWidget(self._labelRemoteFix)
+
+        self._labelRemoteSats = QtGui.QLabel()
+        self._labelRemoteSats.setFrameStyle(QtGui.QFrame.Panel |
+                                            QtGui.QFrame.Sunken)
+        self._labelRemoteSats.setToolTip('Remote GPS satellites')
+        set_max_text_width(self._labelRemoteSats, ['-- / --'])
+        statusBar.addPermanentWidget(self._labelRemoteSats)
+
+        self.set_remote_status({'status': 0,
+                                'lon': None,
+                                'lat': None})
+        self.set_remote_sats(None)
+        self.set_connected(False)
+
     def show_message(self, message, param=None):
-        status = self._MESSAGES[message]
+        status = Status._MESSAGES[message]
         if param is not None:
             status = status.format(param)
 
         self._statusBar.showMessage(status)
+
+    def set_connected(self, connected):
+        self._labelConnected.setText(Status._CONNECTED[connected])
+        if not connected:
+            self._labelRemoteStatus.clear()
+            self._labelRemoteFix.clear()
+            self._labelRemoteSats.clear()
+
+    def set_remote_status(self, remoteStatus):
+        status = remoteStatus['status']
+        lon = remoteStatus['lon']
+        lat = remoteStatus['lat']
+        fix = lon is not None and lat is not None
+
+        self._labelRemoteStatus.setText(HARRIER_STATUS[status])
+        self._labelRemoteFix.setText(Status._FIX[fix])
+
+    def set_remote_sats(self, sats):
+        if sats is None:
+            self._labelRemoteSats.setText('--')
+        else:
+            if sats is not None and len(sats):
+                total = len(sats[0])
+                used = len([sat for _sat, sat in sats[0].iteritems()
+                            if sat['Used']])
+                self._labelRemoteSats.setText('{:2}/{:2}'.format(used, total))
+            else:
+                self._labelRemoteSats.setText('--')
 
 
 if __name__ == '__main__':

@@ -29,13 +29,14 @@ from PySide import QtCore
 
 
 class Parse(object):
-    def __init__(self, onOpened, onScans, onSignals, onLog, onStatus):
+    def __init__(self, onOpened, onScans, onSignals, onLog, onStatus, onSats):
         self._signal = SignalParse()
         self._signal.opened.connect(onOpened)
         self._signal.scans.connect(onScans)
         self._signal.signals.connect(onSignals)
         self._signal.log.connect(onLog)
         self._signal.status.connect(onStatus)
+        self._signal.satellites.connect(onSats)
 
         self._isConnected = False
 
@@ -65,6 +66,11 @@ class Parse(object):
         if log is not None:
             self._signal.status.emit(log)
 
+    def __on_sats(self, result):
+        sats = result['Value']
+        if sats is not None:
+            self._signal.satellites.emit(sats)
+
     def parse(self, data):
         try:
             result = json.loads(data)
@@ -83,6 +89,8 @@ class Parse(object):
                 self.__on_log(result)
             elif method == 'Status':
                 self.__on_status(result)
+            elif method == 'Satellites':
+                self.__on_sats(result)
 
     def is_connected(self):
         return self._isConnected
@@ -97,6 +105,7 @@ class SignalParse(QtCore.QObject):
     signals = QtCore.Signal(dict)
     log = QtCore.Signal(dict)
     status = QtCore.Signal(dict)
+    satellites = QtCore.Signal(dict)
 
 if __name__ == '__main__':
     print 'Please run falconer.py'

@@ -30,7 +30,7 @@ import threading
 
 from PySide import QtCore, QtGui
 
-from common.constants import PORT_HARRIER
+from common.constants import HARRIER_PORT
 from falconer import ui
 from falconer.parse import Parse
 from falconer.status import Status
@@ -41,7 +41,8 @@ TIMEOUT_CONNECT = 5
 
 
 class Remote(object):
-    def __init__(self, parent, status, database, onOpened, onStatus, onSynched, onClosed):
+    def __init__(self, parent, status, database,
+                 onOpened, onStatus, onSynched, onClosed):
         self._parent = parent
         self._status = status
         self._database = database
@@ -58,7 +59,8 @@ class Remote(object):
                             self.__on_scans,
                             self.__on_signals,
                             self.__on_log,
-                            onStatus)
+                            onStatus,
+                            self.__on_sats)
 
         self._signal = SignalClient()
         self._signal.opened.connect(onOpened)
@@ -68,6 +70,7 @@ class Remote(object):
 
     def __on_opened(self):
         self._timeout.stop()
+        self._status.set_connected(True)
         message = 'Connection successful'
         QtGui.QMessageBox.information(self._parent,
                                       'Information',
@@ -94,6 +97,9 @@ class Remote(object):
             QtGui.QMessageBox.information(self._parent,
                                           'Information',
                                           'Download finished')
+
+    def __on_sats(self, sats):
+        self._status.set_remote_sats(sats)
 
     def __on_timeout(self):
         self.close()
@@ -134,6 +140,7 @@ class Remote(object):
             self._client.close()
             self._client = None
         self._parse.close()
+        self._status.set_connected(False)
         self._signal.closed.emit()
 
     def is_connected(self):
@@ -194,7 +201,7 @@ class Client(threading.Thread):
     def run(self):
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._sock.connect((self._addr, PORT_HARRIER))
+            self._sock.connect((self._addr, HARRIER_PORT))
         except socket.error as e:
             self._sock = None
             self._signal.error.emit(e.strerror)

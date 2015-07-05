@@ -25,4 +25,6 @@
 # Log size (lines)
 LOG_SIZE = 50
 
-PORT_HARRIER = 12014
+HARRIER_PORT = 12014
+
+HARRIER_STATUS = ['Idle', 'Locate', 'Capture', 'Process']
