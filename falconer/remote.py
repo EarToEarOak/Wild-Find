@@ -51,6 +51,9 @@ class Remote(object):
         self._isDownloading = False
         self._record = False
 
+        self._delay = None
+        self._freq = None
+
         self._timeout = QtCore.QTimer(parent)
         self._timeout.setSingleShot(True)
         self._timeout.timeout.connect(self.__on_timeout)
@@ -61,6 +64,7 @@ class Remote(object):
                             self.__on_log,
                             onStatus,
                             self.__on_sats,
+                            self.__on_settings,
                             self.__on_shutdown)
 
         self._signal = SignalClient()
@@ -78,6 +82,8 @@ class Remote(object):
                                       message)
         self._status.show_message(Status.READY)
         self._signal.opened.emit()
+
+        self.__command('Get', 'Settings')
 
     def __on_scans(self, scans):
         if self._record or self._isDownloading:
@@ -102,6 +108,11 @@ class Remote(object):
     def __on_sats(self, sats):
         self._status.set_remote_sats(sats)
 
+    def __on_settings(self, settings):
+        value = settings['Value']
+        self._delay = value['delay']
+        self._freq = value['frequency']
+
     def __on_shutdown(self):
         QtGui.QMessageBox.warning(self._parent,
                                   'Warning',
@@ -120,10 +131,12 @@ class Remote(object):
         QtGui.QMessageBox.critical(self._parent, 'Remote error', error)
         self._status.show_message(Status.READY)
 
-    def __command(self, command, method):
+    def __command(self, command, method, value=None):
         resp = {}
         resp['Command'] = command
         resp['Method'] = method
+        if value is not None:
+            resp['Value'] = value
         self._client.send(json.dumps(resp) + '\r\n')
 
     def open(self, addr):
@@ -153,14 +166,25 @@ class Remote(object):
     def is_connected(self):
         return self._parse.is_connected()
 
+    def get_settings(self):
+        return self._delay, self._freq
 
-class DialogRemote(QtGui.QDialog):
+    def set_frequency(self, freq):
+        self.__command('Set', 'Frequency', freq)
+        self._freq = freq
+
+    def set_delay(self, delay):
+        self.__command('Set', 'Delay', delay)
+        self._delay = delay
+
+
+class DialogRemoteConnect(QtGui.QDialog):
     def __init__(self, parent, settings):
         QtGui.QDialog.__init__(self, parent)
 
         self._settings = settings
 
-        ui.loadUi(self, 'remote.ui')
+        ui.loadUi(self, 'remote_connect.ui')
         win_remove_context_help(self)
 
         completer = QtGui.QCompleter(settings.remoteHistory, self)
@@ -173,6 +197,46 @@ class DialogRemote(QtGui.QDialog):
     def on__buttonBox_accepted(self):
         self._settings.remoteAddr = self._editAddr.text()
         self._settings.update_remote_history()
+        self.accept()
+
+
+class DialogRemoteSettings(QtGui.QDialog):
+    def __init__(self, parent, remote):
+        QtGui.QDialog.__init__(self, parent)
+
+        self._remote = remote
+        settings = remote.get_settings()
+
+        ui.loadUi(self, 'remote_settings.ui')
+        win_remove_context_help(self)
+
+        self._editFreq.setValidator(QtGui.QDoubleValidator(1, 9999, 1))
+        self._editFreq.setText(str(settings[1]))
+
+        self._editDelay.setValidator(QtGui.QDoubleValidator(0, 9999, 1))
+        if settings[0] is not None:
+            self._checkAuto.setChecked(True)
+            self._editDelay.setEnabled(True)
+            self._editDelay.setText(str(settings[0]))
+        else:
+            self._editDelay.setText('4')
+
+    @QtCore.Slot(bool)
+    def on__checkAuto_clicked(self, checked):
+        self._editDelay.setEnabled(checked)
+
+    @QtCore.Slot()
+    def on__buttonBox_accepted(self):
+        freq = float(self._editFreq.text())
+        auto = self._checkAuto.checkState()
+        if auto:
+            delay = float(self._editDelay.text())
+        else:
+            delay = -1
+
+        self._remote.set_frequency(freq)
+        self._remote.set_delay(delay)
+
         self.accept()
 
 

@@ -114,6 +114,8 @@
     <addaction name="actionDownload"/>
     <addaction name="separator"/>
     <addaction name="actionRecord"/>
+    <addaction name="separator"/>
+    <addaction name="actionSettings"/>
    </widget>
    <addaction name="_menuFile"/>
    <addaction name="menuRemote"/>
@@ -431,6 +433,17 @@
    </property>
    <property name="statusTip">
     <string>Save new data from Harrier</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Settings...</string>
+   </property>
+   <property name="statusTip">
+    <string>Remote settings</string>
    </property>
   </action>
  </widget>

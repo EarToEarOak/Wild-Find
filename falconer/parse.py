@@ -29,7 +29,8 @@ from PySide import QtCore
 
 
 class Parse(object):
-    def __init__(self, onOpened, onScans, onSignals, onLog, onStatus, onSats, onShutdown):
+    def __init__(self, onOpened, onScans, onSignals, onLog,
+                 onStatus, onSats, onSettings, onShutdown):
         self._signal = SignalParse()
         self._signal.opened.connect(onOpened)
         self._signal.scans.connect(onScans)
@@ -37,6 +38,7 @@ class Parse(object):
         self._signal.log.connect(onLog)
         self._signal.status.connect(onStatus)
         self._signal.satellites.connect(onSats)
+        self._signal.settings.connect(onSettings)
         self._signal.shutdown.connect(onShutdown)
 
         self._isConnected = False
@@ -72,9 +74,6 @@ class Parse(object):
         if sats is not None:
             self._signal.satellites.emit(sats)
 
-    def __on_shutdown(self):
-        self._signal.shutdown.emit()
-
     def parse(self, data):
         try:
             result = json.loads(data)
@@ -95,8 +94,10 @@ class Parse(object):
                 self.__on_status(result)
             elif method == 'Satellites':
                 self.__on_sats(result)
+            elif method == 'Settings':
+                self._signal.settings.emit(result)
             elif method == 'Shutdown':
-                self.__on_shutdown()
+                self._signal.shutdown.emit()
 
     def is_connected(self):
         return self._isConnected
@@ -112,6 +113,7 @@ class SignalParse(QtCore.QObject):
     log = QtCore.Signal(dict)
     status = QtCore.Signal(dict)
     satellites = QtCore.Signal(dict)
+    settings = QtCore.Signal(dict)
     shutdown = QtCore.Signal()
 
 if __name__ == '__main__':
