@@ -27,6 +27,8 @@ from PySide import QtCore
 
 from falconer.history import FileHistory
 
+MAX_REMOTE_HISTORY = 5
+
 
 class Settings(object):
     def __init__(self, parent=None, menuBar=None, historyCallback=None):
@@ -43,7 +45,7 @@ class Settings(object):
         self.dirExport = '.'
 
         self.remoteAddr = ''
-        self.remoteHistory = set()
+        self.remoteHistory = []
 
         self.units = 'metric'
 
@@ -136,7 +138,10 @@ class Settings(object):
         self._history.add(fileName)
 
     def update_remote_history(self):
+        while len(self.remoteHistory) > MAX_REMOTE_HISTORY:
+            self.remoteHistory.pop()
         self.remoteHistory.append(self.remoteAddr)
+        self.remoteHistory = list(set(self.remoteHistory))
 
     def close(self):
         self.__save()
