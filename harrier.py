@@ -64,7 +64,7 @@ class Harrier(object):
         self._database = Database(settings.db, queue)
         self._receive = Receive(settings, queue)
         self._status = Status(self._database)
-        self._server = Server(queue, self._status, self._database)
+        self._server = Server(queue, self._status, self._database, settings)
 
         self._isScanning = False
         self._cancel = False

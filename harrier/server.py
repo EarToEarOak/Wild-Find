@@ -36,7 +36,7 @@ VERSION = 1
 
 
 class Server(threading.Thread):
-    def __init__(self, queue, status, database):
+    def __init__(self, queue, status, database, settings):
         threading.Thread.__init__(self)
         self.name = 'Server'
 
@@ -44,7 +44,7 @@ class Server(threading.Thread):
         self._status = status
         self._database = database
 
-        self._parse = Parse(queue, status, database, self)
+        self._parse = Parse(queue, status, database, settings, self)
 
         self._client = None
         self._server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

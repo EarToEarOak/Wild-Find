@@ -33,6 +33,7 @@ class Parse(object):
     # Commands
     COMMAND = 'command'
     GET = 'get'
+    SET = 'set'
     RUN = 'run'
 
     # Methods
@@ -41,17 +42,22 @@ class Parse(object):
     SCANS = 'scans'
     SIGNALS = 'signals'
     LOG = 'log'
+    SETTINGS = 'settings'
+    DELAY = 'delay'
+    FREQUENCY = 'frequency'
 
     # Values
     VALUE = 'value'
+    FLOAT = range(1)
 
-    COMMANDS = [GET, RUN]
-    METHODS = [SCAN, SCANS, SIGNALS, LOG]
+    COMMANDS = [GET, SET, RUN]
+    METHODS = [SCAN, SCANS, SIGNALS, LOG, SETTINGS, DELAY, FREQUENCY]
 
-    def __init__(self, queue, status, database, server):
+    def __init__(self, queue, status, database, settings, server):
         self._queue = queue
         self._status = status
         self._database = database
+        self._settings = settings
         self._server = server
 
         self._params = {}
@@ -59,13 +65,18 @@ class Parse(object):
         self.__set(Parse.SCANS, canGet=True)
         self.__set(Parse.SIGNALS, canGet=True)
         self.__set(Parse.LOG, canGet=True)
+        self.__set(Parse.SETTINGS, canGet=True)
+        self.__set(Parse.DELAY, canSet=True, valSet=Parse.FLOAT)
+        self.__set(Parse.FREQUENCY, canSet=True, valSet=Parse.FLOAT)
 
-    def __set(self, method,
-              canGet=False, canRun=False):
+    def __set(self, method, canGet=False, canSet=False, canRun=False,
+              valSet=None):
         self._params[method] = {'canGet': canGet,
-                                'canRun': canRun}
+                                'canSet': canSet,
+                                'canRun': canRun,
+                                'valSet': valSet}
 
-    def __execute(self, command, method, _value):
+    def __execute(self, command, method, value):
         if method == Parse.SCAN:
             if command == Parse.RUN:
                 events.Post(self._queue).scan()
@@ -79,17 +90,65 @@ class Parse(object):
         elif method == Parse.LOG:
             return self.result(method, self._database.get_log(self.result_log))
 
+        elif method == Parse.SETTINGS:
+            if command == Parse.GET:
+                return self.result(method, self._settings.get())
+
+        elif method == Parse.DELAY:
+            if command == Parse.SET:
+                if value < 0:
+                    value = None
+                self._settings.delay = value
+                return self.result(method)
+
+        elif method == Parse.FREQUENCY:
+            if command == Parse.SET:
+                self._settings.freq = value
+                return self.result(method)
+
     def __check_method(self, command, method, _value):
         canGet = self._params[method]['canGet']
+        canSet = self._params[method]['canSet']
         canRun = self._params[method]['canRun']
 
         if command == Parse.GET and not canGet:
             error = '\'{}\' is not readable'.format(method)
             raise MethodException(error)
 
+        if command == Parse.SET and not canSet:
+            error = '\'{}\' is not writable'.format(method)
+            raise MethodException(error)
+
         elif command == Parse.RUN and not canRun:
             error = '\'{}\' cannot be run'.format(method)
             raise MethodException(error)
+
+    def __check_value(self, command, method, value):
+        valSet = self._params[method]['valSet']
+
+        if command == Parse.GET:
+            if value is not None:
+                error = '\'{}\' has an unexpected value'.format(method)
+                raise ValueException(error)
+
+        elif command == Parse.SET:
+            if valSet is not None:
+                if value is None:
+                    error = '\'{}\' expects a value'.format(method)
+                    raise ValueException(error)
+
+    def __check_value_type(self, command, method, value):
+        valSet = self._params[method]['valSet']
+
+        valType = None
+        if command == Parse.SET:
+            valType = valSet
+
+        if valType == Parse.FLOAT:
+            try:
+                float(value)
+            except ValueError:
+                raise ValueException('Expected a float')
 
     def __get_params(self, instruction):
         command = instruction[Parse.COMMAND]
@@ -125,7 +184,8 @@ class Parse(object):
             instruction = self.__parse(line)
             params = self.__get_params(instruction)
             self.__check_method(*params)
-            self.__check_method(*params)
+            self.__check_value(*params)
+            self.__check_value_type(*params)
             return self.__execute(*params)
 
         except SyntaxException as error:
@@ -137,11 +197,12 @@ class Parse(object):
         except ValueException as error:
             return self.result_error('Value error', error.message)
 
-    def result(self, method, value):
+    def result(self, method, value=None):
         resp = OrderedDict()
         resp['Result'] = 'OK'
         resp['Method'] = method.capitalize()
-        resp['Value'] = value
+        if value is not None:
+            resp['Value'] = value
 
         return json.dumps(resp) + '\r\n'
 

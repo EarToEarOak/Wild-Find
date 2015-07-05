@@ -113,6 +113,11 @@ class Settings(object):
             sys.stderr.write('Configuration error: {}\n'.format(error))
             exit(2)
 
+    def get(self):
+        settings = {'delay': self.delay,
+                    'frequency': self.freq}
+        return settings
+
 
 if __name__ == '__main__':
     print 'Please run harrier.py'
