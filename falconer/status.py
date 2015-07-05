@@ -59,7 +59,7 @@ class Status(object):
                                               QtGui.QFrame.Sunken)
         self._labelRemoteStatus.setToolTip('Remote status')
         set_max_text_width(self._labelRemoteStatus, HARRIER_STATUS)
-        statusBar.addPermanentWidget(self._labelConnected)
+        statusBar.addPermanentWidget(self._labelRemoteStatus)
 
         self._labelRemoteFix = QtGui.QLabel()
         self._labelRemoteFix.setFrameStyle(QtGui.QFrame.Panel |
