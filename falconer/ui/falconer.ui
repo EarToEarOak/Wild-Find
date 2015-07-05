@@ -111,6 +111,8 @@
     <addaction name="actionConnect"/>
     <addaction name="actionDisconnect"/>
     <addaction name="separator"/>
+    <addaction name="actionScan"/>
+    <addaction name="separator"/>
     <addaction name="actionDownload"/>
     <addaction name="separator"/>
     <addaction name="actionRecord"/>
@@ -143,6 +145,7 @@
    <addaction name="separator"/>
    <addaction name="actionConnect"/>
    <addaction name="actionDisconnect"/>
+   <addaction name="actionScan"/>
    <addaction name="actionDownload"/>
    <addaction name="actionRecord"/>
    <addaction name="separator"/>
@@ -444,6 +447,17 @@
    </property>
    <property name="statusTip">
     <string>Remote settings</string>
+   </property>
+  </action>
+  <action name="actionScan">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Scan</string>
+   </property>
+   <property name="statusTip">
+    <string>Request a scan start</string>
    </property>
   </action>
  </widget>

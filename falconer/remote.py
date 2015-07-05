@@ -177,6 +177,9 @@ class Remote(object):
         self.__command('Set', 'Delay', delay)
         self._delay = delay
 
+    def scan(self):
+        self.__command('Run', 'Scan')
+
 
 class DialogRemoteConnect(QtGui.QDialog):
     def __init__(self, parent, settings):
@@ -232,7 +235,7 @@ class DialogRemoteSettings(QtGui.QDialog):
         if auto:
             delay = float(self._editDelay.text())
         else:
-            delay = -1
+            delay = None
 
         self._remote.set_frequency(freq)
         self._remote.set_delay(delay)

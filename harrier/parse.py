@@ -79,7 +79,7 @@ class Parse(object):
     def __execute(self, command, method, value):
         if method == Parse.SCAN:
             if command == Parse.RUN:
-                events.Post(self._queue).scan()
+                events.Post(self._queue).scan_start()
 
         elif method == Parse.SCANS:
             self._database.get_scans(self.result_scans)

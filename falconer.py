@@ -159,6 +159,11 @@ class Falconer(QtGui.QMainWindow):
 
         icon = QtGui.QIcon(add_program_path('falconer',
                                             'ui',
+                                            'logo.png'))
+        self.actionScan.setIcon(icon)
+
+        icon = QtGui.QIcon(add_program_path('falconer',
+                                            'ui',
                                             'download.png'))
         self.actionDownload.setIcon(icon)
 
@@ -338,6 +343,10 @@ class Falconer(QtGui.QMainWindow):
     def on_actionDisconnect_triggered(self):
         self._remote.close()
         self.__set_controls()
+
+    @QtCore.Slot()
+    def on_actionScan_triggered(self):
+        self._remote.scan()
 
     @QtCore.Slot()
     def on_actionDownload_triggered(self):
@@ -559,6 +568,7 @@ class Falconer(QtGui.QMainWindow):
         self.actionPrint.setEnabled(db)
         self.actionClose.setEnabled(db)
         self.actionConnect.setEnabled(not remote)
+        self.actionScan.setEnabled(remote)
         self.actionDownload.setEnabled(db and remote)
         self.actionRecord.setEnabled(db and remote)
         self.actionSettings.setEnabled(remote)
