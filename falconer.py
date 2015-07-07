@@ -159,7 +159,7 @@ class Falconer(QtGui.QMainWindow):
 
         icon = QtGui.QIcon(add_program_path('falconer',
                                             'ui',
-                                            'logo.png'))
+                                            'scan.png'))
         self.actionScan.setIcon(icon)
 
         icon = QtGui.QIcon(add_program_path('falconer',
