@@ -656,7 +656,7 @@ class Falconer(QtGui.QMainWindow):
         save = Database()
 
         if os.path.exists(fileName):
-                os.remove(fileName)
+            os.remove(fileName)
         error = save.open(fileName)
         if error is not None:
             QtGui.QMessageBox.critical(self,

@@ -90,7 +90,6 @@ class Server(threading.Thread):
         except socket.error:
             return 'Client'
 
-
     def run(self):
         while not self._cancel:
             if self._client is None:

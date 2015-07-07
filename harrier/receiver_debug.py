@@ -48,7 +48,7 @@ import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 
 
-class ReceiveDebug():
+class ReceiveDebug(object):
     def __init__(self, argList=None):
         self._args = self.__parse_arguments(argList)
 

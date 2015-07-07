@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from PySide import QtGui, QtCore
+from PySide import QtGui
 
 from common.constants import HARRIER_STATUS
 from falconer.utils_qt import set_max_text_width
