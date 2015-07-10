@@ -46,8 +46,8 @@ class Harrier(object):
     def __init__(self):
         print 'Harrier\n'
 
-        hostname = socket.gethostname()
-        print 'Host name:\t{}'.format(hostname)
+        print 'Host :\t\t{} ({})'.format(socket.gethostname(),
+                                         socket.gethostbyname(socket.getfqdn()))
 
         queue = Queue.Queue()
 
