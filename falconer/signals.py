@@ -29,6 +29,7 @@ from matplotlib import patheffects
 import matplotlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import ScalarFormatter
+import numpy
 
 from falconer import ui
 from falconer.table import format_freq, format_rate, Model
@@ -251,6 +252,11 @@ class DialogHistogram(QtGui.QDialog):
         plt.ylabel('Detections')
         plt.grid(True)
 
+        if matplotlib.__version__ >= '1.2':
+            figure.tight_layout()
+
+        renderer = plt.gcf().canvas.get_renderer()
+
         formatter = ScalarFormatter(useOffset=False)
         axes.xaxis.set_major_formatter(formatter)
         axes.yaxis.set_major_formatter(formatter)
@@ -263,8 +269,16 @@ class DialogHistogram(QtGui.QDialog):
 
         x, z, y = zip(*signals)
         x = [freq / 1e6 for freq in x]
-        width = 0.06
+        if len(x) > 2:
+            width = min(numpy.diff(x)) / 2.
+        else:
+            width = 20 / 1e6
+
         bars = axes.bar(x, y, width=width, color='blue')
+
+        xmin, xmax = plt.xlim()
+        ymin, ymax = plt.ylim()
+
         for i in range(len(y)):
             bar = bars[i]
             freq = x[i]
@@ -280,6 +294,17 @@ class DialogHistogram(QtGui.QDialog):
                                                 foreground="w",
                                                 alpha=0.75)
                 text.set_path_effects([effect])
+
+                bounds = text.get_window_extent(renderer)
+                bounds = bounds.transformed(axes.transData.inverted())
+                extents = bounds.extents
+                xmin = min(xmin, extents[0])
+                ymin = min(ymin, extents[1])
+                xmax = max(xmax, extents[2])
+                ymax = max(ymax, extents[3])
+
+        plt.xlim(xmin, xmax)
+        plt.ylim(ymin, ymax)
 
         canvas = FigureCanvasAgg(figure)
         canvas.draw()
