@@ -56,7 +56,7 @@ TONE_TOL = 10
 # Tolerance of ghosts (Hz)
 GHOST_RATE_TOL = 5
 # Correlation of ghosts (%)
-GHOST_CORR = 75
+GHOST_CORR = 50
 
 
 class Detect(object):
