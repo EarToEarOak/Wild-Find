@@ -25,9 +25,8 @@
 
 import numpy
 from scipy.signal._peak_finding import find_peaks_cwt
-from scipy.signal.spectral import welch
 
-from harrier.constants import SAMPLE_RATE
+from harrier.psd import psd
 from harrier.utils import Utils
 
 
@@ -56,9 +55,7 @@ class Scan(object):
         if self._timing is not None:
             self._timing.start('Scan')
 
-        f, l = welch(self._samples, nperseg=SCAN_BINS,
-                     noverlap=-64 * 1024)
-        f *= SAMPLE_RATE
+        f, l = psd(self._samples, SCAN_BINS, self._fs)
 
         decibels = 10 * numpy.log10(l)
 
