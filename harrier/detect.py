@@ -71,7 +71,7 @@ class Detect(object):
     # Get levels of each frequency
     def __filter_frequencies(self, freqBins, magnitudes):
         pos = 0
-        levels = numpy.empty(len(self._frequencies))
+        levels = numpy.empty(len(self._frequencies), dtype=numpy.float16)
 
         for freq in self._frequencies:
             # Closest bin
@@ -206,7 +206,7 @@ class Detect(object):
         freq = sampleRate / periodAvg
 
         # Create pulses from signal
-        pulse = numpy.zeros((signal.size))
+        pulse = numpy.zeros((signal.size), dtype=numpy.float16)
         pos = 0
         for i in range(widths.size):
             width = widths[i]
@@ -323,7 +323,8 @@ class Detect(object):
         if chunks == 0:
             Utils.error('Sample time too long')
 
-        signals = numpy.empty((chunks, len(self._frequencies)))
+        signals = numpy.empty((chunks, len(self._frequencies)),
+                              dtype=numpy.float16)
 
         # Split samples into chunks
         freqBins = fftpack.fftfreq(DEMOD_BINS, 1. / self._fs)
@@ -356,8 +357,8 @@ class Detect(object):
         # Normalise
         if self._timing is not None:
             self._timing.start('Correl')
-        a = (a - numpy.mean(a)) / (numpy.std(a) * len(a))
-        v = (v - numpy.mean(v)) / numpy.std(v)
+        a = (a - numpy.mean(a)) / (numpy.std(a, dtype=numpy.float32) * len(a))
+        v = (v - numpy.mean(v)) / numpy.std(v, dtype=numpy.float32)
         corr = numpy.correlate(a, v)
         if self._timing is not None:
             self._timing.stop()
