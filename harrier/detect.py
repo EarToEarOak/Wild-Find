@@ -38,9 +38,11 @@ from harrier.utils import Utils
 # Size of each block to analyse
 DEMOD_BINS = 4096
 # Valid pulse widths (s)
-PULSE_WIDTHS = [25e-3, 64e-3]
+PULSE_WIDTHS = [10e-3, 25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
 PULSE_WIDTH_TOL = 25
+# Minimum high to low level ratio
+PULSE_LEVEL_RATIO = 5
 # Maximum pulse rate deviation (%)
 PULSE_RATE_DEVIATION = 15
 # Valid pulse rates (Pulses per minute)
@@ -96,6 +98,9 @@ class Detect(object):
         t4 = numpy.mean(edges[edges < 0])
         threshPos = t2 + (t1 - t2) * 3. / 4.
         threshNeg = t4 + (t3 - t4) * 3. / 4.
+
+        if t1 / t2 < PULSE_LEVEL_RATIO or t3 / t4 < PULSE_LEVEL_RATIO:
+            return threshPos, threshNeg, numpy.empty((0)), numpy.empty((0))
 
         # TODO: optimise!!
         posIndices = []
