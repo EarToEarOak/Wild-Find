@@ -562,7 +562,7 @@ function showHeatmap(show) {
 function follow() {
 	var extentLoc = locations.getExtent();
 	var extentHar = harrier.getExtent();
-	var extent = ol.extent.extend(extentLoc, extentHar)
+	var extent = ol.extent.extend(extentLoc, extentHar);
 
 	_setListeners(false);
 	view.fitExtent(extent, map.getSize());
