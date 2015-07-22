@@ -57,6 +57,8 @@ TONE_TOL = 10
 GHOST_RATE_TOL = 5
 # Correlation of ghosts (%)
 GHOST_CORR = 50
+# Channel spacing (Hz)
+CHANNEL_SPACE = 20e3
 
 
 class Detect(object):
@@ -257,7 +259,7 @@ class Detect(object):
             signals[signalNum] -= numpy.average(signals[signalNum])
 
     # Find pulses and their frequency
-    def __detect(self, signals):
+    def __detect(self, signals, baseband):
         collars = []
 
         # Calculate valid pulse widths with PULSE_WIDTH_TOL tolerance
@@ -301,7 +303,9 @@ class Detect(object):
 
             if pulse is not None:
                 pulse.signalNum = signalNum
-                pulse.freq = self._frequencies[signalNum]
+                freq = self._frequencies[signalNum] + baseband
+                freq = int(round(freq / CHANNEL_SPACE) * CHANNEL_SPACE)
+                pulse.freq = freq
                 collars.append(pulse)
 
             if self._timing is not None:
@@ -397,11 +401,11 @@ class Detect(object):
         if self._debug is not None and self._debug.verbose:
             print '\tRemoved {} ghosts'.format(len(toRemove))
 
-    def search(self):
+    def search(self, baseband):
         if not len(self._frequencies):
             return []
         signals = self.__demod()
-        detected = self.__detect(signals)
+        detected = self.__detect(signals, baseband)
         self.__remove_ghosts(signals, detected)
 
         return detected

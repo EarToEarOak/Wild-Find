@@ -104,7 +104,7 @@ class Receive(threading.Thread):
                 return
 
             detect = Detect(SAMPLE_RATE, iq, frequencies)
-            collars = detect.search()
+            collars = detect.search(self._settings.freq * 1e6)
 
             events.Post(self._queue).status(events.STATUS_IDLE)
             events.Post(self._queue).scan_done(collars=collars,

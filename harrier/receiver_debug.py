@@ -165,8 +165,8 @@ class ReceiveDebug(object):
             ax.fmt_xdata = EngFormatter(places=4, unit='Hz')
             ax.grid()
 
-            ax.plot(freqs + self._source.baseband, levels, label='Signal')
-            ax.plot(frequencies + self._source.baseband, peaks,
+            ax.plot(freqs, levels, label='Signal')
+            ax.plot(frequencies, peaks,
                     linestyle='None', marker='o',
                     color='r', label='Peaks')
             plt.legend(prop={'size': 10}, framealpha=0.8)
@@ -178,12 +178,12 @@ class ReceiveDebug(object):
         print '\tSignals to demodulate: {}'.format(len(frequencies))
         if self._args.verbose:
             for freq in frequencies:
-                print '\t\t{:.4f}MHz'.format((self._source.baseband + freq) / 1e6)
+                print '\t\t{:.4f}MHz'.format((freq) / 1e6)
 
         # Detect
         detect = Detect(self._source.fs, iq, frequencies,
                         self._timing, self.debug)
-        pulses = detect.search()
+        pulses = detect.search(self._source.baseband)
         signals = detect.get_signals()
 
         # Plot results
@@ -208,7 +208,7 @@ class ReceiveDebug(object):
         for pulse in pulses:
             signalNum = pulse.signalNum
             plt.plot(x, signals[signalNum],
-                     label=pulse.get_description(self._source.baseband))
+                     label=pulse.get_description())
 
         if len(pulses):
             plt.legend(prop={'size': 10}, framealpha=0.5)

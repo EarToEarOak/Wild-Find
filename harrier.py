@@ -166,7 +166,6 @@ class Harrier(object):
             if collars is not None:
                 self._status.set_signals(len(collars))
                 for collar in collars:
-                    collar.freq += settings.freq * 1e6
                     location = self._status.get_location()[0]
                     collar.lon = location[0]
                     collar.lat = location[1]
