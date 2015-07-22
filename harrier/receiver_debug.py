@@ -63,6 +63,8 @@ class ReceiveDebug(object):
         if 'wav' in self._args:
             self._source = SourceWav(self._args.wav, self._args.noise,
                                      self.__analyse)
+        elif 'bin' in self._args:
+            self._source = SourceBin(self._args.bin, self.__analyse)
         else:
             baseband = self._args.frequency * 1e6
             self._source = SourceRtlSdr(SAMPLE_RATE, baseband, self._args.gain,
@@ -114,6 +116,9 @@ class ReceiveDebug(object):
                                type=float, default=0)
         parserWav.add_argument('wav', help='IQ wav file')
 
+        parserBin = subparser.add_parser('bin')
+        parserBin.add_argument('bin', help='IQ bin file')
+
         parserRtl = subparser.add_parser('rtlsdr')
         parserRtl.add_argument('-f', '--frequency', help='RTLSDR frequency (MHz)',
                                type=float, required=True)
@@ -123,7 +128,10 @@ class ReceiveDebug(object):
         args = parser.parse_args(argList)
 
         if 'wav' in args and args.wav is not None and not os.path.isfile(args.wav):
-            Utils.error('Cannot find file')
+            Utils.error('Cannot find wav file')
+
+        if 'bin' in args and args.bin is not None and not os.path.isfile(args.bin):
+            Utils.error('Cannot find bin file')
 
         if args.am and args.disableAm:
             Utils.error('AM detection disabled - will not display graphs', False)
@@ -391,6 +399,43 @@ class SourceWav(object):
             samples = self.iq[sampleStart:sampleStart + sampleSize]
 
             self._callback(samples)
+
+
+# Bin file source
+class SourceBin(object):
+    def __init__(self, filename, callback):
+        self._filename = filename
+        self._callback = callback
+        self.fs = 2.4e6
+        self.baseband = 0
+
+        name = os.path.split(filename)[1]
+
+        print 'Bin file:'
+        print '\tLoading capture file: {}'.format(name)
+
+        print '\tSample rate: {:.2f}MSPS (assumed)'.format(self.fs / 1e6)
+        length = os.path.getsize(filename)
+        print '\tLength: {:.2f}s'.format(length / (self.fs * 2.))
+
+    # Return bin file samples
+    def start(self, _timing=None):
+        length = os.path.getsize(self._filename) / 2
+        sampleSize = int(self.fs * SAMPLE_TIME)
+        sampleBlocks = int(length / sampleSize)
+        if sampleBlocks == 0:
+            Utils.error('Capture too short')
+
+        f = open(self._filename, 'rb')
+
+        for _i in range(sampleBlocks):
+            data = bytearray(f.read(sampleSize * 2))
+            iq = numpy.array(data).astype(numpy.float32).view(numpy.complex64)
+            iq /= 255.
+
+            self._callback(iq)
+
+        f.close()
 
 
 # RTLSDR Source
