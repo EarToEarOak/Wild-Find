@@ -40,8 +40,9 @@ class Settings(object):
         self.freq = args.frequency
         self.test = args.test
 
-        self.recvIndex = None
-        self.recvGain = None
+        self.recvIndex = 0
+        self.recvGain = 0
+        self.recvCal = 0
 
         self.scanFast = False
 
@@ -67,6 +68,9 @@ class Settings(object):
 
             if config.has_option('receiver', 'gain'):
                 self.recvGain = config.getfloat('receiver', 'gain')
+
+            if config.has_option('receiver', 'calibration'):
+                self.recvCal = config.getfloat('receiver', 'calibration')
 
             self.gps.port = config.get('gps', 'port')
 

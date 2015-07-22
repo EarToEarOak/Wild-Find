@@ -82,10 +82,10 @@ class Receive(threading.Thread):
                 self._sdr = rtlsdr.RtlSdr(device_index=self._settings.recvIndex)
                 self._sdr.set_sample_rate(SAMPLE_RATE)
                 self._sdr.set_center_freq(self._settings.freq * 1e6)
-                if self._settings.recvGain is not None:
-                    self._sdr.set_gain(self._settings.recvGain)
-                else:
-                    self._sdr.set_gain(0)
+                self._sdr.set_gain(self._settings.recvGain)
+                cal = int(self._settings.recvCal)
+                if cal != 0:
+                    self._sdr.set_freq_correction(cal)
             self._timeStamp = time.time()
 
             self._sdr.read_bytes_async(self.__capture,
