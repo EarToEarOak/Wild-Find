@@ -99,7 +99,7 @@ class Receive(threading.Thread):
                 return
 
             scan = Scan(SAMPLE_RATE, iq)
-            frequencies = scan.search(self._settings.scanFast)
+            frequencies = scan.search()
             if self._cancel:
                 return
 
