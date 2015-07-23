@@ -173,8 +173,8 @@ class ReceiveDebug(object):
             ax.fmt_xdata = EngFormatter(places=4, unit='Hz')
             ax.grid()
 
-            ax.plot(freqs, levels, label='Signal')
-            ax.plot(frequencies, peaks,
+            ax.plot(freqs + self._source.baseband, levels, label='Signal')
+            ax.plot(frequencies + self._source.baseband, peaks,
                     linestyle='None', marker='o',
                     color='r', label='Peaks')
             plt.legend(prop={'size': 10}, framealpha=0.8)
