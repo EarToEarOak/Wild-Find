@@ -290,10 +290,10 @@ class ReceiveDebug(object):
                     child.remove()
 
     # Callback to display edge plot
-    def callback_egdes(self, edge, signalNum, pulse, frequencies,
+    def callback_egdes(self, baseband, edge, signalNum, pulse, frequencies,
                        threshPos, threshNeg, posIndices, negIndices):
 
-        freq = frequencies[signalNum]
+        freq = frequencies[signalNum] + baseband
         edges = self._args.edges * 1e6
         if edges != 0 and (abs(freq - edges) > 50e3):
             return
@@ -305,7 +305,7 @@ class ReceiveDebug(object):
             title += ' (Pulses Found - {})'.format(pulse.get_modulation())
         plt.title(title)
         plt.grid()
-        label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
+        label = '{:.4f}MHz'.format(freq / 1e6)
         plt.plot(x, edge, label=label)
         plt.axhline(threshPos, color='g', label='+ve')
         plt.axhline(threshNeg, color='r', label='-ve')
