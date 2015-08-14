@@ -48,14 +48,14 @@ class Settings(object):
 
         self.gps = Comm()
 
-        self.__load_conf(args.conf)
+        self.__load_conf(args)
 
-    def __load_conf(self, confFile):
+    def __load_conf(self, args):
 
         config = ConfigParser.SafeConfigParser()
 
         try:
-            config.read(confFile)
+            config.read(args.conf)
 
             if config.has_option('scan', 'delay'):
                 self.delay = config.getint('scan', 'delay')
@@ -66,7 +66,9 @@ class Settings(object):
             if config.has_option('receiver', 'index'):
                 self.recvIndex = config.getint('receiver', 'index')
 
-            if config.has_option('receiver', 'gain'):
+            if args.gain is not None:
+                self.recvGain = args.gain
+            elif config.has_option('receiver', 'gain'):
                 self.recvGain = config.getfloat('receiver', 'gain')
 
             if config.has_option('receiver', 'calibration'):

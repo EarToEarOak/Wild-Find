@@ -40,10 +40,14 @@ from harrier.server import Server
 from harrier.settings import Settings
 from harrier.status import Status
 from harrier.testmode import TestMode
+from harrier.utils import ArgparseFormatter
 
 
 class Harrier(object):
     def __init__(self):
+        settings = Settings(self.__arguments())
+        self._settings = settings
+
         print 'Harrier\n'
 
         try:
@@ -53,9 +57,6 @@ class Harrier(object):
             pass
 
         queue = Queue.Queue()
-
-        settings = Settings(self.__arguments())
-        self._settings = settings
 
         if settings.test:
             TestMode(settings)
@@ -113,13 +114,14 @@ class Harrier(object):
 
     def __arguments(self):
         parser = argparse.ArgumentParser(description='Harrier',
-                                         formatter_class=
-                                         argparse.ArgumentDefaultsHelpFormatter)
+                                         formatter_class=ArgparseFormatter)
 
         dirUser = os.path.expanduser('~')
 
         parser.add_argument('-f', '--frequency', help='Centre frequency (MHz)',
                             type=float, required=True)
+        parser.add_argument('-g', '--gain', help='Gain (dB)',
+                            type=float)
         parser.add_argument('-c', '--conf', help='Configuration file',
                             default=os.path.join(dirUser, 'harrier.conf'))
 
