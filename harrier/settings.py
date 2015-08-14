@@ -44,8 +44,6 @@ class Settings(object):
         self.recvGain = 0
         self.recvCal = 0
 
-        self.scanFast = False
-
         self.gps = Comm()
 
         self.__load_conf(args)
@@ -59,9 +57,6 @@ class Settings(object):
 
             if config.has_option('scan', 'delay'):
                 self.delay = config.getint('scan', 'delay')
-
-            if config.has_option('scan', 'fast'):
-                self.scanFast = config.getboolean('scan', 'fast')
 
             if config.has_option('receiver', 'index'):
                 self.recvIndex = config.getint('receiver', 'index')

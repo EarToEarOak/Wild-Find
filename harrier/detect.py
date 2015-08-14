@@ -23,7 +23,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from bisect import bisect_left
 import itertools
 import operator
 
@@ -70,58 +69,34 @@ class Detect(object):
         self._timing = timing
         self._debug = debug
 
-    # Get levels of each frequency
-    def __filter_frequencies(self, freqBins, magnitudes):
-        pos = 0
-        levels = numpy.empty(len(self._frequencies), dtype=numpy.float16)
-
-        for freq in self._frequencies:
-            # Closest bin
-            fftBin = bisect_left(freqBins, freq)
-            if fftBin == DEMOD_BINS:
-                fftBin -= 1
-
-            level = magnitudes[fftBin]
-            levels[pos] = level
-            pos += 1
-
-        return levels
-
-    # Calculate thresholds based on percentiles
-    def __find_edges(self, edges, pulseWidths):
+    # Find pulse edges
+    def __find_edges(self, signals, pulseWidths):
         minPulses = SAMPLE_TIME * min(PULSE_RATES) / 60.
         minHigh = minPulses * min(min(pulseWidths)) / 1e3
         threshold = 1 - (minHigh / SAMPLE_TIME)
         threshold *= 100
 
-        t1 = numpy.percentile(edges[edges > 0], threshold)
-        t2 = numpy.mean(edges[edges > 0])
-        t3 = numpy.percentile(edges[edges < 0], 100 - threshold)
-        t4 = numpy.mean(edges[edges < 0])
-        threshPos = t2 + (t1 - t2) * 3. / 4.
-        threshNeg = t4 + (t3 - t4) * 3. / 4.
+        t1 = numpy.percentile(signals, threshold)
+        threshLow = numpy.mean(signals)
+        threshHigh = threshLow + (t1 - threshLow) / 2.
 
-        if t1 / t2 < PULSE_LEVEL_RATIO or t3 / t4 < PULSE_LEVEL_RATIO:
-            return threshPos, threshNeg, numpy.empty((0)), numpy.empty((0))
+        high = signals >= threshHigh
+        low = signals <= threshLow
+        both = high | low
+        indicesBoth = numpy.nonzero(both)[0]
+        counter = numpy.cumsum(both)
+        edges = numpy.where(counter, high[indicesBoth[counter - 1]], False)
 
-        # TODO: optimise!!
-        posIndices = []
-        negIndices = []
-        high = False
-        for i in range(edges.size):
-            if edges[i] > threshPos and not high:
-                posIndices.append(i)
-                high = True
-            elif edges[i] < threshNeg and high:
-                negIndices.append(i)
-                high = False
+        indicesEdge = numpy.nonzero(numpy.diff(edges))[0]
+        indicesPos = indicesEdge[0::2]
+        indicesNeg = indicesEdge[1::2]
 
-        minSize = min(len(posIndices), len(negIndices))
-        posIndices = posIndices[:minSize]
-        negIndices = negIndices[:minSize]
+        if indicesPos.size != indicesNeg.size:
+            return (threshHigh, threshLow,
+                    numpy.array([]), numpy.array([]))
 
-        return (threshPos, threshNeg,
-                numpy.array(posIndices), numpy.array(negIndices))
+        return (threshHigh, threshLow,
+                indicesPos, indicesNeg)
 
     # Find pulses
     def __find_pulses(self, signal, negIndices, posIndices, pulseWidths):
@@ -274,9 +249,9 @@ class Detect(object):
                 self._timing.start('Detect')
 
             self._signals.append(signal)
-            edge = numpy.diff(signal)
+
             (threshPos, threshNeg,
-             posIndices, negIndices) = self.__find_edges(edge, pulseWidths)
+             posIndices, negIndices) = self.__find_edges(signal, pulseWidths)
 
             # Find CW collars
             pulse = self.__find_pulses(signal,
@@ -312,7 +287,7 @@ class Detect(object):
                 self._timing.stop()
 
             if self._debug is not None:
-                self._debug.callback_edge(edge, signalNum, pulse,
+                self._debug.callback_edge(baseband, signal, signalNum, pulse,
                                           self._frequencies,
                                           threshPos, threshNeg,
                                           posIndices, negIndices)
@@ -321,7 +296,7 @@ class Detect(object):
 
         return collars
 
-    # Analyse blocks from capture
+    # Demodulate blocks from capture
     def __demod(self):
         chunks = self._samples.size / DEMOD_BINS
         if chunks == 0:
@@ -345,8 +320,9 @@ class Detect(object):
             fft = fftpack.fft(chunk, overwrite_x=True)
             fft /= DEMOD_BINS
             mags = numpy.absolute(fft)
-            levels = self.__filter_frequencies(freqBins[freqInds],
-                                               mags[freqInds])
+            bins = numpy.searchsorted(freqBins[freqInds],
+                                      self._frequencies)
+            levels = mags[freqInds][bins]
             signals[chunkNum] = levels
 
             if self._timing is not None:

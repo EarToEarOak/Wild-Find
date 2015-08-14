@@ -95,8 +95,6 @@ class ReceiveDebug(object):
                             action='store_true')
         parser.add_argument('-c', '--scan', help='Display signal search',
                             action='store_true')
-        parser.add_argument('--scan_fast', help='Enable fast scan mode',
-                            action='store_true')
         parser.add_argument('-e', '--edges', help='Display pulse edges',
                             type=float,
                             nargs='?', const=0, default=None)
@@ -160,7 +158,7 @@ class ReceiveDebug(object):
         print 'Block {}'.format(self._block)
 
         scan = Scan(self._source.fs, iq, self._timing)
-        frequencies = scan.search(self._args.scan_fast)
+        frequencies = scan.search()
         if self._args.scan:
             # Show scan results
             freqs, levels = scan.get_spectrum()
@@ -292,10 +290,10 @@ class ReceiveDebug(object):
                     child.remove()
 
     # Callback to display edge plot
-    def callback_egdes(self, edge, signalNum, pulse, frequencies,
+    def callback_egdes(self, baseband, edge, signalNum, pulse, frequencies,
                        threshPos, threshNeg, posIndices, negIndices):
 
-        freq = frequencies[signalNum]
+        freq = frequencies[signalNum] + baseband
         edges = self._args.edges * 1e6
         if edges != 0 and (abs(freq - edges) > 50e3):
             return
@@ -307,7 +305,7 @@ class ReceiveDebug(object):
             title += ' (Pulses Found - {})'.format(pulse.get_modulation())
         plt.title(title)
         plt.grid()
-        label = '{:.4f}MHz'.format((frequencies[signalNum]) / 1e6)
+        label = '{:.4f}MHz'.format(freq / 1e6)
         plt.plot(x, edge, label=label)
         plt.axhline(threshPos, color='g', label='+ve')
         plt.axhline(threshNeg, color='r', label='-ve')

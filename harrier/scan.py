@@ -24,7 +24,6 @@
 #
 
 import numpy
-from scipy.signal._peak_finding import find_peaks_cwt
 
 from harrier.psd import psd
 from harrier.utils import Utils
@@ -48,7 +47,39 @@ class Scan(object):
         self._levels = None
         self._peaks = None
 
-    def search(self, fast):
+    # Based on https://gist.github.com/endolith/250860
+    def __peak_detect(self, spectrum):
+        freqIndices = []
+
+        indexPeak = 0
+        levelMin = numpy.array(numpy.Inf, dtype=numpy.float32)
+        levelMax = numpy.array(-numpy.Inf, dtype=numpy.float32)
+        delta = numpy.array(SCAN_CHANGE, dtype=numpy.float32)
+
+        findPeak = True
+        for i in range(spectrum.size):
+            level = spectrum[i]
+
+            if level > levelMax:
+                levelMax = level
+                indexPeak = i
+            if level < levelMin:
+                levelMin = level
+
+            if findPeak:
+                if level <= levelMax - delta:
+                    freqIndices.append(indexPeak)
+                    levelMin = level
+                    findPeak = False
+            else:
+                if level >= levelMin + delta:
+                    levelMax = level
+                    indexPeak = i
+                    findPeak = True
+
+        return freqIndices
+
+    def search(self):
         if self._samples.size < SCAN_BINS:
             Utils.error('Sample too short')
 
@@ -59,23 +90,7 @@ class Scan(object):
 
         decibels = 10 * numpy.log10(l)
 
-        if fast:
-            diff = numpy.diff(decibels)
-            # Peaks
-            peakIndices = (numpy.diff(numpy.sign(diff)) < 0).nonzero()[0] + 1
-            # Changes above SCAN_CHANGE
-            threshPos = numpy.where((diff > SCAN_CHANGE))[0] + 1
-            threshNeg = numpy.where((diff < -SCAN_CHANGE))[0]
-            threshIndices = numpy.union1d(threshPos, threshNeg)
-            # Peaks above SCAN_CHANGE
-            signalIndices = numpy.where(numpy.in1d(peakIndices,
-                                                   threshIndices))[0]
-            freqIndices = peakIndices[signalIndices]
-        else:
-            freqIndices = find_peaks_cwt(decibels,
-                                         numpy.arange(1, 3),
-                                         gap_thresh=1,
-                                         min_snr=SCAN_CHANGE)
+        freqIndices = self.__peak_detect(decibels)
 
         self._freqs = f
         self._levels = decibels
