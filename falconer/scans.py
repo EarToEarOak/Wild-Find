@@ -81,7 +81,6 @@ class WidgetScans(QtGui.QWidget):
 
     def set(self, scans):
         self._model.set(scans)
-        self._tableScans.resizeColumnsToContents()
         self.__set_width()
 
         self._tableScans.setEnabled(True)

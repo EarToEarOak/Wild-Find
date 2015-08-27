@@ -24,7 +24,6 @@
 #
 
 import argparse
-import math
 import os
 import socket
 import sys

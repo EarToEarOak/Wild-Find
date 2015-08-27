@@ -93,7 +93,6 @@ class WidgetSurveys(QtGui.QWidget):
 
     def set(self, surveys):
         self._model.set(surveys)
-        self._tableSurveys.resizeColumnsToContents()
         self.__set_width()
 
         self._comboSurveys.clear()

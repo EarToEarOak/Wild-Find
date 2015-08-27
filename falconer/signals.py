@@ -135,7 +135,6 @@ class WidgetSignals(QtGui.QWidget):
 
     def set(self, signals):
         self._model.set(signals)
-        self._tableSignals.resizeColumnsToContents()
         self.__set_width()
 
         self._tableSignals.setEnabled(True)

@@ -394,11 +394,8 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def set_locations(self, locations):
-        for location in locations:
-            js = ('addLocation('
-                  '"{:.99g}", "{:3.1f}", "{:2.1f}",'
-                  '{}, {});').format(*location)
-            self.__exec_js(js)
+        js = 'addLocations({})'.format(json.dumps(locations))
+        self.__exec_js(js)
 
     def set_heatmap_opacity(self, opacity):
         js = 'setHeatmapOpacity({});'.format(opacity / 100.)
@@ -457,14 +454,9 @@ class MapLink(QtCore.QObject):
         self.__exec_js(js)
 
     def transform_coords(self, coords):
-        transformed = []
-        for coord in coords:
-            js = 'transformCoord({}, {});'.format(coord[0], coord[1])
-            trans = self.__exec_js(js)
-            trans.extend([coord[2]])
-            transformed.append(trans)
-
-        return transformed
+        js = 'transformCoords({})'.format(json.dumps(coords))
+        trans = self.__exec_js(js)
+        return trans
 
 
 class SignalMap(QtCore.QObject):
