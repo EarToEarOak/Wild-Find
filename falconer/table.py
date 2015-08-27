@@ -133,7 +133,7 @@ class Model(QtCore.QAbstractTableModel):
     def get_filtered(self):
         return self._filtered
 
-    def set_filtered(self, filtered):
+    def set_filtered(self, filtered, emit=True):
         self.beginResetModel()
         self._filtered = filtered
         for i in range(len(self._data)):
@@ -145,7 +145,8 @@ class Model(QtCore.QAbstractTableModel):
 
         self.endResetModel()
 
-        self._signal.filter.emit()
+        if emit:
+            self._signal.filter.emit()
 
 
 def format_qtime(qDateTime):

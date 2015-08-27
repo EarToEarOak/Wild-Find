@@ -119,7 +119,7 @@ class WidgetSurveys(QtGui.QWidget):
 
     def clear(self):
         self._model.set([])
-        self._model.set_filtered([])
+        self._model.set_filtered([], False)
         self._tableSurveys.setEnabled(False)
         self._comboSurveys.setEnabled(False)
 
