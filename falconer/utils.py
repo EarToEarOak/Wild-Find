@@ -138,6 +138,25 @@ def export_kml(fileName, locations, telemetry, image):
     os.remove(kml)
 
 
+def unique_locations(xyz):
+    locations = {}
+    for x, y, z in xyz:
+        if (x, y) in locations:
+            locations[(x, y)] = max(locations[(x, y)], z)
+        else:
+            locations[(x, y)] = z
+
+    x = []
+    y = []
+    z = []
+    for coord in locations.iterkeys():
+        x.append(coord[0])
+        y.append(coord[1])
+        z.append(locations[coord])
+
+    return x, y, z
+
+
 if __name__ == '__main__':
     print 'Please run falconer.py'
     exit(1)

@@ -35,6 +35,8 @@ matplotlib.use("Agg")
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
+from falconer.utils import unique_locations
+
 
 IMAGE_SIZE = 300
 
@@ -109,10 +111,7 @@ class ThreadPlot(QtCore.QThread):
         figure.patch.set_alpha(0)
         axes.axesPatch.set_alpha(0)
 
-        xyz = zip(*self._telemetry)
-        x = xyz[0]
-        y = xyz[1]
-        z = xyz[2]
+        x, y, z = unique_locations(self._telemetry)
 
         east = max(x)
         west = min(x)

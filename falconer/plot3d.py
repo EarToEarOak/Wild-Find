@@ -39,6 +39,7 @@ from mpl_toolkits.mplot3d import Axes3D  # @UnusedImport
 from PySide import QtGui, QtCore
 
 from falconer import ui
+from falconer.utils import unique_locations
 from falconer.utils_qt import win_set_maximise, win_set_icon
 
 
@@ -127,10 +128,7 @@ class WidgetPlot(FigureCanvas):
     def plot(self):
         self.clear()
 
-        xyz = zip(*self._telemetry)
-        x = xyz[0]
-        y = xyz[1]
-        z = xyz[2]
+        x, y, z = unique_locations(self._telemetry)
 
         east = max(x)
         west = min(x)
