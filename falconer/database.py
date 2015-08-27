@@ -211,7 +211,7 @@ class Database(object):
 
         return signals
 
-    def get_locations(self, filteredSurveys, filteredScans, filteredSignals):
+    def get_telemetry(self, filteredSurveys, filteredScans, filteredSignals):
         if self._conn is None:
             return []
 
@@ -226,30 +226,10 @@ class Database(object):
         cursor.execute(cmd)
         rows = cursor.fetchall()
 
-        signals = [[row['Freq'], row['Rate'], 10 * math.log(row['Level']),
-                    row['Lon'], row['Lat']]
-                   for row in rows
-                   if row['Level'] is not None and row['Level'] > 0]
-
-        return signals
-
-    def get_telemetry(self, filteredSurveys, filteredScans, filteredSignals):
-        if self._conn is None:
-            return []
-
-        cursor = self.get_cursor()
-
-        cmd = 'select Id, Lon, Lat, Level from Signals'
-        cmd += self.__filter(cursor,
-                             filteredSurveys,
-                             filteredScans,
-                             filteredSignals)
-        cmd += 'order by Id'
-
-        cursor.execute(cmd)
-        rows = cursor.fetchall()
-        telemetry = [[row['Lon'], row['Lat'], row['Level']] for row in rows
+        telemetry = [row for row in rows
                      if row['Level'] is not None and row['Level'] > 0]
+        for row in telemetry:
+            row['Level'] = 10*math.log(row['Level'])
 
         return telemetry
 

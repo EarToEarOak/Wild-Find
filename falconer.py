@@ -24,6 +24,7 @@
 #
 
 import argparse
+import math
 import os
 import socket
 import sys
@@ -305,15 +306,12 @@ class Falconer(QtGui.QMainWindow):
             filteredScans = self._widgetScans.get_filtered()
             filteredSignals = self._widgetSignals.get_filtered()
 
-            locations = self._database.get_locations(filteredSurveys,
-                                                     filteredScans,
-                                                     filteredSignals)
             telemetry = self._database.get_telemetry(filteredSurveys,
                                                      filteredScans,
                                                      filteredSignals)
             heatmap = self._heatMap.get_file()
 
-            export_kml(fileName, locations, telemetry, heatmap)
+            export_kml(fileName, telemetry, heatmap)
             self._status.show_message(Status.READY)
 
     @QtCore.Slot()
@@ -697,16 +695,18 @@ class Falconer(QtGui.QMainWindow):
         filteredSurveys = self._widgetSurveys.get_filtered()
         filteredScans = self._widgetScans.get_filtered()
         filteredSignals = self._widgetSignals.get_filtered()
-        locations = self._database.get_locations(filteredSurveys,
-                                                 filteredScans,
-                                                 filteredSignals)
-        self._widgetMap.set_locations(locations)
-
         telemetry = self._database.get_telemetry(filteredSurveys,
                                                  filteredScans,
                                                  filteredSignals)
-        telemetry = self._widgetMap.transform_coords(telemetry)
-        self._heatMap.set(telemetry)
+        locations = [[row['Freq'], row['Rate'], row['Level'],
+                      row['Lon'], row['Lat']]
+                     for row in telemetry]
+        self._widgetMap.set_locations(locations)
+
+        coords = [[row['Lon'], row['Lat'], row['Level']]
+                  for row in telemetry]
+        coords = self._widgetMap.transform_coords(coords)
+        self._heatMap.set(coords)
 
     def __clear_scans(self):
         self._widgetSurveys.clear()

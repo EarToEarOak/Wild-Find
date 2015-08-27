@@ -37,15 +37,15 @@ def add_program_path(*paths):
     return os.path.join(cwd, *paths)
 
 
-def export_kml(fileName, locations, telemetry, image):
+def export_kml(fileName, telemetry, image):
     points = ('    <Folder>\n'
               '      <name>Locations</name>\n')
-    for location in locations:
+    for location in telemetry:
         desc = ('{:.4f}MHz\n'
                 '{:.1f}PPM\n'
-                '{:.1f}dB').format(location[0] / 1e6,
-                                   location[1],
-                                   location[2])
+                '{:.1f}dB').format(location['Level'] / 1e6,
+                                   location['Rate'],
+                                   location['Level'])
         points += ('      <Placemark>\n'
                    '      <description>{}</description>\n'
                    '        <styleUrl>#location</styleUrl>\n'
@@ -54,13 +54,13 @@ def export_kml(fileName, locations, telemetry, image):
                    '        <coordinates>{},{},0</coordinates>\n'
                    '        </Point>\n'
                    '    </Placemark>\n').format(desc,
-                                                location[3],
-                                                location[4])
+                                                location['Lon'],
+                                                location['Lat'])
     points += '    </Folder>\n'
 
     coords = ''
     for coord in telemetry:
-        coords += '{},{},0\n'.format(coord[0], coord[1])
+        coords += '{},{},0\n'.format(coord['Lon'], coord['Lat'])
     track = ('    <Placemark>\n'
              '      <name>Track</name>\n'
              '      <styleUrl>#track</styleUrl>\n'
@@ -70,11 +70,12 @@ def export_kml(fileName, locations, telemetry, image):
              '      </LineString>\n'
              '    </Placemark>\n').format(coords=coords)
 
-    xyz = zip(*telemetry)
-    north = max(xyz[1])
-    south = min(xyz[1])
-    east = max(xyz[0])
-    west = min(xyz[0])
+    lats = [x['Lat'] for x in telemetry]
+    lons = [x['Lon'] for x in telemetry]
+    north = max(lats)
+    south = min(lats)
+    east = max(lons)
+    west = min(lons)
 
     keyhole = ('<?xml version="1.0" encoding="UTF-8"?>\n'
                '<kml xmlns="http://www.opengis.net/kml/2.2">\n'

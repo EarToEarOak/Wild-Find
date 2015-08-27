@@ -26,6 +26,7 @@
 import matplotlib
 import numpy
 import warnings
+import math
 
 matplotlib.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -53,7 +54,9 @@ class DialogPlot3d(QtGui.QDialog):
         win_set_icon(self)
         win_set_maximise(self)
 
-        self._widgetPlot.set(telemetry)
+        coords = [[row['Lon'], row['Lat'], row['Level']]
+                  for row in telemetry]
+        self._widgetPlot.set(coords)
         self._widgetPlot.set_cmap(settings.heatmapColour)
         resolution = self._spinResolution.value()
         self._widgetPlot.set_resolution(resolution)
@@ -93,7 +96,7 @@ class WidgetPlot(FigureCanvas):
         self._axes.set_title('3D Plot')
         self._axes.set_xlabel('Longitude')
         self._axes.set_ylabel('Latitude')
-        self._axes.set_zlabel('Level')
+        self._axes.set_zlabel('Level (dB)')
         self._axes.tick_params(axis='both', which='major', labelsize='smaller')
         self._axes.grid(True)
         formatMaj = ScalarFormatter(useOffset=False)
