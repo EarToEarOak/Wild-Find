@@ -671,15 +671,24 @@ class Falconer(QtGui.QMainWindow):
         self._status.show_message(Status.READY)
 
     def __set_surveys(self):
+        self._widgetMap.show_busy(True)
+        self._status.show_message(Status.PROCESSING)
+
         surveys = self._database.get_surveys()
         self._widgetSurveys.set(surveys)
 
     def __set_scans(self):
+        self._widgetMap.show_busy(True)
+        self._status.show_message(Status.PROCESSING)
+
         filteredSurveys = self._widgetSurveys.get_filtered()
         scans = self._database.get_scans(filteredSurveys)
         self._widgetScans.set(scans)
 
     def __set_signals(self):
+        self._widgetMap.show_busy(True)
+        self._status.show_message(Status.PROCESSING)
+
         filteredSurveys = self._widgetSurveys.get_filtered()
         filteredScans = self._widgetScans.get_filtered()
         signals = self._database.get_signals(filteredSurveys,

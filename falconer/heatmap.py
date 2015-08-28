@@ -126,12 +126,15 @@ class ThreadPlot(QtCore.QThread):
 
             xi = numpy.linspace(west, east, IMAGE_SIZE)
             yi = numpy.linspace(south, north, IMAGE_SIZE)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                zi = mlab.griddata(x, y, z, xi=xi, yi=yi, interp='linear')
-            axes.pcolormesh(xi, yi, zi,
-                            cmap=self._settings.heatmapColour)
-            plt.axis([west, east, south, north])
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    zi = mlab.griddata(x, y, z, xi=xi, yi=yi, interp='linear')
+                axes.pcolormesh(xi, yi, zi,
+                                cmap=self._settings.heatmapColour)
+                plt.axis([west, east, south, north])
+            except RuntimeError:
+                pass
 
         self.__save(figure)
 
