@@ -468,13 +468,7 @@ function setHarrier(lon, lat) {
 	harrier.addFeature(feature);
 }
 
-function addLocation(location) {
-	var freq = location[0];
-	var rate = location[1];
-	var level = location[2];
-	var lon = location[3];
-	var lat = location[4];
-
+function addLocation(freq, rate, level, lon, lat) {
 	var point = new ol.geom.Point([ lon, lat ]);
 	point.transform('EPSG:4326', 'EPSG:900913');
 
@@ -497,13 +491,6 @@ function addLocation(location) {
 		feature.getGeometry().appendCoordinate(coord);
 	} else
 		line[0].getGeometry().appendCoordinate(coord);
-}
-
-function addLocations(locations){
-	for (var i = 0; i < locations.length; i++) {
-		var location = locations[i];
-		addLocation(location);
-	}
 }
 
 function selectLocations() {
@@ -587,15 +574,4 @@ function transformCoord(lon, lat) {
 	point.transform('EPSG:4326', 'EPSG:900913');
 
 	return point.getCoordinates();
-}
-
-function transformCoords(coords){
-	var transformed = [];
-	for (var i = 0; i < coords.length; i++) {
-		var coord = coords[i];
-		var point = transformCoord(coord[0], coord[1]);
-		transformed.push([point[0], point[1], coord[2]]);
-	}
-
-	return transformed;
 }
