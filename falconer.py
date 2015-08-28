@@ -443,6 +443,8 @@ class Falconer(QtGui.QMainWindow):
         if self._database.is_connected():
             self._widgetMap.set_heatmap(bounds)
 
+        self._status.show_message(Status.READY)
+
     def __on_signal_map_cleared(self):
         self._widgetMap.clear_heatmap()
         self._widgetMap.show_busy(False)
