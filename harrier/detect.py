@@ -77,8 +77,10 @@ class Detect(object):
         threshold *= 100
 
         t1 = numpy.percentile(signals, threshold)
-        threshLow = numpy.mean(signals)
-        threshHigh = threshLow + (t1 - threshLow) / 2.
+        t2 = numpy.percentile(signals, threshold - 5)
+        offset = (t1 - t2) / 3.
+        threshHigh = t1 - offset
+        threshLow = t2 + offset
 
         high = signals >= threshHigh
         low = signals <= threshLow
@@ -91,9 +93,14 @@ class Detect(object):
         indicesPos = indicesEdge[0::2]
         indicesNeg = indicesEdge[1::2]
 
-        if indicesPos.size != indicesNeg.size:
+        edgeDiff = abs(indicesPos.size - indicesNeg.size)
+        if edgeDiff > 1:
             return (threshHigh, threshLow,
                     numpy.array([]), numpy.array([]))
+        elif edgeDiff == 1:
+            minSize = min(len(indicesPos), len(indicesNeg))
+            indicesPos = indicesPos[:minSize]
+            indicesPos = indicesPos[:minSize]
 
         return (threshHigh, threshLow,
                 indicesPos, indicesNeg)
