@@ -104,6 +104,8 @@ class ReceiveDebug(object):
                             type=int, default=0)
         parser.add_argument('-da', '--disableAm', help='Disable AM detection',
                             action='store_true')
+        parser.add_argument('--collars', help='Save capture if number of COLLARS not found',
+                            type=int, default=None)
         parser.add_argument('-v', '--verbose', help='Be more verbose',
                             action='store_true')
 
@@ -157,6 +159,9 @@ class ReceiveDebug(object):
 
         print 'Block {}'.format(self._block)
 
+        if self._args.collars is not None:
+            iq_copy = numpy.array(iq)
+
         scan = Scan(self._source.fs, iq, self._timing)
         frequencies = scan.search()
         if self._args.scan:
@@ -199,30 +204,48 @@ class ReceiveDebug(object):
         plt.ylabel('Level')
         plt.grid()
 
-        # Create the x axis time points
-        startTime = self._block * SAMPLE_TIME
-        if len(frequencies):
-            x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
-                               signals[0].shape[0])
-        else:
-            x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
-                               1)
-
         self._timing.print_timings()
+        print 'Found {} signals'.format(len(pulses))
 
-        # Plot the signals
-        for pulse in pulses:
-            signalNum = pulse.signalNum
-            plt.plot(x, signals[signalNum],
-                     label=pulse.get_description())
+        if self._args.collars is None:
+            # Create the x axis time points
+            startTime = self._block * SAMPLE_TIME
+            if len(frequencies):
+                x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
+                                   signals[0].shape[0])
+            else:
+                x = numpy.linspace(startTime, startTime + SAMPLE_TIME,
+                                   1)
 
-        if len(pulses):
-            plt.legend(prop={'size': 10}, framealpha=0.5)
+            # Plot the signals
+            for pulse in pulses:
+                signalNum = pulse.signalNum
+                plt.plot(x, signals[signalNum],
+                         label=pulse.get_description())
 
-        # Add a rectangle selector for measurements
-        _selector = RectangleSelector(ax, self.__selection_time,
-                                      drawtype='box', useblit=True)
-        plt.show()
+            if len(pulses):
+                plt.legend(prop={'size': 10}, framealpha=0.5)
+
+            # Add a rectangle selector for measurements
+            _selector = RectangleSelector(ax, self.__selection_time,
+                                          drawtype='box', useblit=True)
+            plt.show()
+        elif len(pulses) < self._args.collars:
+            self.__save_iq(iq_copy)
+
+    def __save_iq(self, iq):
+        iq += 1 + 1j
+        iq *= 255 / 2
+        data = iq.view(numpy.float32)
+        data = data.astype(numpy.uint8)
+
+        print 'Saving "test.bin"'
+        f = open('test.bin', 'wb')
+        f.write(data)
+        f.close()
+
+        print 'Exiting'
+        exit(1)
 
     # Display dragged rectangle
     def __selection_time(self, eventClick, eventRelease):
