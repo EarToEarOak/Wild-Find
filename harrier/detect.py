@@ -55,7 +55,7 @@ TONE_TOL = 10
 # Tolerance of ghosts (Hz)
 GHOST_RATE_TOL = 5
 # Correlation of ghosts (%)
-GHOST_CORR = 50
+GHOST_CORR = 33
 # Channel spacing (Hz)
 CHANNEL_SPACE = 20e3
 
