@@ -39,7 +39,7 @@ DEMOD_BINS = 4096
 # Valid pulse widths (s)
 PULSE_WIDTHS = [10e-3, 25e-3, 64e-3]
 # Pulse width tolerance (+/- %)
-PULSE_WIDTH_TOL = 25
+PULSE_WIDTH_TOL = 75
 # Minimum high to low level ratio
 PULSE_LEVEL_RATIO = 5
 # Maximum pulse rate deviation (%)
@@ -152,7 +152,7 @@ class Detect(object):
                                      1000 * maxDeviation * SAMPLE_TIME / length)
                     Utils.error(msg, False)
             elif self._debug is not None and self._debug.verbose:
-                Utils.error('Only found {} pulses'.format(widths.size),
+                Utils.error('Only found {} pulses'.format(posValid.size),
                             False)
 
         return pulse
