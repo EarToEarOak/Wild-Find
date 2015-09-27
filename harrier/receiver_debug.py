@@ -28,6 +28,7 @@ import ctypes
 import os
 import re
 import sys
+import time
 
 import matplotlib
 from matplotlib.patches import Rectangle
@@ -481,6 +482,7 @@ class SourceRtlSdr(object):
             gain = self._sdr.get_gain()
             print '\tGain: {:.1f}dB'.format(gain)
         self._sdr.set_center_freq(self.baseband)
+        time.sleep(1)
 
     def __capture(self, data, _sdr):
         length = len(data)
