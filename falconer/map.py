@@ -153,9 +153,6 @@ class WidgetMap(QtGui.QWidget):
         sels = [float(f) for f in json.loads(selected)]
         self._signal.selected.emit(sels)
 
-    def resizeEvent(self, _event):
-        self._controls.follow()
-
     def connect(self, loaded, colour, selected):
         self._signal.loaded.connect(loaded)
         self._signal.colour.connect(colour)
