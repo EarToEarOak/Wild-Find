@@ -236,14 +236,14 @@ class Harrier(object):
             warning = '\nWarning: {}'.format(event.get_arg('warning'))
             print warning
             logTime = self._database.append_log(warning)
-            self._server.send_log(logTime, log)
+            self._server.send_log(logTime, warning)
 
         # Error
         elif eventType == events.ERR:
             error = event.get_arg('error')
             sys.stderr.write(error)
             logTime = self._database.append_log(error)
-            self._server.send_log(logTime, log)
+            self._server.send_log(logTime, error)
             self.__close()
             exit(3)
 
