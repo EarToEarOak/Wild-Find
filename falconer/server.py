@@ -28,7 +28,7 @@ from SocketServer import ThreadingMixIn
 import os
 import threading
 
-from falconer.utils import add_program_path
+from falconer.utils import get_htdocs_path
 
 
 PORT = 12015
@@ -63,9 +63,7 @@ class Handler(BaseHTTPRequestHandler):
             self.heatmap.seek(0)
             self.wfile.write(self.heatmap.read())
         else:
-            path = add_program_path('falconer',
-                                    'htdocs',
-                                    self.path.lstrip('/'))
+            path = get_htdocs_path(self.path.lstrip('/'))
 
             if os.path.exists(path):
                 self.send_response(200)

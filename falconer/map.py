@@ -30,7 +30,7 @@ from PySide import QtGui, QtWebKit, QtCore, QtNetwork
 from matplotlib import cm
 
 from falconer import server, ui
-from falconer.utils import add_program_path
+from falconer.utils import get_ui_path
 from falconer.utils_qt import DialogPopup
 
 
@@ -53,7 +53,7 @@ class WidgetMap(QtGui.QWidget):
         self._labelLoad.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                       QtGui.QSizePolicy.Expanding)
         self._labelLoad.setAlignment(QtCore.Qt.AlignCenter)
-        anim = add_program_path('falconer', 'ui', 'loader.gif')
+        anim = get_ui_path('loader.gif')
         movie = QtGui.QMovie(anim)
         self._labelLoad.setMovie(movie)
         movie.start()

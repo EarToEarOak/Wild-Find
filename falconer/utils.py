@@ -28,13 +28,29 @@ import tempfile
 import zipfile
 
 
+# def get_program_path():
+#     return os.path.dirname(os.path.realpath(sys.argv[0]))
+#
+#
+# def add_program_path(*paths):
+#     cwd = get_program_path()
+#     return os.path.join(cwd, *paths)
+
 def get_program_path():
-    return os.path.dirname(os.path.realpath(sys.argv[0]))
+    if getattr(sys, 'frozen', False):
+        path = sys._MEIPASS
+    else:
+        path = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+    return path
 
 
-def add_program_path(*paths):
-    cwd = get_program_path()
-    return os.path.join(cwd, *paths)
+def get_ui_path(filename):
+    return os.path.join(get_program_path(), 'falconer', 'ui', filename)
+
+
+def get_htdocs_path(filename):
+    return os.path.join(get_program_path(), 'falconer', 'htdocs', filename)
 
 
 def export_kml(fileName, telemetry, image):

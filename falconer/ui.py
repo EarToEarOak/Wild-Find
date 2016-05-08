@@ -26,7 +26,7 @@
 
 from PySide import QtUiTools, QtCore
 
-from falconer.utils import add_program_path
+from falconer.utils import get_ui_path
 
 
 class UiLoader(QtUiTools.QUiLoader):
@@ -62,7 +62,7 @@ class UiLoader(QtUiTools.QUiLoader):
 
 def loadUi(instance, fileName):
     loader = UiLoader(instance)
-    uiFile = add_program_path('falconer', 'ui', fileName)
+    uiFile = get_ui_path(fileName)
     widget = loader.load(uiFile)
     QtCore.QMetaObject.connectSlotsByName(widget)
 

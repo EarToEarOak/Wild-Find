@@ -46,7 +46,7 @@ from falconer.settings import Settings
 from falconer.signals import WidgetSignals
 from falconer.status import Status
 from falconer.surveys import WidgetSurveys
-from falconer.utils import export_kml, add_program_path
+from falconer.utils import export_kml, get_ui_path
 from falconer.utils_qt import win_remove_context_help
 
 
@@ -125,9 +125,7 @@ class Falconer(QtGui.QMainWindow):
         self.show()
 
     def __set_icons(self):
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'logo.png'))
+        icon = QtGui.QIcon(get_ui_path('logo.png'))
         self.setWindowIcon(icon)
         if os.name == 'nt':
             import ctypes
@@ -147,29 +145,19 @@ class Falconer(QtGui.QMainWindow):
         icon = style.standardIcon(QtGui.QStyle.SP_DialogCloseButton)
         self.actionClose.setIcon(icon)
 
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'connect.png'))
+        icon = QtGui.QIcon(get_ui_path('connect.png'))
         self.actionConnect.setIcon(icon)
 
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'disconnect.png'))
+        icon = QtGui.QIcon(get_ui_path('disconnect.png'))
         self.actionDisconnect.setIcon(icon)
 
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'scan.png'))
+        icon = QtGui.QIcon(get_ui_path('scan.png'))
         self.actionScan.setIcon(icon)
 
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'download.png'))
+        icon = QtGui.QIcon(get_ui_path('download.png'))
         self.actionDownload.setIcon(icon)
 
-        icon = QtGui.QIcon(add_program_path('falconer',
-                                            'ui',
-                                            'record.png'))
+        icon = QtGui.QIcon(get_ui_path('record.png'))
         self.actionRecord.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxQuestion)
