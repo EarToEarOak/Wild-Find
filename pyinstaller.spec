@@ -25,9 +25,6 @@
 
 import platform
 
-from PyInstaller.utils.win32 import versioninfo
-from PyInstaller import compat
-
 
 
 def build_falconer():
