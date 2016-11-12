@@ -30,24 +30,24 @@ import sys
 
 from PySide import QtGui, QtCore
 
-from falconer import ui
-from falconer.about import DialogAbout
-from falconer.database import Database
-from falconer.heatmap import HeatMap
-from falconer.log import DialogLog
-from falconer.map import WidgetMap
-from falconer.plot3d import DialogPlot3d
-from falconer.preferences import DialogPreferences
-from falconer.printer import print_report
-from falconer.remote import Remote, DialogRemoteConnect, DialogRemoteSettings
-from falconer.scans import WidgetScans
-from falconer.server import Server
-from falconer.settings import Settings
-from falconer.signals import WidgetSignals
-from falconer.status import Status
-from falconer.surveys import WidgetSurveys
-from falconer.utils import export_kml, get_ui_path
-from falconer.utils_qt import win_remove_context_help
+from wildfind.falconer import ui
+from wildfind.falconer.about import DialogAbout
+from wildfind.falconer.database import Database
+from wildfind.falconer.heatmap import HeatMap
+from wildfind.falconer.log import DialogLog
+from wildfind.falconer.map import WidgetMap
+from wildfind.falconer.plot3d import DialogPlot3d
+from wildfind.falconer.preferences import DialogPreferences
+from wildfind.falconer.printer import print_report
+from wildfind.falconer.remote import Remote, DialogRemoteConnect, DialogRemoteSettings
+from wildfind.falconer.scans import WidgetScans
+from wildfind.falconer.server import Server
+from wildfind.falconer.settings import Settings
+from wildfind.falconer.signals import WidgetSignals
+from wildfind.falconer.status import Status
+from wildfind.falconer.surveys import WidgetSurveys
+from wildfind.falconer.utils import export_kml, get_ui_path
+from wildfind.falconer.utils_qt import win_remove_context_help
 
 
 SIP = True

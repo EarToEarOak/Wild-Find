@@ -28,7 +28,7 @@ import os
 
 import wx
 
-from harrier import receiver_debug
+from wildfind.harrier import receiver_debug
 
 
 def parse_arguments():

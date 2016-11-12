@@ -28,7 +28,7 @@ from SocketServer import ThreadingMixIn
 import os
 import threading
 
-from falconer.utils import get_htdocs_path
+from wildfind.falconer.utils import get_htdocs_path
 
 
 PORT = 12015

@@ -32,7 +32,7 @@ import threading
 import time
 
 from common.database import create_database, name_factory
-from harrier import events
+from wildfind.harrier import events
 
 GET_SCANS, \
     ADD_SIGNAL, GET_SIGNALS, \

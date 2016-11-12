@@ -28,7 +28,7 @@ import sys
 import time
 
 from common.constants import HARRIER_STATUS
-from harrier import events
+from wildfind.harrier import events
 
 
 class Status(object):

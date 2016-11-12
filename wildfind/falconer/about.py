@@ -25,9 +25,9 @@
 
 from PySide import QtGui
 
-from falconer import ui
-from falconer.utils import get_ui_path
-from falconer.utils_qt import win_remove_context_help
+from wildfind.falconer import ui
+from wildfind.falconer.utils import get_ui_path
+from wildfind.falconer.utils_qt import win_remove_context_help
 
 
 class DialogAbout(QtGui.QDialog):

@@ -26,7 +26,7 @@
 from collections import OrderedDict
 import json
 
-from harrier import events
+from wildfind.harrier import events
 
 
 class Parse(object):

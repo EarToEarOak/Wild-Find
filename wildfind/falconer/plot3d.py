@@ -39,9 +39,9 @@ from mpl_toolkits.mplot3d import Axes3D  # @UnusedImport
 
 from PySide import QtGui, QtCore
 
-from falconer import ui
-from falconer.utils import unique_locations
-from falconer.utils_qt import win_set_maximise, win_set_icon
+from wildfind.falconer import ui
+from wildfind.falconer.utils import unique_locations
+from wildfind.falconer.utils_qt import win_set_maximise, win_set_icon
 
 
 class DialogPlot3d(QtGui.QDialog):

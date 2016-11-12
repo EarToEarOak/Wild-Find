@@ -29,9 +29,9 @@ import operator
 import numpy
 from scipy import fftpack
 
-from harrier import collar
-from harrier.constants import SAMPLE_TIME
-from harrier.utils import Utils
+from wildfind.harrier import collar
+from wildfind.harrier.constants import SAMPLE_TIME
+from wildfind.harrier.utils import Utils
 
 
 # Size of each block to analyse

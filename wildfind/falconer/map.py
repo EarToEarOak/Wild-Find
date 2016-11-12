@@ -29,9 +29,9 @@ import json
 from PySide import QtGui, QtWebKit, QtCore, QtNetwork
 from matplotlib import cm
 
-from falconer import server, ui
-from falconer.utils import get_ui_path
-from falconer.utils_qt import DialogPopup
+from wildfind.falconer import server, ui
+from wildfind.falconer.utils import get_ui_path
+from wildfind.falconer.utils_qt import DialogPopup
 
 
 RETRY_TIME = 2000

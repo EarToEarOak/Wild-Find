@@ -28,8 +28,8 @@ import socket
 import threading
 
 from common.constants import HARRIER_PORT
-from harrier import events
-from harrier.parse import Parse
+from wildfind.harrier import events
+from wildfind.harrier.parse import Parse
 
 
 VERSION = 1

@@ -31,9 +31,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.ticker import ScalarFormatter
 import numpy
 
-from falconer import ui
-from falconer.table import format_freq, format_rate, Model
-from falconer.utils_qt import TableSelectionMenu, win_set_maximise, win_set_icon
+from wildfind.falconer import ui
+from wildfind.falconer.table import format_freq, format_rate, Model
+from wildfind.falconer.utils_qt import TableSelectionMenu, win_set_maximise, win_set_icon
 import matplotlib.pyplot as plt
 
 

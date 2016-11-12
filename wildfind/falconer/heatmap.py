@@ -35,7 +35,7 @@ matplotlib.use("Agg")
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
-from falconer.utils import unique_locations
+from wildfind.falconer.utils import unique_locations
 
 
 IMAGE_SIZE = 300

@@ -29,10 +29,10 @@ import time
 
 import rtlsdr
 
-from harrier import events
-from harrier.constants import SAMPLE_RATE, SAMPLE_TIME, BLOCKS
-from harrier.detect import Detect, stream_to_complex
-from harrier.scan import Scan
+from wildfind.harrier import events
+from wildfind.harrier.constants import SAMPLE_RATE, SAMPLE_TIME, BLOCKS
+from wildfind.harrier.detect import Detect, stream_to_complex
+from wildfind.harrier.scan import Scan
 
 
 class Receive(threading.Thread):

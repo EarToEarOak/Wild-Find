@@ -26,9 +26,9 @@
 
 from PySide import QtGui, QtCore
 
-from falconer import ui
-from falconer.table import Model
-from falconer.utils_qt import TableSelectionMenu
+from wildfind.falconer import ui
+from wildfind.falconer.table import Model
+from wildfind.falconer.utils_qt import TableSelectionMenu
 
 
 class WidgetSurveys(QtGui.QWidget):

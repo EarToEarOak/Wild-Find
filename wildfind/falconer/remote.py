@@ -31,10 +31,10 @@ import threading
 from PySide import QtCore, QtGui
 
 from common.constants import HARRIER_PORT
-from falconer import ui
-from falconer.parse import Parse
-from falconer.status import Status
-from falconer.utils_qt import win_remove_context_help
+from wildfind.falconer import ui
+from wildfind.falconer.parse import Parse
+from wildfind.falconer.status import Status
+from wildfind.falconer.utils_qt import win_remove_context_help
 
 
 TIMEOUT_CONNECT = 5

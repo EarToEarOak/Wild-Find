@@ -26,9 +26,9 @@
 
 from PySide import QtGui, QtCore
 
-from falconer import ui
-from falconer.table import Model, format_qtime
-from falconer.utils_qt import TableSelectionMenu, win_remove_context_help,\
+from wildfind.falconer import ui
+from wildfind.falconer.table import Model, format_qtime
+from wildfind.falconer.utils_qt import TableSelectionMenu, win_remove_context_help,\
     cal_set_colours
 
 

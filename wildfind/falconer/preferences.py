@@ -26,8 +26,8 @@
 
 from PySide import QtGui, QtCore
 
-from falconer import ui
-from falconer.utils_qt import win_remove_context_help
+from wildfind.falconer import ui
+from wildfind.falconer.utils_qt import win_remove_context_help
 
 
 class DialogPreferences(QtGui.QDialog):

@@ -26,7 +26,7 @@
 import ConfigParser
 import sys
 
-from harrier.comm import Comm
+from wildfind.harrier.comm import Comm
 
 
 class Settings(object):

@@ -25,8 +25,8 @@
 
 import numpy
 
-from harrier.psd import psd
-from harrier.utils import Utils
+from wildfind.harrier.psd import psd
+from wildfind.harrier.utils import Utils
 
 
 # FFT bins used to search

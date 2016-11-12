@@ -25,7 +25,7 @@
 
 from PySide import QtCore, QtGui, QtWebKit
 
-from falconer import ui
+from wildfind.falconer import ui
 
 
 class TableSelectionMenu(object):

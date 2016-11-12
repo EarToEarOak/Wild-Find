@@ -25,7 +25,7 @@
 
 from PySide import QtCore
 
-from falconer.history import FileHistory
+from wildfind.falconer.history import FileHistory
 
 MAX_REMOTE_HISTORY = 5
 

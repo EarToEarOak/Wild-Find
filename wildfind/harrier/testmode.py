@@ -29,9 +29,9 @@ import signal
 import sys
 import time
 
-from harrier import events
-from harrier.collar import MOD_DESC
-from harrier.receive import Receive
+from wildfind.harrier import events
+from wildfind.harrier.collar import MOD_DESC
+from wildfind.harrier.receive import Receive
 
 
 class TestMode(object):

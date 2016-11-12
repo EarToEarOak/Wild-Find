@@ -26,7 +26,7 @@
 
 from PySide import QtUiTools, QtCore
 
-from falconer.utils import get_ui_path
+from wildfind.falconer.utils import get_ui_path
 
 
 class UiLoader(QtUiTools.QUiLoader):

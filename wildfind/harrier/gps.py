@@ -29,7 +29,7 @@ import time
 import serial
 from serial.serialutil import SerialException
 
-from harrier import events
+from wildfind.harrier import events
 
 TIMEOUT = 15
 

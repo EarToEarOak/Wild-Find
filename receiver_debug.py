@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from harrier.receiver_debug import ReceiveDebug
+from wildfind.harrier.receiver_debug import ReceiveDebug
 
 
 def main(argList=None):

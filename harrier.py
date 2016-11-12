@@ -31,16 +31,16 @@ import socket
 import sys
 import time
 
-from harrier import events
-from harrier.constants import GPS_AGE, GPS_RETRY, SAMPLE_RATE
-from harrier.database import Database
-from harrier.gps import Gps
-from harrier.receive import Receive
-from harrier.server import Server
-from harrier.settings import Settings
-from harrier.status import Status
-from harrier.testmode import TestMode
-from harrier.utils import ArgparseFormatter
+from wildfind.harrier import events
+from wildfind.harrier.constants import GPS_AGE, GPS_RETRY, SAMPLE_RATE
+from wildfind.harrier.database import Database
+from wildfind.harrier.gps import Gps
+from wildfind.harrier.receive import Receive
+from wildfind.harrier.server import Server
+from wildfind.harrier.settings import Settings
+from wildfind.harrier.status import Status
+from wildfind.harrier.testmode import TestMode
+from wildfind.harrier.utils import ArgparseFormatter
 
 
 class Harrier(object):
