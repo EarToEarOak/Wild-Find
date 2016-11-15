@@ -26,16 +26,35 @@
 import platform
 
 
+def build_harrier():
+    filename = 'harrier-' + system + '-' + machine
+
+    a = Analysis(['harrier.py'])    
+
+    pyz = PYZ(a.pure)
+
+    exe = EXE(pyz,
+              a.scripts + [('O', '', 'OPTION')],
+              a.binaries,
+              a.zipfiles,
+              a.datas,
+              name=os.path.join('dist', filename),
+              icon='wildfind.ico',
+              upx=False)
+
 
 def build_falconer():
-    filename = 'falconer-' + system + '-' + architecture.lower()
-    hidden = ['PySide.QtXml']
+    filename = 'falconer-' + system + '-' + machine
+    hidden = ['PySide.QtXml', 'matplotlib.mlab.griddata.natgrid']
 
     a = Analysis(['falconer.py'],
                  hiddenimports=hidden)
-
-    a.datas += Tree('falconer/ui', prefix='falconer/ui')
-    a.datas += Tree('falconer/htdocs', prefix='falconer/htdocs')
+    
+    a.datas += Tree('wildfind/falconer/ui', prefix='wildfind/falconer/ui')
+    a.datas += Tree('wildfind/falconer/htdocs', prefix='wildfind/falconer/htdocs')
+    
+    if system=='windows':
+        a.datas += Tree('/openssl/', prefix='openssl')
 
     pyz = PYZ(a.pure)
 
@@ -50,6 +69,7 @@ def build_falconer():
 
 
 system = platform.system().lower()
-architecture, _null = platform.architecture()
+machine = platform.machine().lower()
 
+build_harrier()
 build_falconer()
