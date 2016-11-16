@@ -248,7 +248,6 @@ class Harrier(object):
             logTime = self._database.append_log(error)
             self._server.send_log(logTime, error)
             self.__close()
-            exit(3)
 
         else:
             self._status.set_status(eventType)
