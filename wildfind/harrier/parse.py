@@ -42,16 +42,18 @@ class Parse(object):
     SCANS = 'scans'
     SIGNALS = 'signals'
     LOG = 'log'
+    PORTS = 'ports'
     SETTINGS = 'settings'
+    PORT = 'port'
     DELAY = 'delay'
     FREQUENCY = 'frequency'
 
     # Values
     VALUE = 'value'
-    FLOAT = range(1)
+    FLOAT, STRING = range(2)
 
     COMMANDS = [GET, SET, RUN]
-    METHODS = [SCAN, SCANS, SIGNALS, LOG, SETTINGS, DELAY, FREQUENCY]
+    METHODS = [SCAN, SCANS, SIGNALS, LOG, PORTS, SETTINGS, PORT, DELAY, FREQUENCY]
 
     def __init__(self, queue, status, database, settings, server):
         self._queue = queue
@@ -65,7 +67,9 @@ class Parse(object):
         self.__set(Parse.SCANS, canGet=True)
         self.__set(Parse.SIGNALS, canGet=True)
         self.__set(Parse.LOG, canGet=True)
+        self.__set(Parse.PORTS, canGet=True)
         self.__set(Parse.SETTINGS, canGet=True)
+        self.__set(Parse.PORT, canSet=True, valSet=Parse.STRING)
         self.__set(Parse.DELAY, canSet=True, valSet=Parse.FLOAT)
         self.__set(Parse.FREQUENCY, canSet=True, valSet=Parse.FLOAT)
 
@@ -90,9 +94,20 @@ class Parse(object):
         elif method == Parse.LOG:
             return self.result(method, self._database.get_log(self.result_log))
 
+        elif method == Parse.PORTS:
+            if command == Parse.GET:
+                ports = [port.device for port in self._settings.gps.get_ports()]
+                return self.result(method, ports)
+
         elif method == Parse.SETTINGS:
             if command == Parse.GET:
                 return self.result(method, self._settings.get())
+
+        elif method == Parse.PORT:
+            if command == Parse.SET:
+                self._settings.gps.port = value
+                events.Post(self._queue).gps_open(0)
+                return self.result(method)
 
         elif method == Parse.DELAY:
             if command == Parse.SET:
@@ -149,6 +164,9 @@ class Parse(object):
                 float(value)
             except ValueError:
                 raise ValueException('Expected a float')
+        elif valType == Parse.STRING:
+            if value is None:
+                raise ValueException('Expected a string')
 
     def __get_params(self, instruction):
         command = instruction[Parse.COMMAND]

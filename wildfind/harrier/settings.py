@@ -115,7 +115,8 @@ class Settings(object):
             exit(2)
 
     def get(self):
-        settings = {'delay': self.delay,
+        settings = {'port': self.gps.port,
+                    'delay': self.delay,
                     'frequency': self.freq}
         return settings
 

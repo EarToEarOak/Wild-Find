@@ -30,7 +30,7 @@ from PySide import QtCore
 
 class Parse(object):
     def __init__(self, onOpened, onScans, onSignals, onLog,
-                 onStatus, onSats, onSettings, onShutdown):
+                 onStatus, onSats, onSettings, onPorts, onShutdown):
         self._signal = SignalParse()
         self._signal.opened.connect(onOpened)
         self._signal.scans.connect(onScans)
@@ -39,6 +39,7 @@ class Parse(object):
         self._signal.status.connect(onStatus)
         self._signal.satellites.connect(onSats)
         self._signal.settings.connect(onSettings)
+        self._signal.ports.connect(onPorts)
         self._signal.shutdown.connect(onShutdown)
 
         self._isConnected = False
@@ -96,6 +97,8 @@ class Parse(object):
                 self.__on_sats(result)
             elif method == 'Settings':
                 self._signal.settings.emit(result)
+            elif method == 'Ports':
+                self._signal.ports.emit(result)
             elif method == 'Shutdown':
                 self._signal.shutdown.emit()
 
@@ -114,6 +117,7 @@ class SignalParse(QtCore.QObject):
     status = QtCore.Signal(dict)
     satellites = QtCore.Signal(dict)
     settings = QtCore.Signal(dict)
+    ports = QtCore.Signal(dict)
     shutdown = QtCore.Signal()
 
 if __name__ == '__main__':

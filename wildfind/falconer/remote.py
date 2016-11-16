@@ -51,8 +51,10 @@ class Remote(object):
         self._isDownloading = False
         self._record = False
 
+        self._port = None
         self._delay = None
         self._freq = None
+        self._ports = []
 
         self._timeout = QtCore.QTimer(parent)
         self._timeout.setSingleShot(True)
@@ -65,6 +67,7 @@ class Remote(object):
                             onStatus,
                             self.__on_sats,
                             self.__on_settings,
+                            self.__on_ports,
                             self.__on_shutdown)
 
         self._signal = SignalClient()
@@ -84,6 +87,7 @@ class Remote(object):
         self._signal.opened.emit()
 
         self.__command('Get', 'Settings')
+        self.__command('Get', 'Ports')
 
     def __on_scans(self, scans):
         if self._record or self._isDownloading:
@@ -110,8 +114,12 @@ class Remote(object):
 
     def __on_settings(self, settings):
         value = settings['Value']
+        self._port = value['port']
         self._delay = value['delay']
         self._freq = value['frequency']
+
+    def __on_ports(self, ports):
+        self._ports = ports['Value']
 
     def __on_shutdown(self):
         QtGui.QMessageBox.warning(self._parent,
@@ -167,7 +175,14 @@ class Remote(object):
         return self._parse.is_connected()
 
     def get_settings(self):
-        return self._delay, self._freq
+        return self._port, self._delay, self._freq
+
+    def get_ports(self):
+        return self._ports
+
+    def set_port(self, port):
+        self.__command('Set', 'Port', port)
+        self._port = port
 
     def set_frequency(self, freq):
         self.__command('Set', 'Frequency', freq)
@@ -209,18 +224,25 @@ class DialogRemoteSettings(QtGui.QDialog):
 
         self._remote = remote
         settings = remote.get_settings()
+        ports = remote.get_ports()
 
         ui.loadUi(self, 'remote_settings.ui')
         win_remove_context_help(self)
 
+        if settings[0] is not None:
+            self._comboPort.addItems(ports)
+            if settings[0] in ports:
+                index = ports.index(settings[0])
+                self._comboPort.SetCurrentItem(index)
+
         self._editFreq.setValidator(QtGui.QDoubleValidator(1, 9999, 1))
-        self._editFreq.setText(str(settings[1]))
+        self._editFreq.setText(str(settings[2]))
 
         self._editDelay.setValidator(QtGui.QDoubleValidator(0, 9999, 1))
-        if settings[0] is not None:
+        if settings[1] is not None:
             self._checkAuto.setChecked(True)
             self._editDelay.setEnabled(True)
-            self._editDelay.setText(str(settings[0]))
+            self._editDelay.setText(str(settings[1]))
         else:
             self._editDelay.setText('4')
 
@@ -230,6 +252,7 @@ class DialogRemoteSettings(QtGui.QDialog):
 
     @QtCore.Slot()
     def on__buttonBox_accepted(self):
+        port = self._comboPort.currentText()
         freq = float(self._editFreq.text())
         auto = self._checkAuto.checkState()
         if auto:
@@ -237,6 +260,7 @@ class DialogRemoteSettings(QtGui.QDialog):
         else:
             delay = None
 
+        self._remote.set_port(port)
         self._remote.set_frequency(freq)
         self._remote.set_delay(delay)
 

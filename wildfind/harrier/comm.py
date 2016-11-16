@@ -24,6 +24,7 @@
 #
 
 import serial
+from serial.tools import list_ports
 
 
 class Comm(object):
@@ -41,6 +42,9 @@ class Comm(object):
         self.parity = serial.PARITY_NONE
         self.stops = serial.STOPBITS_ONE
         self.soft = False
+
+    def get_ports(self):
+        return list_ports.comports()
 
     def get_bauds(self):
         return serial.Serial.BAUDRATES
