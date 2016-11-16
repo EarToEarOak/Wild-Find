@@ -25,7 +25,7 @@
 
 from PySide import QtGui
 
-from common.constants import HARRIER_STATUS
+from wildfind.common.constants import HARRIER_STATUS
 from wildfind.falconer.utils_qt import set_max_text_width
 
 

@@ -31,7 +31,7 @@ import sqlite3
 import threading
 import time
 
-from common.database import create_database, name_factory
+from wildfind.common.database import create_database, name_factory
 from wildfind.harrier import events
 
 GET_SCANS, \

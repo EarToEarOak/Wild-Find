@@ -30,7 +30,7 @@ import threading
 
 from PySide import QtCore, QtGui
 
-from common.constants import HARRIER_PORT
+from wildfind.common.constants import HARRIER_PORT
 from wildfind.falconer import ui
 from wildfind.falconer.parse import Parse
 from wildfind.falconer.status import Status

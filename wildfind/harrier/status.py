@@ -27,7 +27,7 @@ from collections import OrderedDict
 import sys
 import time
 
-from common.constants import HARRIER_STATUS
+from wildfind.common.constants import HARRIER_STATUS
 from wildfind.harrier import events
 
 

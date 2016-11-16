@@ -27,7 +27,7 @@ import select
 import socket
 import threading
 
-from common.constants import HARRIER_PORT
+from wildfind.common.constants import HARRIER_PORT
 from wildfind.harrier import events
 from wildfind.harrier.parse import Parse
 

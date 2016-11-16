@@ -24,7 +24,7 @@
 
 import sqlite3
 
-from common.constants import LOG_SIZE
+from wildfind.common.constants import LOG_SIZE
 
 
 VERSION = 3

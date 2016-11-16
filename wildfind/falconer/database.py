@@ -27,7 +27,7 @@ import math
 import os
 import sqlite3
 
-from common.database import create_database, name_factory
+from wildfind.common.database import create_database, name_factory
 
 
 class Database(object):
