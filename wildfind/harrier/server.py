@@ -68,7 +68,7 @@ class Server(threading.Thread):
                 if not data:
                     self.__close_client()
                     return
-            except socket.timeout:
+            except (socket.timeout, socket.error):
                 self.__close_client()
                 return
             buf += data
