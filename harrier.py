@@ -214,8 +214,8 @@ class Harrier(object):
         # GPS error
         elif eventType == events.GPS_ERR:
             self._gps = None
-            error = '\nGPS error: {}'.format(event.get_arg('error'))
-            print error
+            error = 'GPS error: {}'.format(event.get_arg('error'))
+            print '\n' + error
             print 'Retry in {}s'.format(GPS_RETRY)
             logTime = self._database.append_log(error)
             self._server.send_log(logTime, error)
@@ -228,16 +228,16 @@ class Harrier(object):
         # Info
         elif eventType == events.INFO:
             self._status.clear_gps()
-            info = '\nInfo: {}'.format(event.get_arg('info'))
-            print info
+            info = 'Info: {}'.format(event.get_arg('info'))
+            print '\n' + info
             logTime = self._database.append_log(info)
             self._server.send_log(logTime, info)
 
         # Warning
         elif eventType == events.WARN:
             self._status.clear_gps()
-            warning = '\nWarning: {}'.format(event.get_arg('warning'))
-            print warning
+            warning = 'Warning: {}'.format(event.get_arg('warning'))
+            print '\n' + warning
             logTime = self._database.append_log(warning)
             self._server.send_log(logTime, warning)
 
