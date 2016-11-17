@@ -109,6 +109,8 @@ class Remote(object):
                                           'Information',
                                           'Download finished')
 
+        self._status.set_remote_log(log)
+
     def __on_sats(self, sats):
         self._status.set_remote_sats(sats)
 

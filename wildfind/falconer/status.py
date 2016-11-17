@@ -75,10 +75,18 @@ class Status(object):
         set_max_text_width(self._labelRemoteSats, ['-- / --'])
         statusBar.addPermanentWidget(self._labelRemoteSats)
 
+        self._labelRemoteLog = QtGui.QLabel()
+        self._labelRemoteLog.setFrameStyle(QtGui.QFrame.Panel |
+                                           QtGui.QFrame.Sunken)
+        self._labelRemoteLog.setToolTip('Last message')
+        set_max_text_width(self._labelRemoteLog, ['#' * 25])
+        statusBar.addPermanentWidget(self._labelRemoteLog)
+
         self.set_remote_status({'status': 0,
                                 'lon': None,
                                 'lat': None})
         self.set_remote_sats(None)
+        self.set_remote_log(None)
         self.set_connected(False)
 
     def show_message(self, message, param=None):
@@ -115,6 +123,12 @@ class Status(object):
                 self._labelRemoteSats.setText('{:2}/{:2}'.format(used, total))
             else:
                 self._labelRemoteSats.setText('--')
+
+    def set_remote_log(self, log):
+        if log is None:
+            self._labelRemoteLog.setText('')
+        else:
+            self._labelRemoteLog.setText(log[-1]['Message'])
 
 
 if __name__ == '__main__':
