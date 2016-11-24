@@ -235,7 +235,7 @@ class DialogRemoteSettings(QtGui.QDialog):
             self._comboPort.addItems(ports)
             if settings[0] in ports:
                 index = ports.index(settings[0])
-                self._comboPort.SetCurrentItem(index)
+                self._comboPort.setCurrentIndex(index)
 
         self._editFreq.setValidator(QtGui.QDoubleValidator(1, 9999, 1))
         self._editFreq.setText(str(settings[2]))
