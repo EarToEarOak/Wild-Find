@@ -197,6 +197,7 @@ class Harrier(object):
             if self._gps is not None:
                 self._gps.stop()
                 self._gps.join()
+                self._gps = None
             if self._gps is None:
                 print '\nStarting GPS'
                 self._gps = Gps(settings.gps, queue)
