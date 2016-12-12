@@ -114,8 +114,8 @@ class Detect(object):
 
         for wMax, wMin in pulseWidths:
             posValid = numpy.where((widths > wMin) & (widths < wMax))[0]
-            # Must have at least 2 pulses
-            if posValid.size > 1 and posValid.size == widths.size:
+            # Must have between 3 and 6 pulses
+            if posValid.size > 2 and posValid.size < 7 and posValid.size == widths.size:
                 pulseValid = posIndices[posValid]
                 pulseRate = numpy.diff(pulseValid)
                 pulseAvg = numpy.average(pulseRate)
