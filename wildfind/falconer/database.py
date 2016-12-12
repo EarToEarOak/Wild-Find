@@ -229,7 +229,7 @@ class Database(object):
         telemetry = [row for row in rows
                      if row['Level'] is not None and row['Level'] > 0]
         for row in telemetry:
-            row['Level'] = 10 * math.log(row['Level'])
+            row['Level'] = 10 * math.log10(row['Level'])
 
         return telemetry
 
