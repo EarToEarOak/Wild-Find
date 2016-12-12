@@ -154,15 +154,15 @@ def format_qtime(qDateTime):
 
 
 def format_freq(freq):
-    return '{:8.4f}'.format(freq / 1e6)
+    return float('{:8.4f}'.format(freq / 1e6))
 
 
 def format_rate(rate):
-    return '{:5.1f}'.format(rate)
+    return float('{:5.1f}'.format(rate))
 
 
 def format_level(level):
-    return '{:2.1f}'.format(level)
+    return float('{:2.1f}'.format(level))
 
 
 if __name__ == '__main__':
