@@ -197,7 +197,7 @@ class Database(object):
 
         cursor = self.get_cursor()
 
-        cmd = 'select Freq, Rate, count(Freq) from Signals'
+        cmd = 'select Freq, Rate, count(Freq), avg(Level) from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
@@ -206,7 +206,7 @@ class Database(object):
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Freq'], row['Rate'], row['count(Freq)']]
+        signals = [[row['Freq'], row['Rate'], row['count(Freq)'], 10 * math.log10(row['avg(Level)'])]
                    for row in rows]
 
         return signals
@@ -229,7 +229,7 @@ class Database(object):
         telemetry = [row for row in rows
                      if row['Level'] is not None and row['Level'] > 0]
         for row in telemetry:
-            row['Level'] = 10*math.log(row['Level'])
+            row['Level'] = 10 * math.log(row['Level'])
 
         return telemetry
 

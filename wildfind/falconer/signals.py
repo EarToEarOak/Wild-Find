@@ -32,15 +32,15 @@ from matplotlib.ticker import ScalarFormatter
 import numpy
 
 from wildfind.falconer import ui
-from wildfind.falconer.table import format_freq, format_rate, Model
+from wildfind.falconer.table import format_freq, format_rate, format_level, Model
 from wildfind.falconer.utils_qt import TableSelectionMenu, win_set_maximise, win_set_icon
 import matplotlib.pyplot as plt
 
 
 class WidgetSignals(QtGui.QWidget):
-    HEADER = [None, 'Freq', 'Rate', 'Seen']
+    HEADER = [None, 'Freq', 'Rate', 'Seen', 'Level']
     HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
-                   'Rate (PPM)', 'Total detections']
+                   'Rate (PPM)', 'Total detections', 'Average level (dB)']
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)
@@ -49,7 +49,7 @@ class WidgetSignals(QtGui.QWidget):
 
         self._signal = SignalSignals()
 
-        formatters = [None, format_freq, format_rate, None]
+        formatters = [None, format_freq, format_rate, None, format_level]
         self._model = Model(self._signal, self.HEADER, self.HEADER_TIPS,
                             formatters, 1)
         self._proxyModel = QtGui.QSortFilterProxyModel(self)
@@ -266,7 +266,7 @@ class DialogHistogram(QtGui.QDialog):
             signals = [signal for signal in self._signals
                        if signal[0] not in self._filtered]
 
-        x, z, y = zip(*signals)
+        x, z, y, _levels = zip(*signals)
         x = [freq / 1e6 for freq in x]
         if len(x) > 2:
             width = min(numpy.diff(x)) / 2.

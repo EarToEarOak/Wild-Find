@@ -161,6 +161,10 @@ def format_rate(rate):
     return '{:5.1f}'.format(rate)
 
 
+def format_level(level):
+    return '{:2.1f}'.format(level)
+
+
 if __name__ == '__main__':
     print 'Please run falconer.py'
     exit(1)
