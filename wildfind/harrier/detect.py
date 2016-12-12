@@ -129,20 +129,25 @@ class Detect(object):
                     closest = min(PULSE_RATES,
                                   key=lambda x: abs(x - rate))
                     if (abs(closest - rate)) < PULSE_RATE_TOL:
-                        # Get pulse levels
-                        level = 0
-                        for posValid in range(len(pulseValid)):
-                            pos = pulseValid[posValid]
-                            width = widths[posValid]
-                            pulseSignal = signal[pos:pos + width - 1]
-                            level += numpy.average(pulseSignal)
-                        level /= len(pulseValid)
-                        # Store valid pulse
-                        pulse = collar.Collar(widths.size,
-                                              freq * 60.,
-                                              level,
-                                              width * SAMPLE_TIME * 1000. / length)
-                        break
+                        # Test for missing pulses
+                        if pulseValid[0] - min(pulseRate) < 0 and pulseValid[-1] + min(pulseRate) > length:
+                            # Get pulse levels
+                            level = 0
+                            for posValid in range(len(pulseValid)):
+                                pos = pulseValid[posValid]
+                                width = widths[posValid]
+                                pulseSignal = signal[pos:pos + width - 1]
+                                level += numpy.average(pulseSignal)
+                            level /= len(pulseValid)
+                            # Store valid pulse
+                            pulse = collar.Collar(widths.size,
+                                                  freq * 60.,
+                                                  level,
+                                                  width * SAMPLE_TIME * 1000. / length)
+                            break
+                        elif self._debug is not None and self._debug.verbose:
+                            Utils.error('Missing pulses',
+                                        False)
                     elif self._debug is not None and self._debug.verbose:
                         Utils.error('Invalid rate {:.1f}PPM'.format(rate),
                                     False)
@@ -152,7 +157,7 @@ class Detect(object):
                                      1000 * maxDeviation * SAMPLE_TIME / length)
                     Utils.error(msg, False)
             elif self._debug is not None and self._debug.verbose:
-                Utils.error('Only found {} pulses'.format(posValid.size),
+                Utils.error('Invalid number of pulses ({}) or invalid pulse widths'.format(posValid.size),
                             False)
 
         return pulse
