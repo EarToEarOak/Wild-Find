@@ -293,6 +293,7 @@ class Detect(object):
                 freq = self._frequencies[signalNum] + baseband
                 freq = int(round(freq / CHANNEL_SPACE) * CHANNEL_SPACE)
                 pulse.freq = freq
+                pulse.rate = min(PULSE_RATES, key=lambda x: abs(x - pulse.rate))
                 collars.append(pulse)
 
             if self._timing is not None:
