@@ -121,7 +121,7 @@ class ThreadPlot(QtCore.QThread):
         width = east - west
         height = north - south
 
-        if len(x) > 2 and len(y) > 2 and width != 0 and height != 0:
+        if len(x) > 2 and len(y) > 2 and width >= 10 and height >= 10:
             figure.set_size_inches((6, 6. * height / width))
 
             xi = numpy.linspace(west, east, IMAGE_SIZE)
