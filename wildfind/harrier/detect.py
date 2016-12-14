@@ -45,8 +45,8 @@ PULSE_LEVEL_RATIO = 5
 # Maximum pulse rate deviation (%)
 PULSE_RATE_DEVIATION = 15
 # Valid pulse rates (Pulses per minute)
-PULSE_RATES = [40, 60, 80]
-# Pulse rate tolerance (+/- Pulses per minute)
+PULSE_RATES = [40, 50, 60, 80]
+# Pulse rate tolerance (+/- %)
 PULSE_RATE_TOL = 10
 # Valid AM tones (Hz)
 TONES = [260]
@@ -128,7 +128,7 @@ class Detect(object):
                     # Limit to PULSE_RATES
                     closest = min(PULSE_RATES,
                                   key=lambda x: abs(x - rate))
-                    if (abs(closest - rate)) < PULSE_RATE_TOL:
+                    if (abs(closest - rate)) <= closest * PULSE_RATE_TOL / 100.0:
                         # Test for missing pulses
                         if pulseValid[0] - min(pulseRate) < 0 and pulseValid[-1] + min(pulseRate) > length:
                             # Get pulse levels
