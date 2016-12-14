@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 class WidgetSignals(QtGui.QWidget):
     HEADER = [None, 'Freq', 'Rate', 'Seen', 'Level']
     HEADER_TIPS = ['Included', 'Signal frequency (MHz)',
-                   'Rate (PPM)', 'Total detections', 'Average level (dB)']
+                   'Avergae rate (PPM)', 'Total detections', 'Average level (dB)']
 
     def __init__(self, parent):
         QtGui.QWidget.__init__(self, parent)

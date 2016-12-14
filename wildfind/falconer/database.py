@@ -197,7 +197,7 @@ class Database(object):
 
         cursor = self.get_cursor()
 
-        cmd = 'select Freq, Rate, count(Freq), avg(Level) from Signals'
+        cmd = 'select Freq, avg(Rate), count(Freq), avg(Level) from Signals'
         cmd += self.__filter(cursor,
                              filteredSurveys,
                              filteredScans,
@@ -206,7 +206,7 @@ class Database(object):
 
         cursor.execute(cmd)
         rows = cursor.fetchall()
-        signals = [[row['Freq'], row['Rate'], row['count(Freq)'], 10 * math.log10(row['avg(Level)'])]
+        signals = [[row['Freq'], row['avg(Rate)'], row['count(Freq)'], 10 * math.log10(row['avg(Level)'])]
                    for row in rows]
 
         return signals
