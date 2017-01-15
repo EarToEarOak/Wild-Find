@@ -26,8 +26,9 @@
 from PySide import QtGui
 
 from wildfind.falconer import ui
-from wildfind.falconer.utils import get_ui_path
+from wildfind.falconer.utils import get_resource_ui
 from wildfind.falconer.utils_qt import win_remove_context_help
+from wildfind.common.version import VERSION
 
 
 class DialogAbout(QtGui.QDialog):
@@ -37,8 +38,10 @@ class DialogAbout(QtGui.QDialog):
         ui.loadUi(self, 'about.ui')
         win_remove_context_help(self)
 
-        pixmap = QtGui.QPixmap(get_ui_path('logo.png'))
+        pixmap = QtGui.QPixmap(get_resource_ui('logo.png'))
         self._labelLogo.setPixmap(pixmap)
+
+        self._version.setText('v' + '.'.join([str(x) for x in VERSION]))
 
 
 if __name__ == '__main__':

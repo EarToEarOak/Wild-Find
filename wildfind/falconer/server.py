@@ -28,7 +28,7 @@ from SocketServer import ThreadingMixIn
 import os
 import threading
 
-from wildfind.falconer.utils import get_htdocs_path
+from wildfind.falconer.utils import get_resource_htdocs
 
 
 PORT = 12015
@@ -63,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
             self.heatmap.seek(0)
             self.wfile.write(self.heatmap.read())
         else:
-            path = get_htdocs_path(self.path.lstrip('/'))
+            path = get_resource_htdocs(self.path.lstrip('/'))
 
             if os.path.exists(path):
                 self.send_response(200)

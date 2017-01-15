@@ -26,7 +26,7 @@
 
 from PySide import QtUiTools, QtCore
 
-from wildfind.falconer.utils import get_ui_path
+from wildfind.falconer.utils import get_resource_ui
 
 
 class UiLoader(QtUiTools.QUiLoader):
@@ -62,7 +62,7 @@ class UiLoader(QtUiTools.QUiLoader):
 
 def loadUi(instance, fileName):
     loader = UiLoader(instance)
-    uiFile = get_ui_path(fileName)
+    uiFile = get_resource_ui(fileName)
     widget = loader.load(uiFile)
     QtCore.QMetaObject.connectSlotsByName(widget)
 

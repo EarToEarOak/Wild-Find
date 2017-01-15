@@ -46,7 +46,7 @@ from wildfind.falconer.settings import Settings
 from wildfind.falconer.signals import WidgetSignals
 from wildfind.falconer.status import Status
 from wildfind.falconer.surveys import WidgetSurveys
-from wildfind.falconer.utils import export_kml, get_ui_path
+from wildfind.falconer.utils import export_kml, get_resource_ui
 from wildfind.falconer.utils_qt import win_remove_context_help
 
 
@@ -125,7 +125,7 @@ class Falconer(QtGui.QMainWindow):
         self.show()
 
     def __set_icons(self):
-        icon = QtGui.QIcon(get_ui_path('logo.png'))
+        icon = QtGui.QIcon(get_resource_ui('logo.png'))
         self.setWindowIcon(icon)
         if os.name == 'nt':
             import ctypes
@@ -145,19 +145,19 @@ class Falconer(QtGui.QMainWindow):
         icon = style.standardIcon(QtGui.QStyle.SP_DialogCloseButton)
         self.actionClose.setIcon(icon)
 
-        icon = QtGui.QIcon(get_ui_path('connect.png'))
+        icon = QtGui.QIcon(get_resource_ui('connect.png'))
         self.actionConnect.setIcon(icon)
 
-        icon = QtGui.QIcon(get_ui_path('disconnect.png'))
+        icon = QtGui.QIcon(get_resource_ui('disconnect.png'))
         self.actionDisconnect.setIcon(icon)
 
-        icon = QtGui.QIcon(get_ui_path('scan.png'))
+        icon = QtGui.QIcon(get_resource_ui('scan.png'))
         self.actionScan.setIcon(icon)
 
-        icon = QtGui.QIcon(get_ui_path('download.png'))
+        icon = QtGui.QIcon(get_resource_ui('download.png'))
         self.actionDownload.setIcon(icon)
 
-        icon = QtGui.QIcon(get_ui_path('record.png'))
+        icon = QtGui.QIcon(get_resource_ui('record.png'))
         self.actionRecord.setIcon(icon)
 
         icon = style.standardIcon(QtGui.QStyle.SP_MessageBoxQuestion)

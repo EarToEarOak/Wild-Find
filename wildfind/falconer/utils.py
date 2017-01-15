@@ -4,7 +4,7 @@
 # Wild Find
 #
 #
-# Copyright 2014 - 2015 Al Brown
+# Copyright 2014 - 2017 Al Brown
 #
 # Wildlife tracking and mapping
 #
@@ -22,27 +22,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import os
+import pkg_resources
 import sys
 import tempfile
 import zipfile
 
 
-def get_program_path():
-    if getattr(sys, 'frozen', False):
-        path = sys._MEIPASS
+class ResourceType():
+    GUI, HTDOCS = range(2)
+
+
+def __get_resource(type, resource):
+    location = 'gui'
+    if type == ResourceType.HTDOCS:
+        location = 'htdocs'
+
+    if not hasattr(sys, 'frozen'):
+        return pkg_resources.resource_filename('wildfind.falconer.' + location, resource)
     else:
-        path = os.path.dirname(os.path.realpath(sys.argv[0]))
-
-    return path
+        return os.path.join(sys._MEIPASS, 'wildfind', 'falconer', location, resource)
 
 
-def get_ui_path(filename):
-    return os.path.join(get_program_path(), 'wildfind', 'falconer', 'ui', filename)
+def get_resource_ui(resource):
+    return __get_resource(ResourceType.GUI, resource)
 
 
-def get_htdocs_path(filename):
-    return os.path.join(get_program_path(), 'wildfind', 'falconer', 'htdocs', filename)
+def get_resource_htdocs(resource):
+    return __get_resource(ResourceType.HTDOCS, resource)
 
 
 def export_kml(fileName, telemetry, image):

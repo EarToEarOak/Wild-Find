@@ -30,7 +30,7 @@ from PySide import QtGui, QtWebKit, QtCore, QtNetwork
 from matplotlib import cm
 
 from wildfind.falconer import server, ui
-from wildfind.falconer.utils import get_ui_path
+from wildfind.falconer.utils import get_resource_ui
 from wildfind.falconer.utils_qt import DialogPopup
 
 
@@ -53,7 +53,7 @@ class WidgetMap(QtGui.QWidget):
         self._labelLoad.setSizePolicy(QtGui.QSizePolicy.Expanding,
                                       QtGui.QSizePolicy.Expanding)
         self._labelLoad.setAlignment(QtCore.Qt.AlignCenter)
-        anim = get_ui_path('loader.gif')
+        anim = get_resource_ui('loader.gif')
         movie = QtGui.QMovie(anim)
         self._labelLoad.setMovie(movie)
         movie.start()
