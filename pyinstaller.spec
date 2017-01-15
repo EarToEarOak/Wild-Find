@@ -24,12 +24,15 @@
 #
 
 import platform
+import sys
+
+from PyInstaller.utils.win32 import versioninfo
 
 
-def build_harrier():
+def build_harrier(version):
     filename = 'harrier-' + system + '-' + machine
 
-    a = Analysis(['harrier.py'])    
+    a = Analysis(['harrier.py'])
 
     pyz = PYZ(a.pure)
 
@@ -40,20 +43,21 @@ def build_harrier():
               a.datas,
               name=os.path.join('dist', filename),
               icon='wildfind.ico',
+              version=version,
               upx=False)
 
 
-def build_falconer():
+def build_falconer(version):
     filename = 'falconer-' + system + '-' + machine
     hidden = ['PySide.QtXml', 'matplotlib.mlab.griddata.natgrid']
 
     a = Analysis(['falconer.py'],
                  hiddenimports=hidden)
-    
-    a.datas += Tree('wildfind/falconer/ui', prefix='wildfind/falconer/ui')
+
+    a.datas += Tree('wildfind/falconer/gui', prefix='wildfind/falconer/gui')
     a.datas += Tree('wildfind/falconer/htdocs', prefix='wildfind/falconer/htdocs')
-    
-    if system=='windows':
+
+    if system == 'windows':
         a.datas += Tree('/openssl/', prefix='openssl')
 
     pyz = PYZ(a.pure)
@@ -65,11 +69,53 @@ def build_falconer():
               a.datas,
               name=os.path.join('dist', filename),
               icon='wildfind.ico',
+              version=version,
               upx=False)
+
+
+def create_version():
+    search = os.path.join(os.getcwd(), 'wildfind', 'common')
+    sys.path.append(search)
+    from version import VERSION
+    version = VERSION
+    version.append(0)
+
+    ffi = versioninfo.FixedFileInfo(filevers=VERSION,
+                                    prodvers=VERSION)
+
+    strings = []
+    strings.append(versioninfo.StringStruct('ProductName',
+                                            'Wild Find'))
+    strings.append(versioninfo.StringStruct('FileDescription',
+                                            'Wildlif tracking'))
+    strings.append(versioninfo.StringStruct('LegalCopyright',
+                                            'Copyright 2012 - 2017 Al Brown'))
+    table = versioninfo.StringTable('040904B0', strings)
+    sInfo = versioninfo.StringFileInfo([table])
+    var = versioninfo.VarStruct('Translation', [2057, 1200])
+    vInfo = versioninfo.VarFileInfo([var])
+    vvi = versioninfo.VSVersionInfo(ffi, [sInfo, vInfo])
+
+    f = open('version.txt', 'w')
+    f.write(vvi.__unicode__())
+    f.close()
+
+    print 'Version: {}.{}.{}.{}'.format (vvi.ffi.fileVersionMS >> 16,
+                                         vvi.ffi.fileVersionMS & 0xffff,
+                                         vvi.ffi.fileVersionLS >> 16,
+                                         vvi.ffi.fileVersionLS & 0xFFFF)
 
 
 system = platform.system().lower()
 machine = platform.machine().lower()
 
-build_harrier()
-build_falconer()
+version = None
+if system == 'windows':
+    create_version()
+    version = 'version.txt'
+
+build_harrier(version)
+build_falconer(version)
+
+if version is not None:
+    os.remove('version.txt')
