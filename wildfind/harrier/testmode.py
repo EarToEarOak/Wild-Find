@@ -51,7 +51,7 @@ class TestMode(object):
 
         self.__close()
 
-    def __process_queue(self, settings, queue):
+    def __process_queue(self, _settings, queue):
         event = queue.get()
         eventType = event.get_type()
 

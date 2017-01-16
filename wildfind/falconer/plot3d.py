@@ -26,7 +26,6 @@
 import matplotlib
 import numpy
 import warnings
-import math
 
 matplotlib.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas

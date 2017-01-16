@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from PySide import QtCore, QtGui, QtWebKit
+from PySide import QtCore, QtGui
 
 from wildfind.falconer import ui
 
