@@ -2,7 +2,7 @@
 
 ## Wildlife tracking and mapping ##
 
-Copyright 2014-2016 Al Brown
+Copyright 2014-2017 Al Brown
 
 al [at] eartoearoak.com
 
@@ -13,6 +13,8 @@ A software suite designed to track and map the locations of VHF transmitters whi
 It uses RTLSDR compatible USB dongles to receive the transmissions and any GPS unit which provides NMEA data.
 
 Please note this software is at the Beta stage and currently undergoing testing.
+
+More information can be found on the [website](https://eartoearoak.com/software/wild-find)
 
 ## Usage ##
 Wild Find consists of two components: Harrier and Falconer.
@@ -38,10 +40,14 @@ Falconer is used to map the data from Harrier.
 
 From Falconer one or more surveys can be selected (a survey is generated each time Harrier is run), as well as individual scans (a scan is a sweep of frequencies at a particular time).  Finally the detected signals can be filtered (to include particular collars or exclude erroneous transmissions).
 
+Start Falconer by using the command:
+
+    python falconer.py
+
 
 ## License ##
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation version 3.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation version 2.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
