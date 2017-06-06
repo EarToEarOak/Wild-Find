@@ -40,7 +40,7 @@ setup(name='wild-find',
                    'Topic :: Scientific/Engineering :: Bio-Informatics'
                    'Topic :: Scientific/Engineering :: Visualization'],
       keywords='wildlife tracking ecology',
-      url='https://github.com/EarToEarOak/Wild-Find',
+      url='https://eartoearoak.com/software/wild-find',
       author='Al Brown',
       author_email='al [at] eartoearok.com',
       license='GPLv2',
