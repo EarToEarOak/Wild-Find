@@ -49,4 +49,4 @@ setup(name='wild-find',
                     'wildfind.falconer.htdocs': ['*'],
                     'wildfind.falconer.htdocs.ol': ['*']},
       scripts=['falconer.py', 'harrier.py'],
-      install_requires=['matplotlib', 'natgrid', 'numpy', 'pyrtlsdr', 'pyserial', 'PySide', 'scipy'])
+      install_requires=['matplotlib', 'numpy', 'pyrtlsdr', 'pyserial', 'PySide', 'scipy'])
