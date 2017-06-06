@@ -145,7 +145,7 @@ class WidgetPlot(FigureCanvas):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 xSurf, ySurf = numpy.meshgrid(xi, yi)
-                zSurf = mlab.griddata(x, y, z, xi=xi, yi=yi)
+                zSurf = mlab.griddata(x, y, z, xi=xi, yi=yi, interp='linear')
 
             vmin = numpy.min(zSurf)
             vmax = numpy.max(zSurf)
