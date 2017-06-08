@@ -36,10 +36,10 @@
    <item row="1" column="1">
     <widget class="QComboBox" name="_comboUnits"/>
    </item>
-   <item row="3" column="1">
-    <widget class="QDialogButtonBox" name="_buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>List font</string>
      </property>
     </widget>
    </item>
@@ -50,12 +50,22 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="3" column="0">
+    <widget class="QLabel" name="_labelInterp">
      <property name="text">
-      <string>List font</string>
+      <string>Interpolation</string>
      </property>
     </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QDialogButtonBox" name="_buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="_comboInterp"/>
    </item>
   </layout>
  </widget>

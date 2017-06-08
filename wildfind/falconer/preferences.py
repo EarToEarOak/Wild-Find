@@ -28,6 +28,12 @@ from PySide import QtGui, QtCore
 from wildfind.falconer import ui
 from wildfind.falconer.utils_qt import win_remove_context_help
 
+try:
+    import mpl_toolkits.natgrid  # @UnusedImport
+    NATGRID = True
+except ImportError as error:
+    NATGRID = False
+
 
 class DialogPreferences(QtGui.QDialog):
     def __init__(self, parent, settings):
@@ -54,6 +60,14 @@ class DialogPreferences(QtGui.QDialog):
         self._font.fromString(settings.fontList)
         self._buttonFont.setText(self.__font_name())
 
+        if NATGRID:
+            interp = ['Linear', 'Nearest neighbour']
+            self._comboInterp.addItems(interp)
+            self._comboInterp.setCurrentIndex(1 if self._settings.interpolation == 'nn' else 0)
+        else:
+            self._labelInterp.hide()
+            self._comboInterp.hide()
+
     @QtCore.Slot(str)
     def on__comboStyles_activated(self, styleName):
         style = QtGui.QStyleFactory.create(styleName)
@@ -71,6 +85,10 @@ class DialogPreferences(QtGui.QDialog):
         self._settings.style = self._comboStyles.currentText()
         self._settings.units = self._comboUnits.currentText()
         self._settings.fontList = self._font.toString()
+        if NATGRID:
+            self._settings.interpolation = 'linear' if self._comboInterp.currentIndex() == 0 else 'nn'
+        else:
+            self._settings.interpolation = 'linear'
 
         self.accept()
 

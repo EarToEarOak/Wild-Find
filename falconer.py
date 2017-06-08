@@ -49,9 +49,9 @@ from wildfind.falconer.utils import export_kml, get_resource_ui
 from wildfind.falconer.utils_qt import win_remove_context_help
 
 
-SIP = True
 try:
     import sip  # @UnusedImport
+    SIP = True
 except ImportError as error:
     SIP = False
 
@@ -358,10 +358,13 @@ class Falconer(QtGui.QMainWindow):
 
     @QtCore.Slot()
     def on_actionPreferences_triggered(self):
+        interpolation = self._settings.interpolation
         dlg = DialogPreferences(self, self._settings)
         if dlg.exec_():
             self._widgetMap.set_units(self._settings.units)
             self.__set_fonts()
+            if interpolation != self._settings.interpolation:
+                self.__set_map()
 
     @QtCore.Slot(bool)
     def on_actionViewSurveys_triggered(self, checked):
@@ -390,7 +393,7 @@ class Falconer(QtGui.QMainWindow):
                                                  filteredScans,
                                                  filteredSignals)
 
-        dlg = DialogPlot3d(settings, telemetry)
+        dlg = DialogPlot3d(self._settings, telemetry)
         dlg.exec_()
 
     @QtCore.Slot()

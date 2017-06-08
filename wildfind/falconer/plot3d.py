@@ -46,6 +46,8 @@ class DialogPlot3d(QtGui.QDialog):
     def __init__(self, settings, telemetry):
         QtGui.QDialog.__init__(self)
 
+        self._interpolation = settings.interpolation
+
         self.customWidgets = {'WidgetPlot': WidgetPlot}
 
         ui.loadUi(self, 'plot3d.ui')
@@ -58,17 +60,17 @@ class DialogPlot3d(QtGui.QDialog):
         self._widgetPlot.set_cmap(settings.heatmapColour)
         resolution = self._spinResolution.value()
         self._widgetPlot.set_resolution(resolution)
-        self._widgetPlot.plot()
+        self._widgetPlot.plot(self._interpolation)
 
     @QtCore.Slot(bool)
     def on__checkWireframe_clicked(self, checked):
         self._widgetPlot.set_wireframe(checked)
-        self._widgetPlot.plot()
+        self._widgetPlot.plot(self._interpolation)
 
     @QtCore.Slot(int)
     def on__spinResolution_valueChanged(self, value):
         self._widgetPlot.set_resolution(value)
-        self._widgetPlot.plot()
+        self._widgetPlot.plot(self._interpolation)
 
 
 class WidgetPlot(FigureCanvas):
@@ -126,7 +128,7 @@ class WidgetPlot(FigureCanvas):
     def set_wireframe(self, wireframe):
         self._wireframe = wireframe
 
-    def plot(self):
+    def plot(self, interpolation):
         self.clear()
 
         x, y, z = unique_locations(self._telemetry)
@@ -145,7 +147,8 @@ class WidgetPlot(FigureCanvas):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 xSurf, ySurf = numpy.meshgrid(xi, yi)
-                zSurf = mlab.griddata(x, y, z, xi=xi, yi=yi, interp='linear')
+                zSurf = mlab.griddata(x, y, z, xi=xi, yi=yi,
+                                      interp=interpolation)
 
             vmin = numpy.min(zSurf)
             vmax = numpy.max(zSurf)

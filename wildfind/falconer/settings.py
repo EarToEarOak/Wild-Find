@@ -26,6 +26,12 @@ from PySide import QtCore
 
 from wildfind.falconer.history import FileHistory
 
+try:
+    import mpl_toolkits.natgrid  # @UnusedImport
+    NATGRID = True
+except ImportError as error:
+    NATGRID = False
+
 MAX_REMOTE_HISTORY = 5
 
 
@@ -53,6 +59,8 @@ class Settings(object):
         self.heatmapColour = 'jet'
         self.mapPos = [0, 0]
         self.mapZoom = 4
+
+        self.interpolation = 'nn' if NATGRID else 'linear'
 
         self.__load()
 
@@ -108,6 +116,10 @@ class Settings(object):
 
         self.remoteHistory = self.__load_array('RemoteHistory')
 
+        if NATGRID:
+            self.interpolation = settings.value('interpolation',
+                                                self.interpolation)
+
     def __save(self):
         settings = self.__open()
 
@@ -132,6 +144,8 @@ class Settings(object):
             self.__save_array('History', history)
 
         self.__save_array('RemoteHistory', self.remoteHistory)
+
+        settings.setValue('interpolation', self.interpolation)
 
     def add_history(self, fileName):
         self._history.add(fileName)
