@@ -16,6 +16,8 @@ Please note this software is at the Beta stage and currently undergoing testing.
 
 More information can be found on the [website](https://eartoearoak.com/software/wild-find)
 
+**Update:**  This project is no longer actively developed as I've been unable to make progress with the signal demodulation.
+
 ## Usage ##
 Wild Find consists of two components: Harrier and Falconer.
 
